@@ -4,43 +4,50 @@ library(dplyr)
 library(shinyIncubator)
 library(shinyAce)
 
-# constants:
+## constants:
 alpha = 0.05
 # L = 6,S = 2,
+
+## read datasets:
+tbl_measures <- read.csv("data/app_measures_tbl_v1.csv") %>% tbl_df()
+tbl_meta <- read.csv("data/app_meta_tbl_v1.csv") %>% tbl_df()
 # genotypes_vec <- c("129S1/SvImJ","A/J","AKR/J","BALB/cByJ","BTBR_T/1_tf/tf","C3H/HeJ","C57BL/6J","C57L/J","C58/J","CAST/Ei","DBA/2J","FVB/NJ","MOLF/Ei","NOD/LtJ","NZB/B1NJ","PERA/Ei","PL/J","SJL/J","SM/J","SPRET/Ei","SWR/J","C57BL/6N","DBA/2")
-# datasets:
-dat <- read.csv("wuerbel_testsmeasures_units_s2int.csv")
 
-read.csv(file="tbl_meta_data_clean.csv") %>% tbl_df() -> tbl_data
-
-tbl_data %>%
-  select(proc_id,procedure.name) %>%
-  unique() %>%
-  transmute(proc_id_name = paste0(proc_id," : ",procedure.name)) ->
-  proc_name_list 
-
+## get table and list of procedures:
+tbl_proc <- tbl_measures %>%
+  select(Database,procedure_name) %>%
+  distinct()
+proc_IMPC_vec <- tbl_proc %>%
+  filter(Database=="IMPC") %>%
+  transmute(procedure_name)
+proc_R2012_vec <- tbl_proc %>%
+  filter(Database=="R2012") %>%
+  transmute(procedure_name)
+proc_name_list <- list(IMPC = proc_IMPC_vec,"Richer 2012" = proc_R2012_vec)
+  
 shinyServer(function(input, output, session) {
-  # Main new ----
-  observe({
+  
+  observeEvent({
+    proc_name_selected <- input$proc_name 
     
-    input$procedure_id_name %>% substr(1,13) -> selected_proc_id
+    tbl_meta_selected <- tbl_meta %>%
+      filter(procedure_name == proc_name_selected, parameter_name != "Standard Operating Procedure") %>%
+      select("Parameter Name" = parameter_name, "Default Value" = default ,Units = parameter_unit) %>% 
+      as.data.frame()
     
-    tbl_data %>% filter(proc_id==selected_proc_id,parameter.name!="directions",
-                        measurement_type=="researcher-controlled variable") %>%
-      select(Parameter_Name=parameter.name,Value=default.value.for.the.procedure.or.s_int_2,Units=units) %>% 
-      as.data.frame()-> meta_df 
-    meta_df_txt <- paste0(capture.output(print(meta_df,right = F, row.names = FALSE)),collapse="\n")
+    tbl_meta_selected_txt <- paste0(capture.output(print(meta_df,right = F, row.names = FALSE)),collapse="\n")
     
-    if (nrow(meta_df)==0)
-      updateAceEditor(session,"meta_parameters_window",value = ".",theme="ambiance",mode = "r")
+    if (nrow(tbl_meta_selected)==0)
+      updateAceEditor(session,"meta_data_editor",value = ".",theme="ambiance",mode = "r")
     else
-      updateAceEditor(session,"meta_parameters_window",value = meta_df_txt,theme="ambiance",mode = "r")
+      updateAceEditor(session,"meta_data_editor",value = tbl_meta_selected_txt, theme="ambiance",mode = "r")
     
-    tbl_data %>% filter(proc_id==selected_proc_id, measurement_type=="phenotypic measure") %>%
-      select(parameter.name) -> parameter_names
+    tbl_measures_selected <- tbl_measures %>%
+      filter(procedure_name == proc_name_selected)
     
-    updateSelectInput(session,"parameter_name", choices = as.character(parameter_names$parameter.name))
+    measure_name_list <- tbl_measures_selected$parameter_name
     
+    updateSelectInput(session,"parameter_name", choices = parameter_name_list)
   })
   
   output$proc_directions <- renderText({

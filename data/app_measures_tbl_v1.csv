@@ -1,0 +1,151 @@
+Database,Gender,Rich_normal_hetro,parameter_id,procedure_name,parameter_name,parameter_desc,S2_interaction,S2_error,S2_lab,parameter_trans_expr,parameter_trans_symbol,parameter_unit
+IMPC,female,,ESLIM_004_001_701,Simplified IPGTT,Glucose response AUC,Simplified.IPGTT.Glucose.response.AUC,7796.772,32690.934,28737.091,x,none,
+IMPC,female,,ESLIM_005_001_002,DEXA,Fat mass,DEXA.Fat.mass,0.01213,0.1493,0.23204,x,none,
+IMPC,female,,ESLIM_005_001_004,DEXA,Bone Mineral Density (excluding skull),DEXA.Bone.Mineral.Density..excluding.skull.,0.00127,0.00354,0.00657,x,none,
+IMPC,female,,ESLIM_005_001_005,DEXA,Bone Mineral Content,DEXA.Bone.Mineral.Content,0.00117,0.00231,0.00432,x,none,
+IMPC,female,,ESLIM_005_001_701,DEXA,BMC/Body weight,DEXA.BMC.Body.weight,0,0,1.00E-05,x,none,
+IMPC,female,,ESLIM_005_001_702,DEXA,Lean/Body weight,DEXA.Lean.Body.weight,0,0.0024,0.00321,x,none,
+IMPC,female,,ESLIM_005_001_703,DEXA,Fat/Body weight,DEXA.Fat.Body.weight,0.00032,0.00431,0.00882,x,none,
+IMPC,female,,ESLIM_005_001_704,DEXA,Bone area (BMC/BMD),DEXA.Bone.area..BMC.BMD.,0.23116,0.96399,0.70306,x,none,
+IMPC,female,,ESLIM_007_001_005,Open-field,Whole arena average speed,Open.field.Whole.arena.average.speed,0.00025,0.04718,0.49195,x,none,
+IMPC,female,,ESLIM_007_001_006,Open-field,Periphery distance travelled,Open.field.Periphery.distance.travelled,0,0.07584,0.33177,x,none,
+IMPC,female,,ESLIM_007_001_007,Open-field,Periphery resting time,Open.field.Periphery.resting.time,1332.821,5417.734,15893.337,x,none,
+IMPC,female,,ESLIM_007_001_008,Open-field,Periphery permanence time,Open.field.Periphery.permanence.time,0.0599,0.30822,0.30463,x,none,
+IMPC,female,,ESLIM_007_001_009,Open-field,Periphery average speed,Open.field.Periphery.average.speed,0.00043,0.04651,0.5003,x,none,
+IMPC,female,,ESLIM_007_001_011,Open-field,Centre resting time,Open.field.Centre.resting.time,0.26682,2.00791,1.40404,log(x),log,
+IMPC,female,,ESLIM_007_001_013,Open-field,Centre average speed,Open.field.Centre.average.speed,0,0.07558,0.22871,log(x+0.5*min(x[x!=0 & !is.na(x)])),log(x+0.5*min(x)),
+IMPC,female,,ESLIM_007_001_014,Open-field,Latency to centre entry,Open.field.Latency.to.centre.entry,0.35363,3.13341,0.46483,log(x),log,
+IMPC,female,,ESLIM_007_001_015,Open-field,Number of centre entries ,Open.field.Number.of.centre.entries.,0.52792,3.17195,47.41749,log(x+0.5*min(x[x!=0 & !is.na(x)])),log(x+0.5*min(x)),
+IMPC,female,,ESLIM_007_001_701,Open-field,Distance travelled - total,Open.field.Distance.travelled...total,0.00258,0.05078,0.45753,sqrt(x),sqrt,
+IMPC,female,,ESLIM_007_001_703,Open-field,Percentage centre time,Open.field.Percentage.centre.time,0.0762,0.34896,2.26379,sqrt(x),sqrt,
+IMPC,female,,ESLIM_008_001_008,Modified SHIRPA,Locomotor activity,Modified.SHIRPA.Locomotor.activity,0.03349,0.12731,0.0341,log(x),log,
+IMPC,female,,ESLIM_009_001_701,Grip-Strength,Forelimb grip strength measurement mean,Grip.Strength.Forelimb.grip.strength.measurement.mean,146.9511,242.2491,857.6109,log(x/(100-x)),log(x/(100-x)),
+IMPC,female,,ESLIM_009_001_702,Grip-Strength,Forelimb and hindlimb grip strength measurement mean,Grip.Strength.Forelimb.and.hindlimb.grip.strength.measurement.mean,270.7166,636.8791,2087.1281,x,none,
+IMPC,female,,ESLIM_009_001_703,Grip-Strength,Forelimb grip strength normalised against body weight,Grip.Strength.Forelimb.grip.strength.normalised.against.body.weight,0.02639,0.05761,0.28686,x,none,
+IMPC,female,,ESLIM_009_001_704,Grip-Strength,Forelimb and hindlimb grip strength normalised against body weight,Grip.Strength.Forelimb.and.hindlimb.grip.strength.normalised.against.body.weight,0.01673,0.03791,0.17964,log(x),log,
+IMPC,female,,ESLIM_011_001_001,Acoustic Startle&PPI,BN startle magnitude ,Acoustic.Startle.PPI.BN.startle.magnitude.,0.14013,0.19224,0.78648,log(x),log,
+IMPC,female,,ESLIM_011_001_002,Acoustic Startle&PPI,PP1 startle magnitude,Acoustic.Startle.PPI.PP1.startle.magnitude,0.0681,0.21431,0.4009,log(x),log,
+IMPC,female,,ESLIM_011_001_003,Acoustic Startle&PPI,PP2 startle magnitude,Acoustic.Startle.PPI.PP2.startle.magnitude,0.04425,0.16456,0.63922,log(x),log,
+IMPC,female,,ESLIM_011_001_004,Acoustic Startle&PPI,PP3 startle magnitude,Acoustic.Startle.PPI.PP3.startle.magnitude,0.0227,0.19434,0.51321,log(x),log,
+IMPC,female,,ESLIM_011_001_005,Acoustic Startle&PPI,PP4 startle magnitude,Acoustic.Startle.PPI.PP4.startle.magnitude,0.02682,0.2333,0.29971,log(x),log,
+IMPC,female,,ESLIM_011_001_006,Acoustic Startle&PPI,110dB startle magnitude,Acoustic.Startle.PPI.110dB.startle.magnitude,0.98146,32.05058,22.80298,log(x),log,
+IMPC,female,,ESLIM_011_001_007,Acoustic Startle&PPI,PP1 + pulse startle magnitude,Acoustic.Startle.PPI.PP1...pulse.startle.magnitude,1.39482,31.19477,30.83777,sqrt(x),sqrt,
+IMPC,female,,ESLIM_011_001_008,Acoustic Startle&PPI,PP2 + pulse startle magnitude,Acoustic.Startle.PPI.PP2...pulse.startle.magnitude,0.94135,25.40215,30.2143,sqrt(x),sqrt,
+IMPC,female,,ESLIM_011_001_009,Acoustic Startle&PPI,PP3 + pulse startle magnitude,Acoustic.Startle.PPI.PP3...pulse.startle.magnitude,0.01177,0.31002,0.99855,sqrt(x),sqrt,
+IMPC,female,,ESLIM_011_001_010,Acoustic Startle&PPI,PP4 + pulse startle magnitude,Acoustic.Startle.PPI.PP4...pulse.startle.magnitude,0.01487,0.2338,0.97387,log(x),log,
+IMPC,female,,ESLIM_011_001_701,Acoustic Startle&PPI,Prepulse inhibition - PP1,Acoustic.Startle.PPI.Prepulse.inhibition...PP1,5.59996,738.86608,236.16874,log(x),log,
+IMPC,female,,ESLIM_011_001_702,Acoustic Startle&PPI,Prepulse inhibition - PP2,Acoustic.Startle.PPI.Prepulse.inhibition...PP2,3.00E-05,474.6069,177.7848,x,none,
+IMPC,female,,ESLIM_011_001_704,Acoustic Startle&PPI,Prepulse inhibition - PP4,Acoustic.Startle.PPI.Prepulse.inhibition...PP4,0,343.025,228.3223,x,none,
+IMPC,female,,ESLIM_021_001_001,Fasted Clinical Chemistry,Glucose,Fasted.Clinical.Chemistry.Glucose,0,0.05439,0.00011,log(x),log,
+IMPC,female,,ESLIM_021_001_002,Fasted Clinical Chemistry,Total cholesterol   ,Fasted.Clinical.Chemistry.Total.cholesterol...,0,0.08482,0.00195,x,none,
+IMPC,female,,ESLIM_021_001_004,Fasted Clinical Chemistry,Free fatty acids  ,Fasted.Clinical.Chemistry.Free.fatty.acids..,0.02531,0.06371,0.02073,log(x),log,
+IMPC,female,,ESLIM_021_001_005,Fasted Clinical Chemistry,HDL-cholesterol    ,Fasted.Clinical.Chemistry.HDL.cholesterol....,0,0.02813,0.00313,log(x),log,
+IMPC,female,,ESLIM_021_001_007,Fasted Clinical Chemistry,Glycerol,Fasted.Clinical.Chemistry.Glycerol,0.0183,0.06131,0.03065,log(x),log,
+IMPC,female,,ESLIM_022_001_709,Body Weight,Grip Strength Body Weight,Body.Weight.Grip.Strength.Body.Weight,0.00043,0.006,0.00172,log(x),log,
+IMPC,female,,ESLIM_022_001_710,Body Weight,Rotarod Body Weight,Body.Weight.Rotarod.Body.Weight,0.00031,0.00595,0.00183,log(x),log,
+IMPC,female,,ESLIM_022_001_711,Body Weight,Acoustic Startle & PPI Body Weight,Body.Weight.Acoustic.Startle...PPI.Body.Weight,0.00024,0.00571,0.00143,log(x),log,
+IMPC,female,,ESLIM_022_001_712,Body Weight,Hot Plate Body Weight,Body.Weight.Hot.Plate.Body.Weight,0.00078,0.00598,0.00186,log(x),log,
+IMPC,male,,ESLIM_004_001_701,Simplified IPGTT,Glucose response AUC,Simplified.IPGTT.Glucose.response.AUC,7796.772,32690.934,28737.091,x,none,
+IMPC,male,,ESLIM_005_001_002,DEXA,Fat mass,DEXA.Fat.mass,0.01213,0.1493,0.23204,x,none,
+IMPC,male,,ESLIM_005_001_004,DEXA,Bone Mineral Density (excluding skull),DEXA.Bone.Mineral.Density..excluding.skull.,0.00127,0.00354,0.00657,x,none,
+IMPC,male,,ESLIM_005_001_005,DEXA,Bone Mineral Content,DEXA.Bone.Mineral.Content,0.00117,0.00231,0.00432,x,none,
+IMPC,male,,ESLIM_005_001_701,DEXA,BMC/Body weight,DEXA.BMC.Body.weight,0,0,1.00E-05,x,none,
+IMPC,male,,ESLIM_005_001_702,DEXA,Lean/Body weight,DEXA.Lean.Body.weight,0,0.0024,0.00321,x,none,
+IMPC,male,,ESLIM_005_001_703,DEXA,Fat/Body weight,DEXA.Fat.Body.weight,0.00032,0.00431,0.00882,x,none,
+IMPC,male,,ESLIM_005_001_704,DEXA,Bone area (BMC/BMD),DEXA.Bone.area..BMC.BMD.,0.23116,0.96399,0.70306,x,none,
+IMPC,male,,ESLIM_007_001_005,Open-field,Whole arena average speed,Open.field.Whole.arena.average.speed,0.00025,0.04718,0.49195,x,none,
+IMPC,male,,ESLIM_007_001_006,Open-field,Periphery distance travelled,Open.field.Periphery.distance.travelled,0,0.07584,0.33177,x,none,
+IMPC,male,,ESLIM_007_001_007,Open-field,Periphery resting time,Open.field.Periphery.resting.time,1332.821,5417.734,15893.337,x,none,
+IMPC,male,,ESLIM_007_001_008,Open-field,Periphery permanence time,Open.field.Periphery.permanence.time,0.0599,0.30822,0.30463,x,none,
+IMPC,male,,ESLIM_007_001_009,Open-field,Periphery average speed,Open.field.Periphery.average.speed,0.00043,0.04651,0.5003,x,none,
+IMPC,male,,ESLIM_007_001_011,Open-field,Centre resting time,Open.field.Centre.resting.time,0.26682,2.00791,1.40404,log(x),log,
+IMPC,male,,ESLIM_007_001_013,Open-field,Centre average speed,Open.field.Centre.average.speed,0,0.07558,0.22871,log(x+0.5*min(x[x!=0 & !is.na(x)])),log(x+0.5*min(x[x!=0 & !is.na(x)])),
+IMPC,male,,ESLIM_007_001_014,Open-field,Latency to centre entry,Open.field.Latency.to.centre.entry,0.35363,3.13341,0.46483,log(x),log,
+IMPC,male,,ESLIM_007_001_015,Open-field,Number of centre entries ,Open.field.Number.of.centre.entries.,0.52792,3.17195,47.41749,log(x+0.5*min(x[x!=0 & !is.na(x)])),log(x+0.5*min(x[x!=0 & !is.na(x)])),
+IMPC,male,,ESLIM_007_001_701,Open-field,Distance travelled - total,Open.field.Distance.travelled...total,0.00258,0.05078,0.45753,sqrt(x),sqrt,
+IMPC,male,,ESLIM_007_001_703,Open-field,Percentage centre time,Open.field.Percentage.centre.time,0.0762,0.34896,2.26379,sqrt(x),sqrt,
+IMPC,male,,ESLIM_008_001_008,Modified SHIRPA,Locomotor activity,Modified.SHIRPA.Locomotor.activity,0.03349,0.12731,0.0341,log(x),log,
+IMPC,male,,ESLIM_009_001_701,Grip-Strength,Forelimb grip strength measurement mean,Grip.Strength.Forelimb.grip.strength.measurement.mean,146.9511,242.2491,857.6109,log(x/(100-x)),log(x/(100-x)),
+IMPC,male,,ESLIM_009_001_702,Grip-Strength,Forelimb and hindlimb grip strength measurement mean,Grip.Strength.Forelimb.and.hindlimb.grip.strength.measurement.mean,270.7166,636.8791,2087.1281,x,none,
+IMPC,male,,ESLIM_009_001_703,Grip-Strength,Forelimb grip strength normalised against body weight,Grip.Strength.Forelimb.grip.strength.normalised.against.body.weight,0.02639,0.05761,0.28686,x,none,
+IMPC,male,,ESLIM_009_001_704,Grip-Strength,Forelimb and hindlimb grip strength normalised against body weight,Grip.Strength.Forelimb.and.hindlimb.grip.strength.normalised.against.body.weight,0.01673,0.03791,0.17964,log(x),log,
+IMPC,male,,ESLIM_011_001_001,Acoustic Startle&PPI,BN startle magnitude ,Acoustic.Startle.PPI.BN.startle.magnitude.,0.14013,0.19224,0.78648,log(x),log,
+IMPC,male,,ESLIM_011_001_002,Acoustic Startle&PPI,PP1 startle magnitude,Acoustic.Startle.PPI.PP1.startle.magnitude,0.0681,0.21431,0.4009,log(x),log,
+IMPC,male,,ESLIM_011_001_003,Acoustic Startle&PPI,PP2 startle magnitude,Acoustic.Startle.PPI.PP2.startle.magnitude,0.04425,0.16456,0.63922,log(x),log,
+IMPC,male,,ESLIM_011_001_004,Acoustic Startle&PPI,PP3 startle magnitude,Acoustic.Startle.PPI.PP3.startle.magnitude,0.0227,0.19434,0.51321,log(x),log,
+IMPC,male,,ESLIM_011_001_005,Acoustic Startle&PPI,PP4 startle magnitude,Acoustic.Startle.PPI.PP4.startle.magnitude,0.02682,0.2333,0.29971,log(x),log,
+IMPC,male,,ESLIM_011_001_006,Acoustic Startle&PPI,110dB startle magnitude,Acoustic.Startle.PPI.110dB.startle.magnitude,0.98146,32.05058,22.80298,log(x),log,
+IMPC,male,,ESLIM_011_001_007,Acoustic Startle&PPI,PP1 + pulse startle magnitude,Acoustic.Startle.PPI.PP1...pulse.startle.magnitude,1.39482,31.19477,30.83777,sqrt(x),sqrt,
+IMPC,male,,ESLIM_011_001_008,Acoustic Startle&PPI,PP2 + pulse startle magnitude,Acoustic.Startle.PPI.PP2...pulse.startle.magnitude,0.94135,25.40215,30.2143,sqrt(x),sqrt,
+IMPC,male,,ESLIM_011_001_009,Acoustic Startle&PPI,PP3 + pulse startle magnitude,Acoustic.Startle.PPI.PP3...pulse.startle.magnitude,0.01177,0.31002,0.99855,sqrt(x),sqrt,
+IMPC,male,,ESLIM_011_001_010,Acoustic Startle&PPI,PP4 + pulse startle magnitude,Acoustic.Startle.PPI.PP4...pulse.startle.magnitude,0.01487,0.2338,0.97387,log(x),log,
+IMPC,male,,ESLIM_011_001_701,Acoustic Startle&PPI,Prepulse inhibition - PP1,Acoustic.Startle.PPI.Prepulse.inhibition...PP1,5.59996,738.86608,236.16874,log(x),log,
+IMPC,male,,ESLIM_011_001_702,Acoustic Startle&PPI,Prepulse inhibition - PP2,Acoustic.Startle.PPI.Prepulse.inhibition...PP2,3.00E-05,474.6069,177.7848,x,none,
+IMPC,male,,ESLIM_011_001_704,Acoustic Startle&PPI,Prepulse inhibition - PP4,Acoustic.Startle.PPI.Prepulse.inhibition...PP4,0,343.025,228.3223,x,none,
+IMPC,male,,ESLIM_021_001_001,Fasted Clinical Chemistry,Glucose,Fasted.Clinical.Chemistry.Glucose,0,0.05439,0.00011,log(x),log,
+IMPC,male,,ESLIM_021_001_002,Fasted Clinical Chemistry,Total cholesterol   ,Fasted.Clinical.Chemistry.Total.cholesterol...,0,0.08482,0.00195,x,none,
+IMPC,male,,ESLIM_021_001_004,Fasted Clinical Chemistry,Free fatty acids  ,Fasted.Clinical.Chemistry.Free.fatty.acids..,0.02531,0.06371,0.02073,log(x),log,
+IMPC,male,,ESLIM_021_001_005,Fasted Clinical Chemistry,HDL-cholesterol    ,Fasted.Clinical.Chemistry.HDL.cholesterol....,0,0.02813,0.00313,log(x),log,
+IMPC,male,,ESLIM_021_001_007,Fasted Clinical Chemistry,Glycerol,Fasted.Clinical.Chemistry.Glycerol,0.0183,0.06131,0.03065,log(x),log,
+IMPC,male,,ESLIM_022_001_709,Body Weight,Grip Strength Body Weight,Body.Weight.Grip.Strength.Body.Weight,0.00043,0.006,0.00172,log(x),log,
+IMPC,male,,ESLIM_022_001_710,Body Weight,Rotarod Body Weight,Body.Weight.Rotarod.Body.Weight,0.00031,0.00595,0.00183,log(x),log,
+IMPC,male,,ESLIM_022_001_711,Body Weight,Acoustic Startle & PPI Body Weight,Body.Weight.Acoustic.Startle...PPI.Body.Weight,0.00024,0.00571,0.00143,log(x),log,
+IMPC,male,,ESLIM_022_001_712,Body Weight,Hot Plate Body Weight,Body.Weight.Hot.Plate.Body.Weight,0.00078,0.00598,0.00186,log(x),log,
+R2012,both,normal,R2012_001_001_001,Barrier Test,latency to climb over barrier,BT_latency_to_climb_over_barrier_s,0.01731,0.15413,0.00105,,log,sec
+R2012,both,normal,R2012_001_002_001,Vertical Pole Test,latency to fall off,VPT_latency_to_fall_off_s,0,0.24388,0.00686,,log,sec
+R2012,both,normal,R2012_001_003_001,Elevated Zero Maze,total path moved,total_path_moved_cm_EZM,14.48994,23.06937,0.55781,,sqrt,cm
+R2012,both,normal,R2012_001_003_002,Elevated Zero Maze,path moved in closed sectors,path_moved_in_closed_sectors_cm_EZM,20773.376,34608.187,2766.151,,none,cm
+R2012,both,normal,R2012_001_003_003,Elevated Zero Maze,time spent in closed segments,time_spent_in_closed_segments_s_EZM,0.00124,0.02221,0.00352,,angular,sec
+R2012,both,normal,R2012_001_003_004,Elevated Zero Maze,number of open segment entries,number_of_open_segment_entries_EZM,0.04832,1.23356,0,,sqrt,count
+R2012,both,normal,R2012_001_003_005,Elevated Zero Maze,total head dips,total_head_dips_EZM,0.14247,1.32795,0.12503,,sqrt,count
+R2012,both,normal,R2012_001_003_006,Elevated Zero Maze,protected head dips,protected_head_dips_EZM,3.04401,25.86354,4.41613,,none,count
+R2012,both,normal,R2012_001_003_007,Elevated Zero Maze,bolus count,bolus_count_EZM,0.11426,0.66653,0.11966,,sqrt,count
+R2012,both,normal,R2012_001_003_008,Elevated Zero Maze,total stretched postures,total_stretched_postures_EZM,0.06817,0.56461,2.26983,,sqrt,count
+R2012,both,normal,R2012_001_003_009,Elevated Zero Maze,number of rearing,number_of_rearing_EZM,0.11102,0.75862,0,,sqrt,count
+R2012,both,normal,R2012_001_004_001,Open Field Test,bolus count,bolus_count_OFT,1.71051,10.23925,0.69974,,none,count
+R2012,both,normal,R2012_001_004_002,Open Field Test,path moved within centre,path_moved_within_centre_cm_OFT,23.59738,86.85638,76.63325,,sqrt,cm
+R2012,both,normal,R2012_001_004_003,Open Field Test,path moved within corner zone,path_moved_within_corner_zone_cm_OFT,429.0424,22141.1236,60806.9324,,sqrt,cm
+R2012,both,normal,R2012_001_004_004,Open Field Test,total path moved,total_path_moved_cm_OFT,14.65404,75.93747,72.10584,,none,cm
+R2012,both,normal,R2012_001_004_005,Open Field Test,corner time,corner_time_s_OFT,0.00661,0.0198,0.01751,,angular,sec
+R2012,both,normal,R2012_001_004_006,Open Field Test,centre time,centre_time_s_OFT,0.00204,0.02374,0.02271,,angular,sec
+R2012,both,normal,R2012_001_004_007,Open Field Test,entries centre,entries_centre_OFT,216.7944,466.0466,446.3755,,none,count
+R2012,both,normal,R2012_001_004_008,Open Field Test,entries corner zone,entries_corner_zone_OFT,45.47903,224.63266,137.15253,,none,count
+R2012,both,normal,R2012_001_005_001,Novel Object Test,bolus count,bolus_count_NOT,0.97908,11.34225,1.35868,,sqrt,count
+R2012,both,normal,R2012_001_005_002,Novel Object Test,total path moved,total_path_moved_cm_NOT,13.36485,114.44955,53.35238,,sqrt,cm
+R2012,both,normal,R2012_001_005_003,Novel Object Test,path moved within wall zone,path_moved_within_wall_zone_cm_NOT,1.06902,58.58746,43.33867,,sqrt,cm
+R2012,both,normal,R2012_001_005_004,Novel Object Test,path moved within exploration zone 1,path_moved_within_exploration_zone_1_cm_NOT,6.00157,31.50181,9.12829,,sqrt,cm
+R2012,both,normal,R2012_001_005_005,Novel Object Test,path moved within exploration zone 2,path_moved_within_exploration_zone_2_cm_NOT,8.18506,34.20239,3.9622,,sqrt,cm
+R2012,both,normal,R2012_001_005_006,Novel Object Test,exploration frequency 1 entries exploration zone 1 ,exploration_frequency_1_entries_exploration_zone_1_NOT,0.71252,3.18405,0,,sqrt,freq
+R2012,both,normal,R2012_001_005_007,Novel Object Test,exploration frequency 2 entries exploration zone 2,exploration_frequency_2_entries_exploration_zone_2_NOT,0.66487,3.31651,0,,sqrt,freq
+R2012,both,normal,R2012_001_005_008,Novel Object Test,exploration time 1 time spent in exploration zone 1,exploration_time_1_time_spent_in_exploration_zone_1_s_NOT,0.30037,7.00968,2.15041,,sqrt,sec
+R2012,both,normal,R2012_001_005_009,Novel Object Test,exploration time 2 time spent in exploration zone 2,exploration_time_2_time_spent_in_exploration_zone_2_s_NOT,0.90635,2.75664,0.09974,,sqrt,sec
+R2012,both,normal,R2012_001_005_010,Novel Object Test,wall time including corner,wall_time_including_corner_s_NOT,0.00223,0.02699,0.01581,,angular,sec
+R2012,both,hetro,R2012_002_001_001,Barrier Test,latency to climb over barrier,BT_latency_to_climb_over_barrier_s,0.01405,0.13106,0.00643,,log,sec
+R2012,both,hetro,R2012_002_002_001,Vertical Pole Test,latency to fall off,VPT_latency_to_fall_off_s,0.00674,0.22478,0.00684,,log,sec
+R2012,both,hetro,R2012_002_003_001,Elevated Zero Maze,total path moved,total_path_moved_cm_EZM,7.41222,19.71091,7.46901,,sqrt,cm
+R2012,both,hetro,R2012_002_003_002,Elevated Zero Maze,path moved in closed sectors,path_moved_in_closed_sectors_cm_EZM,6222.389,32546.926,17502.805,,none,cm
+R2012,both,hetro,R2012_002_003_003,Elevated Zero Maze,time spent in closed segments,time_spent_in_closed_segments_s_EZM,0.00395,0.01635,0.00348,,angular,sec
+R2012,both,hetro,R2012_002_003_004,Elevated Zero Maze,number of open segment entries,number_of_open_segment_entries_EZM,0.4499,0.80821,0.0283,,sqrt,count
+R2012,both,hetro,R2012_002_003_005,Elevated Zero Maze,total head dips,total_head_dips_EZM,0.11619,0.83359,0,,sqrt,count
+R2012,both,hetro,R2012_002_003_006,Elevated Zero Maze,protected head dips,protected_head_dips_EZM,1.13689,18.07836,0,,none,count
+R2012,both,hetro,R2012_002_003_007,Elevated Zero Maze,bolus count,bolus_count_EZM,0.04527,0.63796,0,,sqrt,count
+R2012,both,hetro,R2012_002_003_008,Elevated Zero Maze,total stretched postures,total_stretched_postures_EZM,0.1112,0.47875,1.43746,,sqrt,count
+R2012,both,hetro,R2012_002_003_009,Elevated Zero Maze,number of rearing,number_of_rearing_EZM,0.00658,0.58512,0.24289,,sqrt,count
+R2012,both,hetro,R2012_002_004_001,Open Field Test,bolus count,bolus_count_OFT,0.21801,9.97118,0,,none,count
+R2012,both,hetro,R2012_002_004_002,Open Field Test,path moved within centre,path_moved_within_centre_cm_OFT,21.36307,76.55405,67.49854,,sqrt,cm
+R2012,both,hetro,R2012_002_004_003,Open Field Test,path moved within corner zone,path_moved_within_corner_zone_cm_OFT,1288.322,18770.434,47515.055,,sqrt,cm
+R2012,both,hetro,R2012_002_004_004,Open Field Test,total path moved,total_path_moved_cm_OFT,16.53254,62.07088,62.98954,,none,cm
+R2012,both,hetro,R2012_002_004_005,Open Field Test,corner time,corner_time_s_OFT,0.00357,0.02261,0.02006,,angular,sec
+R2012,both,hetro,R2012_002_004_006,Open Field Test,centre time,centre_time_s_OFT,0.00339,0.02695,0.02457,,angular,sec
+R2012,both,hetro,R2012_002_004_007,Open Field Test,entries centre,entries_centre_OFT,255.0798,482.3003,353.5759,,none,count
+R2012,both,hetro,R2012_002_004_008,Open Field Test,entries corner zone,entries_corner_zone_OFT,133.8005,208.1519,119.5242,,none,count
+R2012,both,hetro,R2012_002_005_001,Novel Object Test,bolus count,bolus_count_NOT,0.00054,8.12567,1.45623,,sqrt,count
+R2012,both,hetro,R2012_002_005_002,Novel Object Test,total path moved,total_path_moved_cm_NOT,9.66435,52.21998,64.07261,,sqrt,cm
+R2012,both,hetro,R2012_002_005_003,Novel Object Test,path moved within wall zone,path_moved_within_wall_zone_cm_NOT,4.07746,32.03741,40.09018,,sqrt,cm
+R2012,both,hetro,R2012_002_005_004,Novel Object Test,path moved within exploration zone 1,path_moved_within_exploration_zone_1_cm_NOT,12.0525,28.79178,1.24594,,sqrt,cm
+R2012,both,hetro,R2012_002_005_005,Novel Object Test,path moved within exploration zone 2,path_moved_within_exploration_zone_2_cm_NOT,23.88028,32.18357,0,,sqrt,cm
+R2012,both,hetro,R2012_002_005_006,Novel Object Test,exploration frequency 1 entries exploration zone 1 ,exploration_frequency_1_entries_exploration_zone_1_NOT,1.30337,3.07416,0,,sqrt,freq
+R2012,both,hetro,R2012_002_005_007,Novel Object Test,exploration frequency 2 entries exploration zone 2,exploration_frequency_2_entries_exploration_zone_2_NOT,1.62698,3.20049,0,,sqrt,freq
+R2012,both,hetro,R2012_002_005_008,Novel Object Test,exploration time 1 time spent in exploration zone 1,exploration_time_1_time_spent_in_exploration_zone_1_s_NOT,0.88412,6.15818,1.39352,,sqrt,sec
+R2012,both,hetro,R2012_002_005_009,Novel Object Test,exploration time 2 time spent in exploration zone 2,exploration_time_2_time_spent_in_exploration_zone_2_s_NOT,1.93158,3.47576,0,,sqrt,sec
+R2012,both,hetro,R2012_002_005_010,Novel Object Test,wall time including corner,wall_time_including_corner_s_NOT,0.00206,0.03052,0.00857,,angular,sec
