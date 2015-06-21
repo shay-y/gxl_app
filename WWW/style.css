@@ -1,9 +1,16 @@
 /* General font styling */
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 ,body {
+
+h1, h3,  h6, .h1, .h3, .h6 ,body {
   font-family: "Source Sans Pro";
 }  
 
-html {font-size: 14px;}
+html{font-size: 17px;}
+
+h5 {
+  font-size: 17px;
+  line-height: 1.5em;
+  font-family: "Source Sans Pro";
+}
 
 body {
   background-image: url('tiny_grid.png');
@@ -13,11 +20,30 @@ body {
 }
 
 h2, h4, .h2, .h4 {
+  text-shadow: 1px 0 1px rgba(0, 0, 0, 0.3);
+  color:#555;
   font-family: "Source Sans Pro";
-text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
-color:#444;
+  text-align: center;
+
 }
 
+.MathJax {
+font-size: 1.3em !important;
+}
+
+.selectize-input, .form-control{
+  width:initial;
+  min-width: 250px;
+}
+
+.col-sm-8, .col-sm-offset-2 {
+  padding-right: 40px;
+  padding-left: 40px;
+}
+
+#experiment_identifier {
+  width: 450px;
+}
 .step{
     /*position: absolute;    
     left: -1.2em;
@@ -27,19 +53,49 @@ color:#444;
     line-height : 175%;*/
     background-color: #A2D959;
     text-align: center;
-    font: italic bold 1.1em/1.6em Georgia, Serif;
-    text-shadow: 1px 1px 1px rgba(0,0,0,.2);
+    font: italic 1em Georgia, Serif;
+    text-shadow: 1px 1px 1px rgba(0,0,0,.3);
     color: #fff;
-    border-radius: 2em;
-    -webkit-border-radius: 2em;
-    -moz-border-radius: 2em;
-    box-shadow: 1px 1px 2px #888;
+    
+    -webkit-border-radius: 0.4em;
+    -moz-border-radius: 0.4em;
+    border-radius: 0.4em;
+    
     -moz-box-shadow: 1px 1px 2px #888;
     -webkit-box-shadow: 1px 1px 2px #888;
+    box-shadow: 1px 1px 2px #888;
+    
+    display: inline;
+    padding: 0.2em;
+    margin-right: 0.5em;
 }
 
-input.tb { width: 60px; }
-.ResetBtn {font-size: 11px; float:right;}
+#stats_tbl .tb { 
+  width: 70px;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+  -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+  -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+  transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+  margin: 3px;
+}
+
+#stats_tbl th {
+  text-align: center;
+}
+
+#stats_tbl hr{
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-top: 3px solid #ddd;
+}
+
+.ResetBtn {font-size: 14px; float:right;}
 
 .nav > li > a{
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
