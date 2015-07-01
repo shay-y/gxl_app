@@ -3,6 +3,7 @@ library(dplyr)
 library(shinyIncubator)
 library(shinyAce)
 library(shinyjs)
+library(DT)
 
 shinyUI(fluidPage(
   useShinyjs(),
@@ -10,9 +11,7 @@ shinyUI(fluidPage(
   navbarPage(title = HTML("Genotype-Lab Replicability Analyzer"),
              tabPanel("App",
 
-#                       actionButton("Example4b", "Example 4 Stats.",class="ResetBtn",icon = icon("refresh")),
-#                       actionButton("Example4a", "Example 4 param.",class="ResetBtn",icon = icon("refresh")),
-#                       actionButton("Example3b", "Example 3 Stats.",class="ResetBtn",icon = icon("refresh")),
+                        #actionButton("Example3b", "Example 3 Stats.",class="ResetBtn",icon = icon("refresh")),
 #                       actionButton("Example3a", "Example 3 param.",class="ResetBtn",icon = icon("refresh")),
 #                       actionButton("Example2b", "Example 2 Stats.",class="ResetBtn",icon = icon("refresh")),
 #                       actionButton("Example2a", "Example 2 param.",class="ResetBtn",icon = icon("refresh")),
@@ -26,17 +25,19 @@ shinyUI(fluidPage(
                                h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
                                
                                hr(),
-                               
-                               HTML("<h5><div class='step'>Step 1:</div> Fill in lab name and the genotype groups participated in the experiment ; Choose the experiment design for the multiple comparisons correction; Choose a unique experiment identifier or use default:</h5>"),
+                               actionButton("Example1_step2", "Example 4 Stats.",class="ResetBtn",icon = icon("refresh")),
+                               actionButton("Example1_step1", "Example 4 param.",class="ResetBtn",icon = icon("refresh")),
+                               hr(),hr(),hr(),
+                               HTML("<h5><div class='step'>Step 1:</div> Fill in lab name and the genotype groups participated in the experiment ; Choose the pair-wise comparisons design ; Choose a unique experiment identifier or use default:</h5>"),
                                
                                wellPanel(
                                  #selectizeInput("lab_name",'Lab name:', choices = lab_names_vec, multiple = F, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list or add one',onInitialize = I('function() { this.setValue(""); }'))),
                                  textInput("lab_name", "Lab name:",value = "your_lab_name"),
-                                 radioButtons("expr_design",'Experiment design:', choices = c("Pairwise Comparisons","Control vs. Cases"),inline = T),
-                                 conditionalPanel(condition = "input.expr_design == 'Pairwise Comparisons'",
-                                        selectizeInput("genotypes_tested_pairwise",'Genotypes tested (pairwise comparisons):', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
+                                 radioButtons("expr_design",'Comparisons design:', choices = list("All pairs" = "Tukey","Many to one (Cases vs. control)" = "Dunnet"),inline = T),
+                                 conditionalPanel(condition = "input.expr_design == 'Tukey'",
+                                        selectizeInput("genotypes_tested_pairwise",'Genotypes tested:', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
                                         ),
-                                 conditionalPanel(condition = "input.expr_design == 'Control vs. Cases'",
+                                 conditionalPanel(condition = "input.expr_design == 'Dunnet'",
                                         selectizeInput("genotypes_tested_control",'Genotype tested (control group):', choices = genotypes_vec, multiple = FALSE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list one',onInitialize = I('function() { this.setValue(""); }'))),
                                         selectizeInput("genotypes_tested_cases",'Genotypes tested (cases groups):', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
                                  ),
@@ -94,20 +95,29 @@ shinyUI(fluidPage(
                                
                                wellPanel(
                                  
+                                 #numericInput("alpha", "\\(\\alpha\\) - level:", "0.05")
+                                 withMathJax(HTML("<div class='form-group shiny-input-container'>
+                                                  <label for='alpha'>\\(\\alpha\\) - level:</label>
+                                                  <input id='alpha' type='number' class='form-control' value='0.05' style='display:inline-block; width:100px; min-width:100px'/></div>")),
+                                 checkboxInput("mult_correct","Apply multiplicity correction"),
                                  checkboxInput("checkbox_agrees_share","Contribute the project by sending the experiment settings and results to our database."), # improve
                                  actionButton("submit_data", "Submit", icon = icon("cog")),
                                  
-                                 h5("Summary table:"),
-                                 hr(),
-                                 tableOutput("out_tbl"),
-                                 hr(),
-                                 downloadButton("dl_results_button","Download results and inputs")
+                                 h5("Results:"),
                                  
-                               ),
-                               
-                               hr(),
-                               h5("Diagram:")
-                               # add plot here
+                                 hidden(
+                                   div(
+                                     id = "results_sec",
+                                     h5("Summary Table:"),
+                                     DT::dataTableOutput("out_tbl", width = "85%"),
+                                     downloadButton("dl_button","Download results and inputs"),
+                                     h5("Comparisons Diagram:"),
+                                     div(plotOutput("ci_plot",width = "70%"), align = "center"),
+                                     h5("Confidence Intervals Plot:"),
+                                     div(plotOutput("dia_plot",width = "70%"), align = "center")
+                                   )
+                                 )
+                               )
                         ) # end column
                       ) # end fluid row
              ),

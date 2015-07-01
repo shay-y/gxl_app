@@ -1,5 +1,9 @@
-#devtools::install_github(c("rstudio/shiny-incubator","trestletech/shinyAce"))
-#devtools::install_github("daattali/shinyjs")
+# devtools::install_github(c("rstudio/shiny-incubator",
+#                            "trestletech/shinyAce",
+#                            "rstudio/DT",
+#                            "daattali/shinyjs",
+#                            'rstudio/ggvis'))
+
 
 library(shiny)
 library(dplyr)
@@ -34,5 +38,4 @@ proc_R2012_vec <- tbl_proc %>%
 proc_name_list <- list(IMPC = proc_IMPC_vec, "Richer 2012" = proc_R2012_vec)
 
 ## functions:
-
 source("functions.R")

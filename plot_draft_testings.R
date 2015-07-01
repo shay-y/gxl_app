@@ -22,3 +22,22 @@ tbl_res <- cbind(pv,pv_new,tbl_ci,tbl_ci_new[,2:3])
 
 plot(so$ci)
 plot(so$ci_new)
+
+
+# x1 <- o$co$ci
+# x2 <- o$co$ci_new
+
+cols <- 
+plot_confint_glht(x1,x2, xlab = "Measure",
+                  main = "Confidence Intervals",
+                  cex.axis = 0.8,
+                  cex_leg = 0.8,
+                  cex.main = 0.97,
+                  cex.subt = 0.9,
+                  cex.lab = 0.85,
+                  notch = 0.12,
+                  text.font = 3,
+                  font.axis = 3,
+                  inset = 0.1,
+                  ltys = c(1,1),
+                  cols = cols) 

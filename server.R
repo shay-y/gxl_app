@@ -1,9 +1,9 @@
-#devtools::install_github(c("rstudio/shiny-incubator","trestletech/shinyAce"))
 library(shiny)
 library(dplyr)
 library(shinyIncubator)
 library(shinyAce)
 library(shinyjs)
+library(DT)
 
 humanDate <- function() format(Sys.time(), "%Y_%m_%d")
 
@@ -95,7 +95,7 @@ shinyServer(function(input, output, session) {
     input$reset_experiment
     expr_design <- input$expr_design
     
-    if (expr_design=='Pairwise Comparisons')
+    if (expr_design=='Tukey')
     {
       genotypes_tested <- input$genotypes_tested_pairwise
       if (is.null(genotypes_tested))
@@ -106,11 +106,11 @@ shinyServer(function(input, output, session) {
         for (g in genotypes_tested)
           html <- paste0(html,"<tr><td>",g,"</td><td><input class='tb' id='",g,"_mean' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,"_SD' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,"_N' type='number' value='' step='1'/></td></tr>")
         html <- paste0(html,"</tbody></table>")
-        return(HTML(html))
+        return(list(tbl_html=HTML(html),genotypes_tested = genotypes_tested , expr_design = expr_design))
       }
     }
     
-    if (expr_design=='Control vs. Cases')
+    if (expr_design=='Dunnet')
     {
       genotypes_tested <- c(input$genotypes_tested_control,input$genotypes_tested_cases)
       if (is.null(genotypes_tested))
@@ -180,514 +180,158 @@ shinyServer(function(input, output, session) {
 # ---- main function ----
 
   ## when form is submited, read data from stats table, create comparisons
-  observeEvent(input$go,{
-    genotypes_tested <- create_stats_tbl()$genotypes_tested
-    expr_design <- create_stats_tbl()$expr_design
+  get_comparisons_object <- eventReactive(input$submit_data,{
+    
+    # read data:
+    stats_tbl <- create_stats_tbl()
     measure_details <- selected_measure_details()
     
+    genotypes_tested <- stats_tbl$genotypes_tested
+    expr_design <- stats_tbl$expr_design
+   
     S2_int <- measure_details$S2_interaction
     n_lab <- measure_details$n_lab
     n_genotype <- measure_details$n_genotype
-   
+    
+    type <- ifelse(input$mult_correct,"single-step","none")
+    alpha <- input$alpha
+    
     # read input to df
-    genotypes_tested <- c("aaa","bbb","ccc")
     ids_vec <- c(paste0("input$'",genotypes_tested,"_mean'"),
                  paste0("input$'",genotypes_tested,"_SD'"),
                  paste0("input$'",genotypes_tested,"_N'"))
-    input <- NULL
+    
     stats_vec <- sapply(ids_vec, function(x)eval(parse(text=x)))
     stats_mat <- matrix(stats_vec,ncol = 3)
     
-    ############## continue here###############
+    # create comparisons object
+    co <- gxl_adjust(type = type, name_vec = genotypes_tested, mean_vec = stats_mat[,1], SD_vec = stats_mat[,3],
+                     N_vec = stats_mat[,3], design = expr_design, S2_int, n_lab, n_genotype, alpha = alpha)
+    tbl_res <- get_res_table(co)
     
-    if (expr_design=='Pairwise Comparisons')
-    {
-      gxl_adjust(type = ??,name_vec = genotypes_tested, mean_vec = stats_mat[,1], SD_vec = stats_mat[,3],
-                 N_vec = stats_mat[,3], design = "pairwise", S2_int, n_lab, n_genotype)
-    }
+    return(list(co=co,tbl_res=tbl_res,measure_details=measure_details,stats_mat=stats_mat,expr_design=expr_design,genotypes_tested=genotypes_tested))
+  })
+  
+  observeEvent(input$submit_data, {
+    shinyjs::show("results_sec")
+  })
+  
+  ## when main object created, use it to print table
+  output$out_tbl <- DT::renderDataTable({
+    o <<- get_comparisons_object()
+    tbl_res <- o$tbl_res
     
-    if (expr_design=='Control vs. Cases')
-    {
-      gxl_adjust(type = ??, name_vec = genotypes_tested, mean_vec = stats_mat[,1], SD_vec = stats_mat[,3],
-                 N_vec = stats_mat[,3], design = "control", S2_int, n_lab, n_genotype)
-    }  
+    # table sketch
+    sketch <- withTags(table(
+      class = 'display cell-border nowrap compact',
+      thead(
+        tr(
+          th(rowspan = 2, 'Pair'),
+          th(rowspan = 2, HTML('Unadjusted<br> p-value')),
+          th(rowspan = 2, HTML('GxL adjusted<br> p-value')),
+          th(rowspan = 2, 'Difference'),
+          th(colspan = 2, 'Unadjusted CI'),
+          th(colspan = 2, 'GxL adjusted CI')
+        ),
+        tr(
+          lapply(rep(c('lwr', 'upr'), 2), th)
+        )
+      )
+    ))
+  
+    # calculate siginificant digits for table (like display in xtable)
+    sig_digit_est <- 
+      c(tbl_res[,5]-tbl_res[,4],tbl_res[,3:5]) %>% # take the CIs lengths and all estimates values
+      abs() %>% min() %>%                                      # the the minimum of thier absolute values 
+      log(10) %>% {3-floor(.)} %>%                             # get its approximate order of magnitude, plus 3 is the desired digits to display
+      max(3)                                                   # or 3 (the maximum of both)
+    sig_digit_pv <- 
+      tbl_res[,1] %>% min() %>%                            # take the minimum pv  abs() %>% min() %>% # the the minimum of thier absolute values 
+      log(10) %>% {2-floor(.)} %>%                             # get its approximate order of magnitude, plus 3 is the desired digits to display
+      max(4)                                                   # or 4 (the maximum of both)
     
+    # create DT object
+    caption = htmltools::tags$caption(
+      style = 'caption-side: bottom; text-align: center;padding;0;',
+      em(paste("Measure:",o$measure_details$parameter_name))
+    )
     
-    
-  })  
-      
-
-      
-      
-  # render results table: 
-#   output$tbl_pv <- renderTable(maketable()[1:4],digits=c(0,0,6,6,6))
-#   # render download handler: 
+    datatable(tbl_res,caption = caption,
+              selection = "none", container = sketch,escape = T,
+              options = list(paging =  F, dom='t', ordering = F, processing = T)) %>% 
+      formatRound(1:2,sig_digit_pv) %>% 
+      formatRound(3:8,sig_digit_est)
+  })
+  
+  ## when main object created, plot cis
+  output$ci_plot <- renderPlot({
+    o <- get_comparisons_object()
+    plot_confint_glht(o$co$ci,o$co$ci_new,xlab = o$measure_details$parameter_name)
+  })
+  
+  output$dia_plot <- renderPlot({
+    o <- get_comparisons_object()
+    tbl_res <- o$tbl_res[,1:2]
+    pair_names <- matrix(unlist((strsplit(rownames(tbl_res)," - "))),ncol=2,byrow = T)
+    tbl_pairs <- data.frame(name1 = pair_names[,1],name2 = pair_names[,2],tbl_res)
+    tbl_singles <- data.frame(name=o$genotypes_tested,mean=o$stats_mat[,1])
+    plot_diagram(tbl_singles,tbl_pairs)
+  })
+  
+  
+  
 #   output$dh <- downloadHandler(filename = function() {paste0("Results_",gsub(" ", "_", input$Measure),".csv")},
 #                                content = function(file) {write.csv(maketable(),file,row.names = FALSE)})
-  
-  # render plot (draft)-------------------------------------------------------------
-  
-  
-  #   output$plot <- renderPlot({
-  #     if (input$go==0)
-  #       return()
-  #     data <- maketable()[5:10]
-  #     m1 <- data[,1]
-  #     m2 <- data[,2]
-  #     sp <- data[,3]
-  #     sint <- data[,4]
-  #     s <- data[,5]
-  #     d <- abs(m1-m2)
-  #     shift <- d*0.02
-  #     plot(c(0,0,0,0),c(min(m1,m2),max(m1,m2),min(m1,m2)-0.277*abs(d),max(m1,m2)+0.277*abs(d)),
-  #          xlim=c(-0.5,d),
-  #          col=c(1,1,0,0),pch=19,
-  #          main = input$Measure,xaxt="n",asp=1, axes=FALSE, frame.plot=F)
-  #     axis(side = 2,pos = 0, col= "grey",las=2)
-  #     segments(x0 = shift ,y0 = min(m1,m2),x1 = shift+sint*sp/s,y1 = min(m1,m2)+sint^2/s,col = rgb(159,100,100,maxColorValue = 255) ,lwd = 3 )
-  #     segments(x0 = shift ,y0 = min(m1,m2)+s,x1 = shift + sint*sp/s,y1 = min(m1,m2)+sint^2/s,col = rgb(159,92,92,maxColorValue = 255) ,lwd = 3 )
-  #     segments(x0 = 0 ,y0 = min(m1,m2),x1 = 0 ,y1 = max(m1,m2),
-  #              col = if (d>s) rgb(120,165,68,maxColorValue = 255) else rgb(161,153,153,maxColorValue = 255),lwd = 3 )
-  #     text(x = sint*sp/s+shift ,y = min(m1,m2)+sint^2/s + 0.5* (sp^2/s) , "Sp")
-  #     text(x = sint*sp/s+shift ,y = min(m1,m2)+sint^2/s - 0.5*(sint^2/s), "Sint.")
-  #     
-  #   })
-  
-  
-  # reset buttons -----------------------------------------------------------
-  
-#   observe({
-#     if (input$Re)
-#     {
-#       isolate({
-#         for (g in input$Genotypes)
-#         {
-#           updateTextInput(session, inputId = paste0(g,".mean"),value = "")
-#           updateTextInput(session, inputId = paste0(g,".SD"),value = "")
-#           updateTextInput(session, inputId = paste0(g,".N"),value = "")
-#         }
-#         
-#         #1       
-#         s_options <- list()
-#         updateTextInput(session, "ExperimentName",value = "")
-#         updateTextInput(session, "LabAddress", ,value = "")
-#         updateSelectizeInput(session, "Genotypes", choices = Genotypes, 
-#                              options = list(create = TRUE, maxOptions = 5,
-#                                             placeholder = 'Select from the list or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         #2
-#         updateDateInput(session,inputId =  "date", value = date())
-#         updateNumericInput(session,inputId =  "Age", value = "")
-#         updateRadioButtons(session,inputId =  "Sex",selected = "Males")
-#         updateSelectInput(session, "TestType",selected = "-")
-#         updateRadioButtons(session, "ArenaS",selected = "rectangle")
-#         updateNumericInput(session, "AW", value = "")
-#         updateNumericInput(session, "AL", value = "")
-#         updateNumericInput(session, "AR", value = "")
-#         updateNumericInput(session, "AH", value = "")
-#         updateSelectizeInput(session, "AM", choices = c("disposable floor paper","non-reflective white plastic"),options = list(create = TRUE, placeholder = 'Select a material or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         updateNumericInput(session, "TL", value = "")
-#         updateRadioButtons(session, "TM", selected = "video")
-#         
-#         updateNumericInput(session,"Eaf",value = "")
-#         updateNumericInput(session,"Wh",value = "")
-#         updateSelectizeInput(session,"Ct", choices = c("Macrolon type II","Macrolon type III"),options = list(create = TRUE,maxOptions = 5, placeholder = 'Select type or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         updateNumericInput(session,"Bh",value = "")
-#         updateNumericInput(session,"Bw",value = "")
-#         updateSelectizeInput(session,"Pm", choices = c("wood wrapped with cloth tape"),options = list(create = TRUE,maxOptions = 5, placeholder = 'Select material or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         updateNumericInput(session,"Bh",value = "")
-#         updateNumericInput(session,"Bw",value = "")
-#         
-#         
-#         updateSelectizeInput(session, "TS",  choices = c("EthoVision <3.0",
-#                                                          "EthoVision 3.0",
-#                                                          "EthoVision 3.1",
-#                                                          "EthoVision XT",
-#                                                          "ANYmaze"),options = list(create = TRUE,maxOptions = 5, placeholder = 'Select a system or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         
-#         updateRadioButtons(session,"Phase",selected = "light")
-#         updateNumericInput(session,"TD", value = "")
-#         
-#         #3
-#         
-#         
-#         TT <- input$TestType
-#         m_choices <- as.list(dat$Meassure[dat$Test==TT])
-#         names(m_choices) <- paste0(dat$Meassure[dat$Test==TT]," [",dat$unit[dat$Test==TT],",",dat$trans[dat$Test==TT],"]")
-#         updateSelectInput(session,"Measure",choices = m_choices)
-#         
-#         
-#       })
-#       
-#     }
-#     else
-#       return()
-#   })
-#   
-#   observe({
-#     if (input$Rt)
-#     {
-#       isolate({
-#         
-#         for (g in input$Genotypes)
-#         {
-#           updateTextInput(session, inputId = paste0(g,".mean"),value = "")
-#           updateTextInput(session, inputId = paste0(g,".SD"),value = "")
-#           updateTextInput(session, inputId = paste0(g,".N"),value = "")
-#         }
-#         
-#         #2
-#         updateDateInput(session,inputId =  "date", value = date())
-#         updateNumericInput(session,inputId =  "Age", value = "")
-#         updateRadioButtons(session,inputId =  "Sex",selected = "Males")
-#         updateSelectInput(session, "TestType",selected = "-")
-#         updateRadioButtons(session, "ArenaS",selected = "rectangle")
-#         updateNumericInput(session, "AW", value = "")
-#         updateNumericInput(session, "AL", value = "")
-#         updateNumericInput(session, "AR", value = "")
-#         updateNumericInput(session, "AH", value = "")
-#         updateSelectizeInput(session, "AM", choices = c("disposable floor paper","non-reflective white plastic"),options = list(create = TRUE, placeholder = 'Select a material or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         updateNumericInput(session, "TL", value = "")
-#         updateRadioButtons(session, "TM", selected = "video")
-#         
-#         updateNumericInput(session,"Eaf",value = "")
-#         updateNumericInput(session,"Wh",value = "")
-#         updateSelectizeInput(session,"Ct", choices = c("Macrolon type II","Macrolon type III"),options = list(create = TRUE,maxOptions = 5, placeholder = 'Select type or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         updateNumericInput(session,"Bh",value = "")
-#         updateNumericInput(session,"Bw",value = "")
-#         updateSelectizeInput(session,"Pm", choices = c("wood wrapped with cloth tape"),options = list(create = TRUE,maxOptions = 5, placeholder = 'Select material or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         updateNumericInput(session,"Bh",value = "")
-#         updateNumericInput(session,"Bw",value = "")
-#         
-#         
-#         updateSelectizeInput(session, "TS",  choices = c("EthoVision <3.0",
-#                                                          "EthoVision 3.0",
-#                                                          "EthoVision 3.1",
-#                                                          "EthoVision XT",
-#                                                          "ANYmaze"),options = list(create = TRUE,maxOptions = 5, placeholder = 'Select a system or add one',onInitialize = I('function() { this.setValue(""); }')))
-#         
-#         updateRadioButtons(session,"Phase",selected = "light")
-#         updateNumericInput(session,"TD", value = "")
-#         
-#         #3
-#         
-#         
-#         TT <- input$TestType
-#         m_choices <- as.list(dat$Meassure[dat$Test==TT])
-#         names(m_choices) <- paste0(dat$Meassure[dat$Test==TT]," [",dat$unit[dat$Test==TT],",",dat$trans[dat$Test==TT],"]")
-#         updateSelectInput(session,"Measure",choices = m_choices)
-#         
-#         
-#       })
-#       
-#     }
-#     else
-#       return()
-#   })
-#   
-#   observe({
-#     if (input$Rm)
-#     {
-#       isolate({
-#         
-#         for (g in input$Genotypes)
-#         {
-#           updateTextInput(session, inputId = paste0(g,".mean"),value = "")
-#           updateTextInput(session, inputId = paste0(g,".SD"),value = "")
-#           updateTextInput(session, inputId = paste0(g,".N"),value = "")
-#         }
-#         
-#         #3
-#         
-#         
-#         TT <- input$TestType
-#         m_choices <- as.list(dat$Meassure[dat$Test==TT])
-#         names(m_choices) <- paste0(dat$Meassure[dat$Test==TT]," [",dat$unit[dat$Test==TT],",",dat$trans[dat$Test==TT],"]")
-#         updateSelectInput(session,"Measure",choices = m_choices)
-#         
-#         
-#         
-#       })
-#       
-#     }
-#     else
-#       return()
-#   })
-#   
-#   observe({
-#     if (input$Rr)
-#     {
-#       isolate({
-#         
-#         for (g in input$Genotypes)
-#         {
-#           updateTextInput(session, inputId = paste0(g,".mean"),value = "")
-#           updateTextInput(session, inputId = paste0(g,".SD"),value = "")
-#           updateTextInput(session, inputId = paste0(g,".N"),value = "")
-#         }
-#         
-#       })
-#       
-#     }
-#     else
-#       return()
-#   })
-#   
-#   observe({
-#     input$Measure
-#     for (g in input$Genotypes)
-#     {
-#       updateTextInput(session, inputId = paste0(g,".mean"),value = "")
-#       updateTextInput(session, inputId = paste0(g,".SD"),value = "")
-#       updateTextInput(session, inputId = paste0(g,".N"),value = "")
-#     }
-#   })
-  # Examples ----------------------------------------------------------------
+#     
   
   ## Example 1:
   
-#   observe({
-#     if (input$Example1a)
-#     {
-#       isolate({
-#         
-#         updateTextInput(session, "ExperimentName",value = "Example_1_OFT")
-#         updateTextInput(session, "LabAddress", ,value = "Utrecht")
-#         updateSelectizeInput(session, "Genotypes", selected = c("C57BL/6N","DBA/2"))
-#         
-#         updateDateInput(session,inputId =  "date", value = "2011-01-01")
-#         updateNumericInput(session,inputId =  "Age", value = "12")
-#         updateRadioButtons(session,inputId =  "Sex",selected = "Females")
-#         updateSelectInput(session, "TestType",selected = "Open field test")
-#         updateRadioButtons(session, "ArenaS",selected = "rectangle")
-#         updateNumericInput(session, "AW", value = 50)
-#         updateNumericInput(session, "AL", value = 50)
-#         updateNumericInput(session, "AR", value = "")
-#         updateNumericInput(session, "AH", value = 37)
-#         updateSelectizeInput(session, "AM", selected = "disposable floor paper")
-#         updateNumericInput(session, "TL", value = 60)
-#         updateRadioButtons(session, "TM", selected = "video")
-#         updateSelectizeInput(session, "TS",  selected = c("EthoVision 3.1"))
-#         
-#         updateRadioButtons(session,"Phase",selected = "light")
-#         updateNumericInput(session,"TD", value = 10)
-#         updateSelectInput(session,inputId = "Measure",selected = "bolus count")
-#         
-#       })
-#     }
-#     else
-#       return()
-#   })
-#   
-#   observe({
-#     if (input$Example1b)
-#     {
-#       isolate({
-#         updateTextInput(session, inputId = "C57BL/6N.mean",value = 4.438)
-#         updateTextInput(session, inputId = "C57BL/6N.SD",value = 3.204)
-#         updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
-#         updateTextInput(session, inputId = "DBA/2.mean",value = 10.938)
-#         updateTextInput(session, inputId = "DBA/2.SD",value = 4.074)
-#         updateTextInput(session, inputId = "DBA/2.N",value = 16)
-#       })
-#     }
-#     else
-#       return()
-#     
-#   })
-#   
+  observeEvent(input$Example1_step1,{
+    updateTextInput(session, "lab_name",value = "my_lab")
+    updateRadioButtons(session,"expr_design",selected = "Tukey")
+    updateSelectizeInput(session, "genotypes_tested_pairwise", selected = c("C57BL/6N","DBA/2","AKR/J"))
+    updateRadioButtons(session,inputId =  "proc_gender",selected = "Females")
+    updateSelectizeInput(session, "proc_name", selected = "Open Field Test")
+    updateNumericInput(session,inputId =  "proc_age", value = "12")
+    updateNumericInput(session,"proc_duration", value = 10)
+    updateSelectInput(session,inputId = "measure_name",selected = "bolus count")
+    updateSelectInput(session,inputId = "measure_name",selected = "bolus count")
+  })
+  
+  observeEvent(input$Example1_step2,{
+    updateTextInput(session, inputId = "C57BL/6N_mean",value = 4.438)
+    updateTextInput(session, inputId = "C57BL/6N_SD",value = 3.204)
+    updateTextInput(session, inputId = "C57BL/6N_N",value = 16)
+    updateTextInput(session, inputId = "DBA/2_mean",value = 10.938)
+    updateTextInput(session, inputId = "DBA/2_SD",value = 4.074)
+    updateTextInput(session, inputId = "DBA/2_N",value = 16)
+    updateTextInput(session, inputId = "AKR/J_mean",value = 15)
+    updateTextInput(session, inputId = "AKR/J_SD",value = 3)
+    updateTextInput(session, inputId = "AKR/J_N",value = 12)
+  })
+})
+  
 #   
 #   ## Example 2:
+#   "total path moved"
+#   updateTextInput(session, inputId = "C57BL/6N.mean",value = 59.861)
+#   updateTextInput(session, inputId = "C57BL/6N.SD",value = 5.977)
+#   updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
+#   updateTextInput(session, inputId = "DBA/2.mean",value = 70.768)
+#   updateTextInput(session, inputId = "DBA/2.SD",value = 14.279)
+#   updateTextInput(session, inputId = "DBA/2.N",value = 16)
+#   "path moved within centre"
+#   updateTextInput(session, inputId = "C57BL/6N.mean",value = 49.513)
+#   updateTextInput(session, inputId = "C57BL/6N.SD",value = 6.411)
+#   updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
+#   updateTextInput(session, inputId = "DBA/2.mean",value = 56.814)
+#   updateTextInput(session, inputId = "DBA/2.SD",value = 17.330)
+#   updateTextInput(session, inputId = "DBA/2.N",value = 16)
+#   updateSelectInput(session,inputId = "Measure",selected = "path moved within exploration zone 1")
+#   updateTextInput(session, inputId = "C57BL/6N.mean",value = 15.544)
+#   updateTextInput(session, inputId = "C57BL/6N.SD",value = 5.192)
+#   updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
+#   updateTextInput(session, inputId = "DBA/2.mean",value = 20.346)
+#   updateTextInput(session, inputId = "DBA/2.SD",value = 7.783)
+#   updateTextInput(session, inputId = "DBA/2.N",value = 16)
 #   
-#   observe({
-#     if (input$Example2a)
-#     {
-#       isolate({
-#         
-#         updateTextInput(session, "ExperimentName",value = "Example_2_OFT")
-#         updateTextInput(session, "LabAddress", ,value = "Giessen")
-#         updateSelectizeInput(session, "Genotypes", selected = c("C57BL/6N","DBA/2"))
-#         
-#         updateDateInput(session,inputId =  "date", value = "2011-01-01")
-#         updateNumericInput(session,inputId =  "Age", value = "12")
-#         updateRadioButtons(session,inputId =  "Sex",selected = "Females")
-#         updateSelectInput(session, "TestType",selected = "Open field test")
-#         updateRadioButtons(session, "ArenaS",selected = "rectangle")
-#         updateNumericInput(session, "AW", value = 50)
-#         updateNumericInput(session, "AL", value = 50)
-#         updateNumericInput(session, "AR", value = "")
-#         updateNumericInput(session, "AH", value = 37)
-#         updateSelectizeInput(session, "AM", selected = "disposable floor paper")
-#         updateNumericInput(session, "TL", value = 60)
-#         updateRadioButtons(session, "TM", selected = "video")
-#         updateSelectizeInput(session, "TS",  selected = c("EthoVision 3.1"))
-#         
-#         updateRadioButtons(session,"Phase",selected = "light")
-#         updateNumericInput(session,"TD", value = 10)
-#         updateSelectInput(session,inputId = "Measure",selected = "total path moved")
-#         
-#       })
-#     }
-#     else
-#       return()
-#   })
-#   
-#   observe({
-#     if (input$Example2b)
-#     {
-#       isolate({
-#         updateTextInput(session, inputId = "C57BL/6N.mean",value = 59.861)
-#         updateTextInput(session, inputId = "C57BL/6N.SD",value = 5.977)
-#         updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
-#         updateTextInput(session, inputId = "DBA/2.mean",value = 70.768)
-#         updateTextInput(session, inputId = "DBA/2.SD",value = 14.279)
-#         updateTextInput(session, inputId = "DBA/2.N",value = 16)
-#       })
-#     }
-#     else
-#       return()
-#     
-#   })
-#   
-#   ## Example 3:
-#   
-#   observe({
-#     if (input$Example3a)
-#     {
-#       isolate({
-#         
-#         updateTextInput(session, "ExperimentName",value = "Example_3_OFT_multi")
-#         updateTextInput(session, "LabAddress", ,value = "Giessen")
-#         updateSelectizeInput(session, "Genotypes", selected = c("C57BL/6N","DBA/2"))
-#         
-#         updateDateInput(session,inputId =  "date", value = "2011-01-01")
-#         updateNumericInput(session,inputId =  "Age", value = "12")
-#         updateRadioButtons(session,inputId =  "Sex",selected = "Females")
-#         updateSelectInput(session, "TestType",selected = "Open field test")
-#         updateRadioButtons(session, "ArenaS",selected = "rectangle")
-#         updateNumericInput(session, "AW", value = 50)
-#         updateNumericInput(session, "AL", value = 50)
-#         updateNumericInput(session, "AR", value = "")
-#         updateNumericInput(session, "AH", value = 37)
-#         updateSelectizeInput(session, "AM", selected = "disposable floor paper")
-#         updateNumericInput(session, "TL", value = 60)
-#         updateRadioButtons(session, "TM", selected = "video")
-#         updateSelectizeInput(session, "TS",  selected = c("EthoVision 3.1"))
-#         
-#         updateRadioButtons(session,"Phase",selected = "light")
-#         updateNumericInput(session,"TD", value = 10)
-#         updateSelectInput(session,inputId = "Measure",selected = "path moved within centre")
-#         
-#       })
-#     }
-#     else
-#       return()
-#   })
-#   
-#   observe({
-#     if (input$Example3b)
-#     {
-#       isolate({
-#         updateTextInput(session, inputId = "C57BL/6N.mean",value = 49.513)
-#         updateTextInput(session, inputId = "C57BL/6N.SD",value = 6.411)
-#         updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
-#         updateTextInput(session, inputId = "DBA/2.mean",value = 56.814)
-#         updateTextInput(session, inputId = "DBA/2.SD",value = 17.330)
-#         updateTextInput(session, inputId = "DBA/2.N",value = 16)
-#       })
-#     }
-#     else
-#       return()
-#     
-#   })
-#   
-#   
-#   ## Example 4:
-#   
-#   observe({
-#     if (input$Example4a)
-#     {
-#       isolate({
-#         
-#         updateTextInput(session, "ExperimentName",value = "Example_4_NOT")
-#         updateTextInput(session, "LabAddress", ,value = "Mannhein")
-#         updateSelectizeInput(session, "Genotypes", selected = c("C57BL/6N","DBA/2"))
-#         
-#         updateDateInput(session,inputId =  "date", value = "2012-02-02")
-#         updateNumericInput(session,inputId =  "Age", value = "12")
-#         updateRadioButtons(session,inputId =  "Sex",selected = "Females")
-#         updateSelectInput(session, "TestType",selected = "Novel object test")
-#         updateNumericInput(session, "TL", value = 60)
-#         updateRadioButtons(session, "TM", selected = "video")
-#         updateSelectizeInput(session, "TS",  selected = c("EthoVision 3.1"))
-#         
-#         updateRadioButtons(session,"Phase",selected = "light")
-#         updateNumericInput(session,"TD", value = 10)
-#         updateSelectInput(session,inputId = "Measure",selected = "path moved within exploration zone 1")
-#         updateSelectInput(session,inputId = "Measure",selected = "path moved within exploration zone 1")
-#         
-#       })
-#       
-#     }
-#     else
-#       return()
-#   })
-#   
-#   observe({
-#     if (input$Example4b)
-#     {
-#       isolate({
-#         updateTextInput(session, inputId = "C57BL/6N.mean",value = 15.544)
-#         updateTextInput(session, inputId = "C57BL/6N.SD",value = 5.192)
-#         updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
-#         updateTextInput(session, inputId = "DBA/2.mean",value = 20.346)
-#         updateTextInput(session, inputId = "DBA/2.SD",value = 7.783)
-#         updateTextInput(session, inputId = "DBA/2.N",value = 16)
-#       })
-#     }
-#     else
-#       return()
-#   })
-  
-})
-
-
-# output$tbl_pv_TIC <- renderTable({
-#   if (input$go)
-#   {
-#     isolate({
-#       
-#       #         if (input$Measures == 'Time in center (in min.)' || input$Measures[2] == 'Time in center (in min.)')
-#       #         {
-#       means <- matrix(sapply(paste0("input$'",combn(input$Genotypes, 2),".mean.TIC'"), function(x)eval(parse(text=x))) ,ncol = 2,byrow = T)
-#       SD <- matrix(sapply(paste0("input$'",combn(input$Genotypes, 2),".SD.TIC'"), function(x)eval(parse(text=x))) ,ncol = 2,byrow = T)
-#       N <- matrix(sapply(paste0("input$'",combn(input$Genotypes, 2),".N.TIC'"), function(x)eval(parse(text=x))) ,ncol = 2,byrow = T)
-#       
-#       D <- means[,1] - means[,2]
-#       Sp2 <- ((N[,1]-1)*SD[,1]^2+(N[,2]-1)*SD[,2]^2)/(N[,1]+N[,2]-2)
-#       Tstat1 <- abs(D)/sqrt(Sp2*(1/N[,1]+1/N[,2]))
-#       Tstat2 <- abs(D)/sqrt(Sp2*(1/N[,1]+1/N[,2])+2*Sint2.TIC)
-#       pv <- 2-2*pt(q = Tstat1,df = N[,1]+N[,2]-2) 
-#       ni <- 1/ ((Sp2*(1/N[,1]+1/N[,2]))^2/(N[,1]+N[,2]-2)+(2*Sint2.TIC)^2/(L-1)/(S-1)) * (Sp2*(1/N[,1]+1/N[,2])+2*Sint2.TIC)^2
-#       rv <- 2-2*pt(q = Tstat2,df = ni) 
-#       
-#       pair <- apply(combn(input$Genotypes, 2),2,function(x) paste(x[1],x[2],sep = " : "))
-#       data.frame(pair = pair,Diff=D,"p-value" = pv,"r-value" = rv)
-#       #         }
-#       #         else NULL
-#       
-#       
-#     })
-#   }
-#   else NULL
-#   
-# },digits=c(0,0,4,4,4))
-
-#   output$tbl_TIC <- renderUI({
-#     html <- "<table><thead><tr><th>Group</th><th>Group Mean</th><th>Group SD</th><th>Group N</th></tr></thead><tbody>"
-#     for (g in input$Genotypes)
-#       html <- paste0(html,"<tr><td>",g,"</td><td><input class='tb' id='",g,".mean.TIC' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,".SD.TIC' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,".N.TIC' type='number' value='' step='1'/></td></tr>")
-#     html <- paste0(html,"</tbody></table>")
-#     return(HTML(html))})
-
-
-
