@@ -12,7 +12,7 @@ mock_data <- function(name_vec,mean_vec,SD_vec,N_vec)
 
 gxl_adjust <- function(name_vec, mean_vec, SD_vec, N_vec, S2_int, n_labs, n_genotype,
                        design = c("Tukey","Dunnet"),
-                       type = c("single-step","none"),alpha = 0.05)
+                       type = c("single-step","none"),alpha)
 {
   data_m <- mock_data(name_vec, mean_vec, SD_vec, N_vec)
   
@@ -60,71 +60,3 @@ get_res_table <- function(co)
   colnames(tbl_res) <- c("p_value","p_value_adj", "est", "ci_lwr", "ci_upr",  "ci_lwr_adj", "ci_upr_adj")
   return(tbl_res)
 }
-
-# install.packages("RColorBrewer")
-# library(RColorBrewer)
-# cols <- brewer.pal(4,"Paired")[c(2,4)]
-plot_confint_glht <- function (x1,x2, xlab = "Measure",
-                               main = "Confidence Intervals",
-                               cex.axis = 0.9,
-                               cex_leg = 1,
-                               cex.main = 1,
-                               cex.subt = 0.95,
-                               cex.lab = 1,
-                               notch = 0.12,
-                               text.font = 3,
-                               font.axis = 3,
-                               inset = 0.1,
-                               ltys = c(1,1),
-                               cols = c("#1F78B4", "#33A02C"))
-{
-  old_mar <- par()$mar # c(5, 4, 4, 2) + 0.1
-  par(mar = c(5, 5.5, 4, 2) + 0.1)
-  
-  xi1 <- x1$confint
-  xi2 <- x2$confint
-  ylab <- unlist(lapply(strsplit(rownames(xi1),split = " - "),paste0,collapse = " -\n"))
-  xi <- rbind(xi1,xi2)
-  xrange <- c(min(xi[, "lwr"]), max(xi[, "upr"]))
-  if (!is.finite(xrange[1])) 
-    xrange[1] <- min(xi[, "Estimate"])
-  if (!is.finite(xrange[2])) 
-    xrange[2] <- max(xi[, "Estimate"])
-  yvals <- c( (nrow(xi1):1)+notch, (nrow(xi1):1)-notch )
-  xlim <- xrange
-  ylim <- c(0.3, nrow(xi1) + 0.5)
-  plot(c(xi[, "lwr"], xi[, "upr"]), rep.int(yvals, 2), type = "n", 
-       axes = FALSE, xlab = NA,sub = NA, ylab = "", xlim = xlim, ylim = ylim)
-  box(col="grey50")
-  axis(1, cex.axis = cex.axis,font = 1)
-  axis(2, at = nrow(xi1):1, labels = ylab, las = 1,  cex.axis = cex.axis,font = 1)
-  # abline(h = yvals, lty = 1, lwd = 1, col = "lightgray")
-  abline(v = 0, lty = 3, lwd = 1,  col = "grey10")
-  left <- xi[, "lwr"]
-  left[!is.finite(left)] <- min(c(0, xlim[1] * 2))
-  right <- xi[, "upr"]
-  right[!is.finite(right)] <- max(c(0, xlim[2] * 2))
-  col_both <- rep(cols,each=nrow(xi1))
-  lty_both <- rep(ltys,each=nrow(xi1))
-  segments(left, yvals, right, yvals, col = col_both, lty = lty_both)
-  points(xi[, "lwr"], yvals, pch = "(", col = col_both)
-  points(xi[, "upr"], yvals, pch = ")", col = col_both)
-  points(xi[, "Estimate"], yvals, pch = 20, col = col_both)
-  if (attr(x1, "type") == "adjusted") {
-    subt <- paste(format(100 * attr(xi1, "conf.level"), 
-                         2), "% family-wise confidence level", sep = "")
-  } else {
-    subt <- paste(format(100 * attr(xi1, "conf.level"), 
-                         2), "% confidence level", sep = "")
-  }
-  legend("bottom",inset = 0.02,c("unadjusted","GxL adjusted"), horiz = T, lty = ltys, col = cols,
-         box.col = "grey10", text.font = 3, cex = cex_leg)
-  title(main,cex.main = cex.main, line= 2)
-  mtext(text = subt,side = 3, line = 1,cex = cex.subt, font = 1)
-  title(xlab = xlab, cex.lab = cex.lab)
-  box("figure",col="grey50" )
-  par(mar = old_mar)
-}
-
-
-

@@ -1,17 +1,20 @@
-# devtools::install_github(c("rstudio/shiny-incubator",
-#                            "trestletech/shinyAce",
-#                            "rstudio/DT",
-#                            "daattali/shinyjs",
-#                            'rstudio/ggvis'))
+# devtools::install_github(c(
+#   "hadley/dplyr",
+#   "rstudio/shiny",
+#   "rstudio/shiny-incubator",
+#   "trestletech/shinyAce",
+#   "daattali/shinyjs",
+#   "rstudio/DT",
+#   'rstudio/ggvis'))
 
-
-library(shiny)
-library(dplyr)
 library(multcomp)
+library(dplyr)
+library(shiny)
+library(shinyIncubator)
+library(shinyAce)
+library(shinyjs)
+library(DT)
 library(ggvis)
-
-## constants:
-alpha = 0.05
 
 ## read datasets:
 tbl_measures <- read.csv("data/app_measures_tbl_v1.csv") %>% tbl_df()
@@ -40,4 +43,4 @@ proc_name_list <- list(IMPC = proc_IMPC_vec, "Richer 2012" = proc_R2012_vec)
 
 ## functions:
 source("functions.R")
-source("plot_diagram.R")
+source("plot_functions.R")
