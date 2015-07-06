@@ -1,138 +1,143 @@
-library(shiny)
-library(dplyr)
-library(shinyIncubator)
-library(shinyAce)
-library(shinyjs)
-library(DT)
-
-shinyUI(fluidPage(
-  useShinyjs(),
-  tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css")),
-  navbarPage(title = HTML("Genotype-Lab Replicability Analyzer"),
+shinyUI(
+  navbarPage(title = HTML("Genotype-Lab Replicability Analyzer"),fluid = F,
              tabPanel("App",
-
-                        #actionButton("Example3b", "Example 3 Stats.",class="ResetBtn",icon = icon("refresh")),
-#                       actionButton("Example3a", "Example 3 param.",class="ResetBtn",icon = icon("refresh")),
-#                       actionButton("Example2b", "Example 2 Stats.",class="ResetBtn",icon = icon("refresh")),
-#                       actionButton("Example2a", "Example 2 param.",class="ResetBtn",icon = icon("refresh")),
-#                       actionButton("Example1b", "Example 1 Stats.",class="ResetBtn",icon = icon("refresh")),
-#                       actionButton("Example1a", "Example 1 param.",class="ResetBtn",icon = icon("refresh")),
-#                       HTML("<div style='clear: both;'></div>"),
-                     fluidRow(
-                        column(8, offset = 2,
-                               
-                               h2("Genotype-Lab Replicability Analyzer",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
-                               h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
-                               
-                               hr(),
-                               actionButton("Example1_step2", "Example 4 Stats.",class="ResetBtn",icon = icon("refresh")),
-                               actionButton("Example1_step1", "Example 4 param.",class="ResetBtn",icon = icon("refresh")),
-                               hr(),hr(),hr(),
-                               HTML("<h5><div class='step'>Step 1:</div> Fill in lab name and the genotype groups participated in the experiment ; Choose the pair-wise comparisons design ; Choose a unique experiment identifier or use default:</h5>"),
-                               
-                               wellPanel(
-                                 #selectizeInput("lab_name",'Lab name:', choices = lab_names_vec, multiple = F, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list or add one',onInitialize = I('function() { this.setValue(""); }'))),
-                                 textInput("lab_name", "Lab name:",value = "your_lab_name"),
-                                 radioButtons("expr_design",'Comparisons design:', choices = list("All pairs" = "Tukey","Many to one (Cases vs. control)" = "Dunnet"),inline = T),
-                                 conditionalPanel(condition = "input.expr_design == 'Tukey'",
-                                        selectizeInput("genotypes_tested_pairwise",'Genotypes tested:', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
-                                        ),
-                                 conditionalPanel(condition = "input.expr_design == 'Dunnet'",
-                                        selectizeInput("genotypes_tested_control",'Genotype tested (control group):', choices = genotypes_vec, multiple = FALSE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list one',onInitialize = I('function() { this.setValue(""); }'))),
-                                        selectizeInput("genotypes_tested_cases",'Genotypes tested (cases groups):', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
-                                 ),
-                                 radioButtons("proc_gender",'Gender:', choices = c("Males","Females","Males & Females"),inline = T),
-                                 textInput("experiment_identifier", "Experiment identifier:",value = ""),
-                                 actionButton("reset_experiment", " Reset",class="ResetBtn",icon = icon("refresh")), # add reset by package
-                                 HTML("<div style='clear: both;'></div>")
-                               ),
-                               
-                               HTML("<h5><div class='step'>Step 2:</div> Select procedure (test); Verify procedure's details in the link to Standard Operating Procedure; Fill-in any changed meta-data parameters:</h5>"),
-                               
-                               wellPanel(
-                                 selectizeInput("proc_name",'Procedure Name:',
-                                                choices = proc_name_list, #setNames(nm = as.character(unique(dat$Test)[c(7,4,1,2,3,5,6,8:(8+33))]),as.list(as.character(unique(dat$Test)[c(7,4,1,2,3,5,6,8:(8+33))])))),
-                                                options = list(onInitialize = I('function() { this.setValue(""); }'))),
-                                 htmlOutput("proc_SOP_link"),
-                                 p("Following are the default meta-data for the procedure. Correct or add values as used in your experiment:"),
-                                 aceEditor("meta_data_editor",".",theme="ambiance",mode = "r",height = "200px"),
-                                 numericInput("proc_age", "Age at testing [weeks]:", ""),
-                                 numericInput("proc_duration", "Procedure duration [min]:", ""),
-                                 HTML(
-                                   "<div class='form-group shiny-input-container'>
-                                        <label for='proc_notes'>Procedure notes:</label>
-                                        <textarea id='proc_notes' class='form-control' rows='2' cols='50' value=''></textarea>
-                                   </div> "
-                                 ),
-                                 actionButton("reset_proc", " Reset",class="ResetBtn",icon = icon("refresh")),
-                                 HTML("<div style='clear: both;'></div>")
-                                 #actionButton(inputId = "submit_editor",label = "Submit"),
-                               ),
-                               
-                               HTML("<h5><div class='step'>Step 3:</div> Select phenotypic measure\\s (note the meassuring unit and transformation):</h5>"),
-                               
-                               wellPanel(
-                                 selectizeInput("measure_name",'Measure',
-                                                choices = measure_name_list ,#  setNames(nm = paste0(dat$Meassure[1],"[",dat$unit[1],",",dat$trans[1],"]"),object = as.list(paste0(dat$Meassure[1],"[",dat$unit[1],",",dat$trans[1],"]"))),width = "auto"),
-                                                options = list(onInitialize = I('function() { this.setValue(""); }'))),
-                                 htmlOutput("selected_measure_details"),     
-                                 actionButton("reset_measure", " Reset",class="ResetBtn",icon = icon("refresh")),
-                                 HTML("<div style='clear: both;'></div>")
-                               ),
-                               
-                               HTML("<h5><div class='step'>Step 4:</div> Fill in the resulted statistics from your experiment:</h5>"),
-                               
-                               wellPanel(
-                                 conditionalPanel(
-                                   condition = 'input.genotypes_tested != NULL',
-                                   htmlOutput("stats_tbl") # stats table for each meassure, add note about multiplicity
-                                 ),
-                                 actionButton("reset_stats_tbl", " Reset",class="ResetBtn",icon = icon("refresh")),
-                                 HTML("<div style='clear: both;'></div>")
-                               ),
-                               
-                               HTML("<h5><div class='step'>Get Results:</div> </h5>"),
-                               
-                               wellPanel(
-                                 
-                                 #numericInput("alpha", "\\(\\alpha\\) - level:", "0.05")
-                                 withMathJax(HTML("<div class='form-group shiny-input-container'>
-                                                  <label for='alpha'>\\(\\alpha\\) - level:</label>
-                                                  <input id='alpha' type='number' class='form-control' value='0.05' style='display:inline-block; width:100px; min-width:100px'/></div>")),
-                                 checkboxInput("mult_correct","Apply multiplicity correction"),
-                                 checkboxInput("checkbox_agrees_share","Contribute the project by sending the experiment settings and results to our database."), # improve
-                                 actionButton("submit_data", "Submit", icon = icon("cog")),
-                                 
-                                 h5("Results:"),
-                                 
-                                 hidden(
-                                   div(
-                                     id = "results_sec",
-                                     h5("Summary Table:"),
-                                     DT::dataTableOutput("out_tbl", width = "85%"),
-                                     downloadButton("dl_button","Download results and inputs"),
-                                     h5("Comparisons Diagram:"),
-                                     div(plotOutput("ci_plot",width = "70%"), align = "center"),
-                                     h5("Confidence Intervals Plot:"),
-                                     div(plotOutput("dia_plot",width = "70%"), align = "center")
-                                   )
-                                 )
-                               )
-                        ) # end column
-                      ) # end fluid row
-             ),
+                      useShinyjs(),
+                      tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css")),
+                      #actionButton("Example3b", "Example 3 Stats.",class="ResetBtn",icon = icon("refresh")),
+                      #                       actionButton("Example3a", "Example 3 param.",class="ResetBtn",icon = icon("refresh")),
+                      #                       actionButton("Example2b", "Example 2 Stats.",class="ResetBtn",icon = icon("refresh")),
+                      #                       actionButton("Example2a", "Example 2 param.",class="ResetBtn",icon = icon("refresh")),
+                      #                       actionButton("Example1b", "Example 1 Stats.",class="ResetBtn",icon = icon("refresh")),
+                      #                       actionButton("Example1a", "Example 1 param.",class="ResetBtn",icon = icon("refresh")),
+                      #                       HTML("<div style='clear: both;'></div>"),
+                      
+                      actionButton("console","server console"),
+                      
+                      fixedRow(
+                        column(12,
+                          
+                          h2("Genotype-Lab Replicability Analyzer",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
+                          h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
+                          
+                          hr(),
+                          actionButton("Example1_step2", "Example 4 Stats.",class="ResetBtn",icon = icon("refresh")),
+                          actionButton("Example1_step1", "Example 4 param.",class="ResetBtn",icon = icon("refresh")),
+                          br(),br(),br(),
+                          HTML("<h5><div class='step'>Step 1:</div> Fill in lab name and the genotype groups participated in the experiment ; Choose the pair-wise comparisons design ; Choose a unique experiment identifier or use default:</h5>"),
+                          
+                          wellPanel(
+                            #selectizeInput("lab_name",'Lab name:', choices = lab_names_vec, multiple = F, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list or add one',onInitialize = I('function() { this.setValue(""); }'))),
+                            textInput("lab_name", "Lab name:",value = "your_lab_name"),
+                            radioButtons("expr_design",'Comparisons design:', choices = list("All pairs" = "Tukey","Many to one (Cases vs. control)" = "Dunnet"),inline = T),
+                            conditionalPanel(condition = "input.expr_design == 'Tukey'",
+                                             selectizeInput("genotypes_tested_pairwise",'Genotypes tested:', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
+                            ),
+                            conditionalPanel(condition = "input.expr_design == 'Dunnet'",
+                                             selectizeInput("genotypes_tested_control",'Genotype tested (control group):', choices = genotypes_vec, multiple = FALSE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list one',onInitialize = I('function() { this.setValue(""); }'))),
+                                             selectizeInput("genotypes_tested_cases",'Genotypes tested (cases groups):', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
+                            ),
+                            radioButtons("proc_gender",'Gender:', choices = c("Males","Females","Males & Females"),inline = T),
+                            textInput("experiment_identifier", "Experiment identifier:",value = ""),
+                            actionButton("reset_experiment", " Reset",class="ResetBtn",icon = icon("refresh")),
+                            HTML("<div style='clear: both;'></div>")
+                          ),
+                          
+                          HTML("<h5><div class='step'>Step 2:</div> Select procedure (test); Verify procedure's details in the link to Standard Operating Procedure; Fill-in any changed meta-data parameters:</h5>"),
+                          
+                          wellPanel(
+                            selectizeInput("proc_name",'Procedure Name:',
+                                           choices = proc_name_list, #setNames(nm = as.character(unique(dat$Test)[c(7,4,1,2,3,5,6,8:(8+33))]),as.list(as.character(unique(dat$Test)[c(7,4,1,2,3,5,6,8:(8+33))])))),
+                                           options = list(onInitialize = I('function() { this.setValue(""); }'))),
+                            htmlOutput("proc_SOP_link"),
+                            p("Following are the default meta-data for the procedure. Correct or add values as used in your experiment:"),
+                            aceEditor("meta_data_editor",".",theme="ambiance",mode = "r",height = "200px"),
+                            numericInput("proc_age", "Age at testing [weeks]:", ""),
+                            numericInput("proc_duration", "Procedure duration [min]:", ""),
+                            HTML(
+                              "<div class='form-group shiny-input-container'>
+                              <label for='proc_notes'>Procedure notes:</label>
+                              <textarea id='proc_notes' class='form-control' rows='2' cols='50' value=''></textarea>
+                              </div> "
+                            ),
+                            actionButton("reset_proc", " Reset",class="ResetBtn",icon = icon("refresh")),
+                            HTML("<div style='clear: both;'></div>")
+                            #actionButton(inputId = "submit_editor",label = "Submit"),
+                            ),
+                          
+                          HTML("<h5><div class='step'>Step 3:</div> Select phenotypic measure\\s (note the meassuring unit and transformation):</h5>"),
+                          
+                          wellPanel(
+                            selectizeInput("measure_name",'Measure',
+                                           choices = measure_name_list ,#  setNames(nm = paste0(dat$Meassure[1],"[",dat$unit[1],",",dat$trans[1],"]"),object = as.list(paste0(dat$Meassure[1],"[",dat$unit[1],",",dat$trans[1],"]"))),width = "auto"),
+                                           options = list(onInitialize = I('function() { this.setValue(""); }'))),
+                            htmlOutput("selected_measure_details"),     
+                            actionButton("reset_measure", " Reset",class="ResetBtn",icon = icon("refresh")),
+                            HTML("<div style='clear: both;'></div>")
+                          ),
+                          
+                          HTML("<h5><div class='step'>Step 4:</div> Fill in the resulted statistics from your experiment:</h5>"),
+                          
+                          wellPanel(
+                            conditionalPanel(
+                              condition = 'input.genotypes_tested != NULL',
+                              htmlOutput("stats_tbl") # stats table for each meassure, add note about multiplicity
+                            ),
+                            actionButton("reset_stats_tbl", " Reset",class="ResetBtn",icon = icon("refresh")),
+                            HTML("<div style='clear: both;'></div>")
+                          ),
+                          
+                          HTML("<h5><div class='step'>Step 5:</div></h5>"),
+                          
+                          wellPanel(
+                            withMathJax(HTML("<div class='form-group shiny-input-container'>
+                                             <label for='alpha'>\\(\\alpha\\) - level:</label>
+                                             <input id='alpha' type='number' class='form-control' value='0.05' min='0' max='0.5' step='0.01',style='display:inline-block; width:100px; min-width:100px'/></div>")),
+                            checkboxInput("mult_correct","Apply multiplicity correction"),
+                            checkboxInput("checkbox_agrees_share","Contribute the project by sending the experiment settings and results to our database."), # improve
+                            div(id = "wrap_submit_data", actionButton("submit_data", "Submit", icon = icon("cog")))
+                            ),
+                          
+                          HTML("<h5><div class='step'>Results:</div> </h5>"),
+                          wellPanel(
+                           # hidden(
+                              withTags(
+                                div(id = "results_sec",
+                                    label(" Summary Table:"),
+                                    DT::dataTableOutput("out_tbl", width = "80%"),
+                                    br(),
+                                    label(" Comparisons Diagram:"),
+                                    hidden(div(id="dia_plot_h", ggvisOutput("dia_plot"), align = "center",width = "70%")),
+                                    div(imageOutput("dia_plot_ph",width = "auto",height = "auto"), align = "center"),
+                                    label(" Confidence Intervals Plot:"),
+                                    hidden(div(id="ci_plot_h",plotOutput("ci_plot",width = "70%"), align = "center")),
+                                    div(imageOutput("ci_plot_ph",width = "auto",height = "auto"), align = "center"),
+                                    br(),
+                                    p("Download the detailed results in a text file or the table only in comma-separated file:"),
+                                    radioButtons("dl_type", label = NULL, choices = list("Detailed (.txt file)"="all","Table only (.csv file)"="table")),
+                                    downloadButton("dl_button","Download",class = "disabled")
+#                                     actionButton(inputId = "dl_button", label = "Download", icon = icon("download"),
+#                                                  class = "shiny-download-link", href = "", target = "_blank")  
+                                    
+                                )
+                              )
+                            #)
+                          ),
+                          wellPanel(p("footer"))
+                            ) # end column
+                        ) # end row
+                      ), # tabPanel
              
              tabPanel("Introduction",
-                      fluidRow(
-                        column(6,offset = 3,
+                      fixedRow(
+                        column(8,offset = 2,
                                h3("Introduction"),
                                p("This application takes mouse phenotyping results measured in your laboratory, and estimates how likely they are to be replicated in other laboratories, using the Random Lab Model with the GxL-adjusting method, as detailed in our manuscript &ldquo;Assessing the replicability of single-laboratory discoveries in phenotyping experiments&rdquo; (submitted)."),
                                p("The application takes as input single-lab phenotyping results from animals belonging to several genotype groups (for example: knockouts vs wildtype controls). The method outputs the p-value of the difference between the groups, using the standard t-test or ANOVA, and the &ldquo;r-value&rdquo; adjusted using previously estimated Genotype-by-Laboratory interaction (GxL). This replicability across laboratory p-value is the more reliable p-value for assessing the replicability of any single-lab genotype effect."),
                                p("Knowing the relevant GxL is the difficult part. The application is therefore limited to phenotypic tests, phenotyping measures and testing conditions for which we can currently us by contributing your phenotyping results and specifying the housing and testing conditions in your laboratory. These will be used to calculate a better estimate of GxL variability, based on more genotypes, more laboratories and more conditions, that will serve you and other researchers over the world in ensuring the replicability of their future phenotyping results. You also have the option not to contribute your results, for example if you do not trust them, or if you are only testing the application with hypothetical values.")
                         ))),
              tabPanel("Instructions",
-                      fluidRow(
-                        column(6,offset = 3,
+                      fixedRow(
+                        column(8,offset = 2,
                                HTML("
                                     <h3 id='instructions'>Instructions</h3>
                                     <h4 id='a-example'>A. Example</h4>
@@ -163,9 +168,9 @@ shinyUI(fluidPage(
                                     <hr>
                                     <h4 id='references'>References</h4>
                                     <p>S. H. Richter, J. P. Garner, B. Zipser, L. Lewejohann, N. Sachser, C. Touma, B. Schindler, S. Chourbaji, C. Brandwein, P. Gass, N. van Stipdonk, J. van der Harst, B. Spruijt, V. V?ikar, D. P. Wolfer, H. W?rbel, <strong>Effect of population heterogenization on the reproducibility of mouse behavior: a multi-laboratory study.</strong> <em>PLoS One</em> 6(1):e16461 (2011). doi: 10.1371/journal.pone.0016461.</p>")
-                               )
                         )
                       )
              )
   )
 )
+

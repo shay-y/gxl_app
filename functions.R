@@ -125,11 +125,6 @@ plot_confint_glht <- function (x1,x2, xlab = "Measure",
   box("figure",col="grey50" )
   par(mar = old_mar)
 }
-# x <- o$co$summ
-# x_new <- o$co$summ_new
 
-plot_diagram <- function(x,x_new)
-{
-  plot(x$test$pvalues,x_new$test$pvalues)
-}
+
 

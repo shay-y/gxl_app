@@ -1,10 +1,3 @@
-library(shiny)
-library(dplyr)
-library(shinyIncubator)
-library(shinyAce)
-library(shinyjs)
-library(DT)
-
 humanDate <- function() format(Sys.time(), "%Y_%m_%d")
 
 shinyServer(function(input, output, session) {
@@ -16,20 +9,22 @@ shinyServer(function(input, output, session) {
   })
   
   ## when inputs in step 1 are changed, update the experiment identifier
-  reactive({
+  observe({
     lab_name <- gsub('([[:punct:]])|\\s+','_',input$lab_name)
-    if (input$expr_design=='Pairwise Comparisons')
+    genotypes_tested <- NULL
+    expr_design <- NULL
+    if (input$expr_design=='Tukey')
     {
       expr_design <- "Pairwise"
       genotypes_tested <- input$genotypes_tested_pairwise
     }
       
-    if (input$expr_design=='Control vs. Cases')
+    if (input$expr_design=='Dunnet')
     {
       expr_design <- "CtrlCases"
       genotypes_tested <- c(input$genotypes_tested_control,input$genotypes_tested_cases)
     }
-      
+    
     genotypes_tested_init <- paste(substr(genotypes_tested,1,1),collapse = ".")
     proc_gender <- switch(input$proc_gender,
            "Males" = "Males",
@@ -145,7 +140,7 @@ shinyServer(function(input, output, session) {
   ## when meassure details retrived present S_int_2 coef units and transformation
   output$selected_measure_details <- renderUI({
     S2_ratio <- selected_measure_details()$S2_ratio %>% 
-      round(4)
+      format(digits=3,nsmall=3)
     parameter_trans_symbol <- selected_measure_details()$parameter_trans_symbol %>% 
       as.character()
     parameter_unit <- selected_measure_details()$parameter_unit %>% 
@@ -155,7 +150,7 @@ shinyServer(function(input, output, session) {
                      "<br><strong>Transformation:</strong> ",parameter_trans_symbol))
   })
   
-# ---- reset operation ----
+# ---- reset operations ----
 
   observeEvent(input$reset_experiment, {
     reset("lab_name"); reset("proc_gender"); reset("expr_design") 
@@ -195,95 +190,145 @@ shinyServer(function(input, output, session) {
     
     type <- ifelse(input$mult_correct,"single-step","none")
     alpha <- input$alpha
-    
+
     # read input to df
     ids_vec <- c(paste0("input$'",genotypes_tested,"_mean'"),
                  paste0("input$'",genotypes_tested,"_SD'"),
                  paste0("input$'",genotypes_tested,"_N'"))
     
-    stats_vec <- sapply(ids_vec, function(x)eval(parse(text=x)))
-    stats_mat <- matrix(stats_vec,ncol = 3)
-    
+    stats_vec <- unlist(sapply(ids_vec, function(x)eval(parse(text=x))))
+    if (is.null(stats_vec))
+      return(NULL)
+    stats_matrix <- matrix(stats_vec,ncol = 3)
+    colnames(stats_matrix) <- c("mean","SD","N")
+    rownames(stats_matrix) <- genotypes_tested
+      
     # create comparisons object
-    co <- gxl_adjust(type = type, name_vec = genotypes_tested, mean_vec = stats_mat[,1], SD_vec = stats_mat[,3],
-                     N_vec = stats_mat[,3], design = expr_design, S2_int, n_lab, n_genotype, alpha = alpha)
+    co <- gxl_adjust(type = type, name_vec = genotypes_tested,
+                     mean_vec = stats_matrix[,1], SD_vec = stats_matrix[,2], N_vec = stats_matrix[,3],
+                     design = expr_design, S2_int, n_lab, n_genotype, alpha = alpha)
     tbl_res <- get_res_table(co)
     
-    return(list(co=co,tbl_res=tbl_res,measure_details=measure_details,stats_mat=stats_mat,expr_design=expr_design,genotypes_tested=genotypes_tested))
-  })
-  
-  observeEvent(input$submit_data, {
-    shinyjs::show("results_sec")
-  })
+    measure_list <- measure_details[c("Gender","parameter_id","procedure_name","parameter_name","S2_interaction","parameter_trans_symbol","parameter_unit","S2_ratio")]
+    details <- sapply(measure_list,as.character)
+    
+    return(list(
+      measure_details=measure_details,
+      tbl_res=tbl_res,
+      co=co,
+      stats_matrix=stats_matrix,
+      genotypes_tested = genotypes_tested,
+      expr_design = expr_design,
+      alpha=alpha,
+      input_stats_matrix = stats_matrix,
+      details = details,
+      results_table=tbl_res))
+  },ignoreNULL = F)
   
   ## when main object created, use it to print table
   output$out_tbl <- DT::renderDataTable({
-    o <<- get_comparisons_object()
-    tbl_res <- o$tbl_res
-    
-    # table sketch
-    sketch <- withTags(table(
-      class = 'display cell-border nowrap compact',
-      thead(
-        tr(
-          th(rowspan = 2, 'Pair'),
-          th(rowspan = 2, HTML('Unadjusted<br> p-value')),
-          th(rowspan = 2, HTML('GxL adjusted<br> p-value')),
-          th(rowspan = 2, 'Difference'),
-          th(colspan = 2, 'Unadjusted CI'),
-          th(colspan = 2, 'GxL adjusted CI')
-        ),
-        tr(
-          lapply(rep(c('lwr', 'upr'), 2), th)
-        )
-      )
-    ))
+    input$alpha # invalidate when alpha is changed (for immidiate reactivity)
+    o <- get_comparisons_object()
+    if (is.null(o))
+    {
+      tbl_NAs <- data.frame(as.list(rep(NA,7)))
+      colnames(tbl_NAs) <- c("p_value","p_value_adj", "est", "ci_lwr", "ci_upr",  "ci_lwr_adj", "ci_upr_adj")
+      rownames(tbl_NAs) <- "-"
+      get_datatable(tbl_NAs,NULL)
+    }else{
+      get_datatable(o$tbl_res,o$measure_details$parameter_name)
+    }
+  })
   
-    # calculate siginificant digits for table (like display in xtable)
-    sig_digit_est <- 
-      c(tbl_res[,5]-tbl_res[,4],tbl_res[,3:5]) %>% # take the CIs lengths and all estimates values
-      abs() %>% min() %>%                                      # the the minimum of thier absolute values 
-      log(10) %>% {3-floor(.)} %>%                             # get its approximate order of magnitude, plus 3 is the desired digits to display
-      max(3)                                                   # or 3 (the maximum of both)
-    sig_digit_pv <- 
-      tbl_res[,1] %>% min() %>%                            # take the minimum pv  abs() %>% min() %>% # the the minimum of thier absolute values 
-      log(10) %>% {2-floor(.)} %>%                             # get its approximate order of magnitude, plus 3 is the desired digits to display
-      max(4)                                                   # or 4 (the maximum of both)
-    
-    # create DT object
-    caption = htmltools::tags$caption(
-      style = 'caption-side: bottom; text-align: center;padding;0;',
-      em(paste("Measure:",o$measure_details$parameter_name))
-    )
-    
-    datatable(tbl_res,caption = caption,
-              selection = "none", container = sketch,escape = T,
-              options = list(paging =  F, dom='t', ordering = F, processing = T)) %>% 
-      formatRound(1:2,sig_digit_pv) %>% 
-      formatRound(3:8,sig_digit_est)
+  ## when main object created, plot diagram
+  observe({
+    o <- get_comparisons_object()
+    if(!is.null(o))
+    {
+      bind_shiny(vis = reactive({
+        tbl_res <- o$tbl_res[,1:2]
+        pair_names <- matrix(unlist((strsplit(rownames(tbl_res)," - "))),ncol=2,byrow = T)
+        tbl_pairs <- data.frame(name1 = pair_names[,1],name2 = pair_names[,2],tbl_res)
+        tbl_singles <- data.frame(name=o$genotypes_tested,mean=o$stats_matrix[,1])
+        plot_diagram(tbl_singles,tbl_pairs,input$alpha)
+      }), plot_id = "dia_plot",session = session)
+    }
+  })
+  
+  observe({
+    if (input$submit_data)
+      show("dia_plot_h")
+  })
+  
+  output$dia_plot_ph <- renderImage({
+    list(src = "WWW/placeholder1.svg",alt = "...")
+  },deleteFile = F)
+  
+  observe({
+    if (input$submit_data)
+      hide("dia_plot_ph")
   })
   
   ## when main object created, plot cis
   output$ci_plot <- renderPlot({
+    input$alpha # invalidate when alpha is changed (for immidiate reactivity)
     o <- get_comparisons_object()
-    plot_confint_glht(o$co$ci,o$co$ci_new,xlab = o$measure_details$parameter_name)
+    if(!is.null(o))
+      plot_confint_glht(o$co$ci,o$co$ci_new,xlab = o$measure_details$parameter_name)
+    },res = 85,bg = "white")
+  
+  outputOptions(output,"ci_plot",suspendWhenHidden = F)
+  
+  observe({
+    if (input$submit_data)
+      show("ci_plot_h")
   })
   
-  output$dia_plot <- renderPlot({
-    o <- get_comparisons_object()
-    tbl_res <- o$tbl_res[,1:2]
-    pair_names <- matrix(unlist((strsplit(rownames(tbl_res)," - "))),ncol=2,byrow = T)
-    tbl_pairs <- data.frame(name1 = pair_names[,1],name2 = pair_names[,2],tbl_res)
-    tbl_singles <- data.frame(name=o$genotypes_tested,mean=o$stats_mat[,1])
-    plot_diagram(tbl_singles,tbl_pairs)
+  output$ci_plot_ph <- renderImage({
+    list(src = "WWW/placeholder1.svg",alt = "...")
+  },deleteFile = F)
+  
+  observe({
+    if (input$submit_data)
+      hide("ci_plot_ph")
   })
+
+  observe(label="console",{
+    if(input$console != 0) {
+      options(browserNLdisabled=TRUE)
+      saved_console<-".RDuetConsole"
+      if (file.exists(saved_console)) load(saved_console)
+      isolate(browser())
+      save(file=saved_console,list=ls(environment()))
+    }
+  })
+
+  output$dl_button <- downloadHandler(
+    filename = function() 
+    {
+      if (input$dl_type=="all")
+        paste0("Results_",input$experiment_identifier,".txt")
+      else
+        paste0("Table_",input$experiment_identifier,".csv")
+    }
+      ,
+    content  = function(file)
+    {
+      o <- get_comparisons_object()
+      if (input$dl_type=="all")
+      {
+        capture.output(o[-(1:4)], file = file)
+      } else {
+        write.csv(o$results_table,file)
+      }
+    }
+  )
   
-  
-  
-#   output$dh <- downloadHandler(filename = function() {paste0("Results_",gsub(" ", "_", input$Measure),".csv")},
-#                                content = function(file) {write.csv(maketable(),file,row.names = FALSE)})
-#     
-  
+  observe({
+    if (input$submit_data>0)
+      removeClass(id = "dl_button", class = "disabled")
+  })
+
   ## Example 1:
   
   observeEvent(input$Example1_step1,{

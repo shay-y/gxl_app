@@ -70,6 +70,22 @@ font-size: 1.3em !important;
     margin-right: 0.5em;
 }
 
+.step2{
+
+  height: 0.5em;
+  width: 0.5em;
+  border-radius: 0.4em;
+  display: inline-block;
+  margin-right: 0.1em;
+  margin-bottom: 0.2em;
+  
+}
+
+#results_sec > label{
+    border-bottom: solid 2px #7BA543;
+}
+
+
 #stats_tbl .tb { 
   width: 70px;
   color: #555;
@@ -97,9 +113,22 @@ font-size: 1.3em !important;
 
 .ResetBtn {font-size: 14px; float:right;}
 
+#wrap_submit_data{
+  padding: 2px;
+  border: solid 2px #88B54D;
+  border-radius: 7px;
+  display: inline-block;
+  box-shadow: 1px 1px 1px #BBB;
+}
+
+  
+
+
+
 .nav > li > a{
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
-	}
+  text-shadow: 1px 0 1px rgba(0, 0, 0, 0.2);
+  color: #555;
+  }
 
 .navbar-inner {
   background-color: #d6d6d6;

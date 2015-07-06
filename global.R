@@ -8,6 +8,7 @@
 library(shiny)
 library(dplyr)
 library(multcomp)
+library(ggvis)
 
 ## constants:
 alpha = 0.05
@@ -39,3 +40,4 @@ proc_name_list <- list(IMPC = proc_IMPC_vec, "Richer 2012" = proc_R2012_vec)
 
 ## functions:
 source("functions.R")
+source("plot_diagram.R")
