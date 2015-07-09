@@ -2,36 +2,65 @@ humanDate <- function() format(Sys.time(), "%Y_%m_%d")
 
 shinyServer(function(input, output, session) {
   
-  ## when control is selected updated the choises for cases:
-  observe({
-    control_selected <- input$genotypes_tested_control
-    updateSelectizeInput(session,inputId = "genotypes_tested_cases", choices = genotypes_vec[genotypes_vec!=control_selected], options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
-  })
+  values <- reactiveValues(Example1_iteration = 0, Example2_iteration = 0, genotypes_tested = NULL,expr_design_syn = NULL)
   
-  ## when inputs in step 1 are changed, update the experiment identifier
-  observe({
-    lab_name <- gsub('([[:punct:]])|\\s+','_',input$lab_name)
-    genotypes_tested <- NULL
-    expr_design <- NULL
+#---- input manipulations:----  
+  
+  ## when experiment is selected update values expr_design_syn and genotypes_tested
+  output$genotype_selection_block <- renderUI({
     if (input$expr_design=='Tukey')
     {
-      expr_design <- "Pairwise"
-      genotypes_tested <- input$genotypes_tested_pairwise
+      values$expr_design_syn <- "Pairwise"
+      out <- div(selectizeInput("genotypes_tested_pairwise",'Genotypes tested:', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }'))))
     }
       
     if (input$expr_design=='Dunnet')
     {
-      expr_design <- "CtrlCases"
-      genotypes_tested <- c(input$genotypes_tested_control,input$genotypes_tested_cases)
+      values$expr_design_syn <- "CtrlCases"
+      out <- div(
+        selectizeInput("genotypes_tested_control",'Genotype tested (control group):', choices = genotypes_vec, multiple = FALSE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list one',onInitialize = I('function() { this.setValue(""); }'))),
+        selectizeInput("genotypes_tested_cases",'Genotypes tested (cases groups):', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
+      )
     }
+    return(out)
+  })
+  
+  observe({
+    if (input$expr_design=='Tukey')
+    {
+      values$genotypes_tested <- input$genotypes_tested_pairwise
+    }
+    if (input$expr_design=='Dunnet')
+    {
+      values$genotypes_tested <- c(input$genotypes_tested_control,input$genotypes_tested_cases)
+    }
+  })
+ 
+  
+  ## when control is selected updated the choises for cases:
+  observeEvent(input$genotypes_tested_control,{
+    control_selected <- input$genotypes_tested_control
+      updateSelectizeInput(session,inputId = "genotypes_tested_cases", choices = genotypes_vec[genotypes_vec!=control_selected], options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
+  })
+  
+  ## when inputs in step 1 are changed, update the experiment identifier
+  observeEvent({input$lab_name; values$genotypes_tested; input$proc_gender; values$expr_design_syn},{
     
-    genotypes_tested_init <- paste(substr(genotypes_tested,1,1),collapse = ".")
-    proc_gender <- switch(input$proc_gender,
+    lab_name_init <- gsub('([[:punct:]])|\\s+','_',input$lab_name)
+    genotypes_tested_init <- paste(substr(values$genotypes_tested,1,1),collapse = ".")
+    proc_gender_init <- switch(input$proc_gender,
            "Males" = "Males",
            "Females" = "Females",
            "Males & Females" = "Both")
-    name <- paste(lab_name,expr_design,genotypes_tested_init,proc_gender,humanDate(),sep = "_")
-    if (is.null(genotypes_tested) || genotypes_tested=="")
+    expr_design_init <-  values$expr_design_syn
+    
+    name <- paste(lab_name_init,
+                  expr_design_init,
+                  genotypes_tested_init,
+                  proc_gender_init,
+                  humanDate(),sep = "_")
+    
+    if (is.null(values$genotypes_tested) || values$genotypes_tested=="")
       reset("experiment_identifier")
     else
       updateTextInput(session,"experiment_identifier",value = name)
@@ -64,6 +93,7 @@ shinyServer(function(input, output, session) {
   })
   
   ## when another procedure is selected, render SOP link 
+  
   output$proc_SOP_link <- renderText({
     proc_name_selected <- input$proc_name
     
@@ -92,39 +122,40 @@ shinyServer(function(input, output, session) {
     
     if (expr_design=='Tukey')
     {
-      genotypes_tested <- input$genotypes_tested_pairwise
-      if (is.null(genotypes_tested))
+      if (is.null(values$genotypes_tested))
         return ()
       else
       {
         html <- "<table><thead><tr><th>Group</th><th>Mean</th><th>SD</th><th>N</th></tr></thead><tbody>"
-        for (g in genotypes_tested)
+        for (g in values$genotypes_tested)
           html <- paste0(html,"<tr><td>",g,"</td><td><input class='tb' id='",g,"_mean' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,"_SD' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,"_N' type='number' value='' step='1'/></td></tr>")
         html <- paste0(html,"</tbody></table>")
-        return(list(tbl_html=HTML(html),genotypes_tested = genotypes_tested , expr_design = expr_design))
+        return(list(tbl_html=HTML(html)))
       }
     }
     
     if (expr_design=='Dunnet')
     {
-      genotypes_tested <- c(input$genotypes_tested_control,input$genotypes_tested_cases)
-      if (is.null(genotypes_tested))
+      if (is.null(values$genotypes_tested))
         return ()
       else
       {
         html <- "<table><thead><tr><th>Group</th><th>Mean</th><th>SD</th><th>N</th></tr></thead><tbody>"
-        g <- genotypes_tested[1]
+        g <- values$genotypes_tested[1]
         html <- paste0(html,"<tr><td>",g,"</td><td><input class='tb' id='",g,"_mean' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,"_SD' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,"_N' type='number' value='' step='1'/></td></tr>")
         html <- paste0(html,"<tr><td colspan='4'><hr></td></tr>")
-        for (g in genotypes_tested[-1])
+        for (g in values$genotypes_tested[-1])
           html <- paste0(html,"<tr><td>",g,"</td><td><input class='tb' id='",g,"_mean' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,"_SD' type='number' value='' step = 'any'/></td><td><input class='tb' id='",g,"_N' type='number' value='' step='1'/></td></tr>")
         html <- paste0(html,"</tbody></table>")
-        return(list(tbl_html=HTML(html),genotypes_tested = genotypes_tested , expr_design = expr_design))
+        return(list(tbl_html=HTML(html)))
       }
     }
   })
   
   output$stats_tbl <- renderUI(create_stats_tbl()$tbl_html)
+  
+  outputOptions(output, "stats_tbl", suspendWhenHidden = FALSE)
+  
   
   ## when measure is selected get meassure details
   selected_measure_details <- reactive({
@@ -140,7 +171,7 @@ shinyServer(function(input, output, session) {
   ## when meassure details retrived present S_int_2 coef units and transformation
   output$selected_measure_details <- renderUI({
     S2_ratio <- selected_measure_details()$S2_ratio %>% 
-      format(digits=3,nsmall=3)
+      format(digits=5,nsmall=3)
     parameter_trans_symbol <- selected_measure_details()$parameter_trans_symbol %>% 
       as.character()
     parameter_unit <- selected_measure_details()$parameter_unit %>% 
@@ -153,8 +184,13 @@ shinyServer(function(input, output, session) {
 # ---- reset operations ----
 
   observeEvent(input$reset_experiment, {
-    reset("lab_name"); reset("proc_gender"); reset("expr_design") 
-    reset("genotypes_tested_pairwise"); reset("genotypes_tested_control"); reset("genotypes_tested_cases")
+    reset("lab_name")
+    reset("proc_gender") 
+    updateSelectizeInput(session,"genotypes_tested_pairwise", options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
+    updateSelectizeInput(session,"genotypes_tested_control", options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list one',onInitialize = I('function() { this.setValue(""); }')))
+    updateSelectizeInput(session,"genotypes_tested_cases", options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
+    reset("expr_design")
+    
     updateSelectizeInput(session,inputId = "proc_name",options = list(onInitialize = I('function() { this.setValue(""); }')))
     reset("proc_age")
     reset("proc_duration")
@@ -178,12 +214,11 @@ shinyServer(function(input, output, session) {
   get_comparisons_object <- eventReactive(input$submit_data,{
     
     # read data:
-    stats_tbl <- create_stats_tbl()
     measure_details <- selected_measure_details()
     
-    genotypes_tested <- stats_tbl$genotypes_tested
-    expr_design <- stats_tbl$expr_design
-   
+    genotypes_tested <- values$genotypes_tested
+    expr_design <- input$expr_design
+    genotypes_tested <- values$genotypes_tested
     S2_int <- measure_details$S2_interaction
     n_lab <- measure_details$n_lab
     n_genotype <- measure_details$n_genotype
@@ -240,6 +275,8 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  outputOptions(output,"out_tbl",suspendWhenHidden = F)
+  
   ## when main object created, plot diagram
   observe({
     o <- get_comparisons_object()
@@ -255,6 +292,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
+
   observe({
     if (input$submit_data)
       show("dia_plot_h")
@@ -274,8 +312,16 @@ shinyServer(function(input, output, session) {
     input$alpha # invalidate when alpha is changed (for immidiate reactivity)
     o <- get_comparisons_object()
     if(!is.null(o))
+    {
       plot_confint_glht(o$co$ci,o$co$ci_new,xlab = o$measure_details$parameter_name)
-    },res = 85,bg = "white")
+#      plot_h <<- nrow(o$tbl_res)
+    }
+      
+    
+    },res = 85,bg = "white"
+#    ,height = function() {session$clientData$output_plot1_width* 0.7 *(1/3)}
+  )
+  
   
   outputOptions(output,"ci_plot",suspendWhenHidden = F)
   
@@ -293,15 +339,15 @@ shinyServer(function(input, output, session) {
       hide("ci_plot_ph")
   })
 
-  observe(label="console",{
-    if(input$console != 0) {
-      options(browserNLdisabled=TRUE)
-      saved_console<-".RDuetConsole"
-      if (file.exists(saved_console)) load(saved_console)
-      isolate(browser())
-      save(file=saved_console,list=ls(environment()))
-    }
-  })
+#   observe(label="console",{
+#     if(input$console != 0) {
+#       options(browserNLdisabled=TRUE)
+#       saved_console<-".RDuetConsole"
+#       if (file.exists(saved_console)) load(saved_console)
+#       isolate(browser())
+#       save(file=saved_console,list=ls(environment()))
+#     }
+#   })
 
   output$dl_button <- downloadHandler(
     filename = function() 
@@ -328,55 +374,100 @@ shinyServer(function(input, output, session) {
     if (input$submit_data>0)
       removeClass(id = "dl_button", class = "disabled")
   })
-
+# ---- Examples ----
+  
   ## Example 1:
   
-  observeEvent(input$Example1_step1,{
-    updateTextInput(session, "lab_name",value = "my_lab")
+  observeEvent(input$Example1,{
+    updateTextInput(session, "lab_name",value = "Exmpl1")
     updateRadioButtons(session,"expr_design",selected = "Tukey")
-    updateSelectizeInput(session, "genotypes_tested_pairwise", selected = c("C57BL/6N","DBA/2","AKR/J"))
+    updateSelectizeInput(session,"genotypes_tested_pairwise",selected = c("g1","g2","g3","g4"))
     updateRadioButtons(session,inputId =  "proc_gender",selected = "Females")
     updateSelectizeInput(session, "proc_name", selected = "Open Field Test")
     updateNumericInput(session,inputId =  "proc_age", value = "12")
     updateNumericInput(session,"proc_duration", value = 10)
-    updateSelectInput(session,inputId = "measure_name",selected = "bolus count")
-    updateSelectInput(session,inputId = "measure_name",selected = "bolus count")
   })
   
-  observeEvent(input$Example1_step2,{
-    updateTextInput(session, inputId = "C57BL/6N_mean",value = 4.438)
-    updateTextInput(session, inputId = "C57BL/6N_SD",value = 3.204)
-    updateTextInput(session, inputId = "C57BL/6N_N",value = 16)
-    updateTextInput(session, inputId = "DBA/2_mean",value = 10.938)
-    updateTextInput(session, inputId = "DBA/2_SD",value = 4.074)
-    updateTextInput(session, inputId = "DBA/2_N",value = 16)
-    updateTextInput(session, inputId = "AKR/J_mean",value = 15)
-    updateTextInput(session, inputId = "AKR/J_SD",value = 3)
-    updateTextInput(session, inputId = "AKR/J_N",value = 12)
+  observeEvent(input$proc_name,{
+    if (input$Example1 > values$Example1_iteration)
+    {
+      updateSelectInput(session,inputId = "measure_name",selected = "bolus count")
+      updateTextInput(session, inputId = "g1_mean",value = 0.84)
+      updateTextInput(session, inputId = "g2_mean",value = 0.19)
+      updateTextInput(session, inputId = "g3_mean",value = 1.52)
+      updateTextInput(session, inputId = "g4_mean",value = 1.27)
+      
+      updateTextInput(session, inputId = "g1_SD",value = 0.38)
+      updateTextInput(session, inputId = "g2_SD",value = 0.30)
+      updateTextInput(session, inputId = "g3_SD",value = 0.37)
+      updateTextInput(session, inputId = "g4_SD",value = 0.35)
+      
+      updateTextInput(session, inputId = "g1_N",value = 10)
+      updateTextInput(session, inputId = "g2_N",value = 16)
+      updateTextInput(session, inputId = "g3_N",value = 12)
+      updateTextInput(session, inputId = "g4_N",value = 12)
+      
+      updateCheckboxInput(session,"mult_correct",value = T)
+      
+      values$Example1_iteration <- input$Example1
+    }
+  })
+  
+  ## Example 2:
+  
+#   output$ctrl <- renderText({
+#     input$gctrl_mean
+#   })
+  
+  observeEvent(input$Example2,{
+    updateTextInput(session, "lab_name",value = "Exmpl2")
+    updateRadioButtons(session,"expr_design",selected = "Dunnet")  
+    updateRadioButtons(session,inputId =  "proc_gender",selected = "Males")
+    updateSelectizeInput(session, "proc_name", selected = "Grip-Strength")
+    updateNumericInput(session,inputId =  "proc_age", value = "10")
+    updateNumericInput(session,"proc_duration", value = 20)
+  })
+
+  observeEvent(input$proc_name,{
+    if (input$Example2 > values$Example2_iteration)
+      updateSelectInput(session,inputId = "measure_name",selected = "Forelimb grip strength normalised against body weight")
+  })
+  
+  observeEvent(input$expr_design,{
+    if (input$Example2 > values$Example2_iteration)
+      updateSelectizeInput(session,"genotypes_tested_control",selected = "gctrl")
+  })
+      
+  observeEvent(input$genotypes_tested_control,{
+    if (input$Example2 > values$Example2_iteration)
+       updateSelectizeInput(session,"genotypes_tested_cases",selected = c("g1","g2","g3"))
+  })
+
+  observeEvent(input$genotypes_tested_cases,{
+    if (input$Example2 > values$Example2_iteration)
+    {
+      updateTextInput(session, inputId = "g1_mean",value = 1.84)
+      updateTextInput(session, inputId = "g2_mean",value = 1.99)
+      updateTextInput(session, inputId = "g3_mean",value = 2.55)
+      
+      updateTextInput(session, inputId = "g1_SD",value = 0.42)
+      updateTextInput(session, inputId = "g2_SD",value = 0.18)
+      updateTextInput(session, inputId = "g3_SD",value = 0.37)
+      
+      updateTextInput(session, inputId = "g1_N",value = 16)
+      updateTextInput(session, inputId = "g2_N",value = 16)
+      updateTextInput(session, inputId = "g3_N",value = 16)
+    }
+  })
+  
+  observeEvent(input$g1_mean,{
+    if (input$Example2 > values$Example2_iteration)
+    {
+      Sys.sleep(1)
+      updateTextInput(session, inputId = "gctrl_mean",value = 2.27)
+      updateTextInput(session, inputId = "gctrl_SD",value = 0.45)
+      updateTextInput(session, inputId = "gctrl_N",value = 12)
+      values$Example2_iteration <- input$Example2
+    }
   })
 })
-  
-#   
-#   ## Example 2:
-#   "total path moved"
-#   updateTextInput(session, inputId = "C57BL/6N.mean",value = 59.861)
-#   updateTextInput(session, inputId = "C57BL/6N.SD",value = 5.977)
-#   updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
-#   updateTextInput(session, inputId = "DBA/2.mean",value = 70.768)
-#   updateTextInput(session, inputId = "DBA/2.SD",value = 14.279)
-#   updateTextInput(session, inputId = "DBA/2.N",value = 16)
-#   "path moved within centre"
-#   updateTextInput(session, inputId = "C57BL/6N.mean",value = 49.513)
-#   updateTextInput(session, inputId = "C57BL/6N.SD",value = 6.411)
-#   updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
-#   updateTextInput(session, inputId = "DBA/2.mean",value = 56.814)
-#   updateTextInput(session, inputId = "DBA/2.SD",value = 17.330)
-#   updateTextInput(session, inputId = "DBA/2.N",value = 16)
-#   updateSelectInput(session,inputId = "Measure",selected = "path moved within exploration zone 1")
-#   updateTextInput(session, inputId = "C57BL/6N.mean",value = 15.544)
-#   updateTextInput(session, inputId = "C57BL/6N.SD",value = 5.192)
-#   updateTextInput(session, inputId = "C57BL/6N.N",value = 16)
-#   updateTextInput(session, inputId = "DBA/2.mean",value = 20.346)
-#   updateTextInput(session, inputId = "DBA/2.SD",value = 7.783)
-#   updateTextInput(session, inputId = "DBA/2.N",value = 16)
-#   

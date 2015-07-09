@@ -34,6 +34,7 @@ font-size: 1.3em !important;
 .selectize-input, .form-control{
   width:initial;
   min-width: 250px;
+  font-size: 15px
 }
 
 .col-sm-8, .col-sm-offset-2 {

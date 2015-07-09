@@ -1,6 +1,8 @@
 # install.packages("RColorBrewer")
 # library(RColorBrewer)
 # cols <- brewer.pal(4,"Paired")[c(2,4)]
+
+
 plot_confint_glht <- function (x1,x2, xlab = "Measure",
                                main = "Confidence Intervals",
                                cex.axis = 0.9,
@@ -17,8 +19,9 @@ plot_confint_glht <- function (x1,x2, xlab = "Measure",
                                lwd = 2.8,
                                lend = 0)
 {
-  old_mar <- par()$mar # c(5, 4, 4, 2) + 0.1
-  par(mar = c(5, 5.5, 4, 2) + 0.1)
+  old.par <- par(no.readonly = TRUE) # c(5, 4, 4, 2) + 0.1
+  par(mar = c(5.5, 5.5, 4, 2) + 0.1)
+  par(bg = NA)
   
   xi1 <- x1$confint
   xi2 <- x2$confint
@@ -32,8 +35,13 @@ plot_confint_glht <- function (x1,x2, xlab = "Measure",
   yvals <- c( (nrow(xi1):1)+notch, (nrow(xi1):1)-notch )
   xlim <- xrange
   ylim <- c(0.3, nrow(xi1) + 0.5)
+  
+  xrange
   plot(c(xi[, "lwr"], xi[, "upr"]), rep.int(yvals, 2), type = "n", 
        axes = FALSE, xlab = NA,sub = NA, ylab = "", xlim = xlim, ylim = ylim)
+  rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
+         "white")
+  
   box(col="grey50")
   axis(1, cex.axis = cex.axis,font = 1)
   axis(2, at = nrow(xi1):1, labels = ylab, las = 1,  cex.axis = cex.axis,font = 1)
@@ -57,15 +65,17 @@ plot_confint_glht <- function (x1,x2, xlab = "Measure",
     subt <- paste(format(100 * attr(xi1, "conf.level"), 
                          2), "% confidence level", sep = "")
   }
-  legend("bottom",inset = 0.02,c("unadjusted","GxL adjusted"), horiz = T, lty = ltys, col = cols,
-         box.col = "grey10", text.font = 3, cex = cex_leg,lwd=lwd)
   title(main,cex.main = cex.main, line= 2)
   mtext(text = subt,side = 3, line = 1,cex = cex.subt, font = 1)
   title(xlab = xlab, cex.lab = cex.lab)
-  box("figure",col="lightgray" )
-  par(mar = old_mar)
+  # box("figure",col="lightgray" )
+  par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+  plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+  legend("bottom",c("unadjusted","GxL adjusted"), horiz = T, lty = ltys, col = cols,
+         box.col = "grey10", text.font = 3, cex = cex_leg,lwd=lwd,
+         xpd = TRUE,inset = c(0,0), bty = "n")
+  par(old.par)
 }
-
 
 tooltip_pv <- function(x)
 {
@@ -114,13 +124,15 @@ plot_diagram <- function(tbl_singles,tbl_pairs,alpha)
     select(-mean) 
   
   # add to pairs table pv levels, pv simbols, connect to two single locations 
-  tbl_points <<- tbl_pairs %>%
-#     mutate(p_levels=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),p_levels),
-#            p_simbols=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),labels = c("***","**","*",".","")),
-#            p_simbols_adj=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),labels = c("***","**","*",".",""))) %>% 
-    inner_join(tbl_singles1,c("name1" = "name")) %>% 
-    inner_join(tbl_singles1,c("name2" = "name")) %>% 
-    mutate(y=(y1.x+y1.y)/2,x=inset_x+abs(y1.x-y1.y)/sqrt(2),pair_id=row_number())
+  suppressWarnings(
+    tbl_points <<- tbl_pairs %>%
+      #     mutate(p_levels=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),p_levels),
+      #            p_simbols=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),labels = c("***","**","*",".","")),
+      #            p_simbols_adj=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),labels = c("***","**","*",".",""))) %>% 
+      inner_join(tbl_singles1,c("name1" = "name")) %>% 
+      inner_join(tbl_singles1,c("name2" = "name")) %>% 
+      mutate(y=(y1.x+y1.y)/2,x=inset_x+abs(y1.x-y1.y)/sqrt(2),pair_id=row_number())
+  )
     
   tbl_seg1 <- tbl_points %>% select(name1,name2,x1 = x1.x,y1 = y1.x,x2 = x, y2 = y,pair_id)
   tbl_seg2 <- tbl_points %>% select(name1,name2,x1 = x1.y,y1 = y1.y,x2 = x, y2 = y,pair_id)
