@@ -12,7 +12,7 @@
 library(multcomp)
 library(dplyr)
 library(shiny)
-library(shinyIncubator)
+# library(shinyIncubator)
 library(shinyAce)
 library(shinyjs)
 library(DT)
