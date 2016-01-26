@@ -1,59 +1,63 @@
 shinyUI(
-  navbarPage(title = HTML("Genotype-Lab Replicability Analyzer"),fluid = F,
+  navbarPage(title = HTML("Genotype-Lab Replicability Analyzer"),fluid = T,
              tabPanel("App",
                       useShinyjs(),
                       tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css")),
-                      # actionButton("console","server console"),
                       fixedRow(
-                        column(12,
+                        # actionButton("console","server console"),
+                        # h2("Genotype-Lab Replicability Analyzer",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
+                        # h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
+                        actionButton("Example2", "Example 2",class="ResetBtn",icon = icon("refresh")),
+                        actionButton("Example1", "Example 1",class="ResetBtn",icon = icon("refresh"))
+                        # actionButton("Example1_step1", "Example 4 param.",class="ResetBtn",icon = icon("refresh"))
+                      ),
+                      fixedRow(
+                        column(
+                          4,
                           
-                          h2("Genotype-Lab Replicability Analyzer",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
-                          h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
-                          
-                          hr(),
-                          actionButton("Example2", "Example 2",class="ResetBtn",icon = icon("refresh")),
-                          actionButton("Example1", "Example 1",class="ResetBtn",icon = icon("refresh")),
-                          # actionButton("Example1_step1", "Example 4 param.",class="ResetBtn",icon = icon("refresh")),
-                          br(),br(),br(),
-                          HTML("<h5><div class='step'>Step 1:</div> Fill in lab name and the genotype groups participated in the experiment ; Choose the pair-wise comparisons design ; Choose a unique experiment identifier or use default:</h5>"),
+                          HTML("<h5><div class='step'>Step 1:</div> Fill in the experiment level details:</h5>"),
                           
                           wellPanel(
-                            #selectizeInput("lab_name",'Lab name:', choices = lab_names_vec, multiple = F, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list or add one',onInitialize = I('function() { this.setValue(""); }'))),
-                            textInput("lab_name", "Lab name:",value = "your_lab_name"),
-                            radioButtons("expr_design",'Comparisons design:', choices = list("All pairs" = "Tukey","Many to one (Cases vs. control)" = "Dunnet"),selected = "Tukey",inline = T),
+                            #selectizeInput("lab_name",'Lab name: ', choices = lab_names_vec, multiple = F, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list or add one',onInitialize = I('function() { this.setValue(""); }'))),
+                            textInput("lab_name", "Lab name:",value = "your_lab_name"), # Fill in lab name. It will appear in the results' file name.
+                            radioButtons("expr_design",'Comparisons design:', choices = list("All genotypes pairs" = "Tukey","Many genotypes to one (Cases vs. control)" = "Dunnet"),selected = "Tukey",inline = T),# You may select to compare 1) each genotype to any other genotype or 2) one "control genotype to any other genotype."
                             uiOutput("genotype_selection_block"),
                             radioButtons("proc_gender",'Gender:', choices = c("Males","Females","Males & Females"),inline = T),
-                            textInput("experiment_identifier", "Experiment identifier:",value = ""),
+                            hidden(textInput("experiment_identifier", "Experiment identifier:",value = "")),
                             actionButton("reset_experiment", " Reset",class="ResetBtn",icon = icon("refresh")),
                             HTML("<div style='clear: both;'></div>")
                           ),
                           
-                          HTML("<h5><div class='step'>Step 2:</div> Select procedure (test); Verify procedure's details in the link to Standard Operating Procedure; Fill-in any changed meta-data parameters:</h5>"),
+                          HTML("<h5><div class='step'>Step 2:</div> Select procedure (test), verify procedure's details in the link to Standard Operating Procedure and fill-in any changed meta-data parameters:</h5>"),
                           
                           wellPanel(
                             selectizeInput("proc_name",'Procedure Name:',
                                            choices = proc_name_list, #setNames(nm = as.character(unique(dat$Test)[c(7,4,1,2,3,5,6,8:(8+33))]),as.list(as.character(unique(dat$Test)[c(7,4,1,2,3,5,6,8:(8+33))])))),
                                            options = list(onInitialize = I('function() { this.setValue(""); }'))),
+                            # HTML("Choose phenotypic assay \\ Standard Operating Procedure(SOP) \\ phenotypic test:"),
                             htmlOutput("proc_SOP_link"),
-                            p("Following are the default meta-data for the procedure. Correct or add values as used in your experiment:"),
+                            hr(),
+                            p(strong("Researcher-Controlled Variables"),"Following are the default researcher-controlled variables for the procedure. Correct and\\or add values as used in your experiment. If value is unknown or irrelevant, fill in 'NA' :"),
                             aceEditor("meta_data_editor",".",theme="ambiance",mode = "r",height = "200px",fontSize = 15),
-                            numericInput("proc_age", "Age at testing [weeks]:", ""),
-                            numericInput("proc_duration", "Procedure duration [min]:", ""),
-                            HTML(
-                              "<div class='form-group shiny-input-container'>
-                              <label for='proc_notes'>Procedure notes:</label>
-                              <textarea id='proc_notes' class='form-control' rows='2' cols='50' value=''></textarea>
-                              </div> "
-                            ),
+                            #                             numericInput("proc_age", "Age at testing [weeks]:", ""),
+                            #                             numericInput("proc_duration", "Procedure duration [min]:", ""),
+                            #                             HTML(
+                            #                               "<div class='form-group shiny-input-container'>
+                            #                               <label for='proc_notes'>Procedure notes:</label>
+                            #                               <textarea id='proc_notes' class='form-control' rows='2' cols='50' value=''></textarea>
+                            #                               </div> "
+                            #                             ),
                             actionButton("reset_proc", " Reset",class="ResetBtn",icon = icon("refresh")),
                             HTML("<div style='clear: both;'></div>")
                             #actionButton(inputId = "submit_editor",label = "Submit"),
-                            ),
-                          
+                          )
+                        ),
+                        column(
+                          4,
                           HTML("<h5><div class='step'>Step 3:</div> Select phenotypic measure\\s (note the meassuring unit and transformation):</h5>"),
                           
                           wellPanel(
-                            selectizeInput("measure_name",'Measure',
+                            selectizeInput("measure_name",'Phenotypic Measure: ',
                                            choices = measure_name_list ,#  setNames(nm = paste0(dat$Meassure[1],"[",dat$unit[1],",",dat$trans[1],"]"),object = as.list(paste0(dat$Meassure[1],"[",dat$unit[1],",",dat$trans[1],"]"))),width = "auto"),
                                            options = list(onInitialize = I('function() { this.setValue(""); }'))),
                             htmlOutput("selected_measure_details"),     
@@ -93,7 +97,7 @@ shinyUI(
                                     label(" Comparisons Diagram:"),
                                     hidden(div(id="dia_plot_h", ggvisOutput("dia_plot"), align = "center",width = "70%")),
                                     div(imageOutput("dia_plot_ph",width = "auto",height = "auto"), align = "center"),
-                                    label(" Confidence Intervals Plot:"),
+                                    label(" Differences Confidence Intervals Plot:"),
                                     hidden(div(id="ci_plot_h",plotOutput("ci_plot",width = "80%",height = "500px"), align = "center")),
                                     div(imageOutput("ci_plot_ph",width = "auto",height = "auto"), align = "center"),
                                     br(),
@@ -102,12 +106,16 @@ shinyUI(
                                     downloadButton("dl_button","Download",class = "disabled")
                                 )
                               )
-                              ),
+                              )
+                          )
+                        ),
+                      fixedRow(
+                        column(
+                          8,offset = 2,
                           hr(),
                           wellPanel(
                             p(
-                              HTML(
-                                "The <strong><em>Genotype-Lab Replicability Analyzer</em></strong> is a project by the <a href = \"http://www.replicability.tau.ac.il/\" target='_blank'>Replicability Research Group</a>. <br>
+                              HTML("The <strong><em>Genotype-Lab Replicability Analyzer</em></strong> is a project by the <a href = \"http://www.replicability.tau.ac.il/\" target='_blank'>Replicability Research Group</a>. <br>
 It's construction is supported by the European Research Council (ERC) under the European Community’s 7th Framework Program (FP/2007-2013) and ERC grant agreement (PSARPS-294519).<br>
 <br>
 The application is built with <a href = \"http://shiny.rstudio.com/\" target=\"_blank\">Shiny</a> web application framework and is hosted in <a href = \"http://www.shinyapps.io/\" target=\"_blank\">shinyapps.io</a> . The source code will be avaliable in github soon.

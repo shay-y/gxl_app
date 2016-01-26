@@ -1,81 +1,97 @@
 # install.packages("RColorBrewer")
 # library(RColorBrewer)
 # cols <- brewer.pal(4,"Paired")[c(2,4)]
-
-
-plot_confint_glht <- function (x1,x2, xlab = "Measure",
-                               main = "Confidence Intervals",
-                               cex.axis = 0.9,
-                               cex_leg = 1,
-                               cex.main = 1,
-                               cex.subt = 0.95,
-                               cex.lab = 1,
-                               notch = 0.12,
-                               text.font = 3,
-                               font.axis = 3,
-                               inset = 0.1,
-                               ltys = c(1,1),
-                               cols = c("#1F78B4", "#33A02C"),
-                               lwd = 2.8,
-                               lend = 0)
-{
-  old.par <- par(no.readonly = TRUE) # c(5, 4, 4, 2) + 0.1
-  par(mar = c(5.5, 5.5, 4, 2) + 0.1)
-  par(bg = NA)
-  
-  xi1 <- x1$confint
-  xi2 <- x2$confint
-  ylab <- unlist(lapply(strsplit(rownames(xi1),split = " - "),paste0,collapse = " -\n"))
-  xi <- rbind(xi1,xi2)
-  xrange <- c(min(xi[, "lwr"]), max(xi[, "upr"]))
-  if (!is.finite(xrange[1])) 
-    xrange[1] <- min(xi[, "Estimate"])
-  if (!is.finite(xrange[2])) 
-    xrange[2] <- max(xi[, "Estimate"])
-  yvals <- c( (nrow(xi1):1)+notch, (nrow(xi1):1)-notch )
-  xlim <- xrange
-  ylim <- c(0.3, nrow(xi1) + 0.5)
-  
-  xrange
-  plot(c(xi[, "lwr"], xi[, "upr"]), rep.int(yvals, 2), type = "n", 
-       axes = FALSE, xlab = NA,sub = NA, ylab = "", xlim = xlim, ylim = ylim)
-  rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
-         "white")
-  
-  box(col="grey50")
-  axis(1, cex.axis = cex.axis,font = 1)
-  axis(2, at = nrow(xi1):1, labels = ylab, las = 1,  cex.axis = cex.axis,font = 1)
-  # abline(h = yvals, lty = 1, lwd = 1, col = "lightgray")
-  abline(v = 0, lty = 3, lwd = 1,  col = "grey10")
-  left <- xi[, "lwr"]
-  left[!is.finite(left)] <- min(c(0, xlim[1] * 2))
-  right <- xi[, "upr"]
-  right[!is.finite(right)] <- max(c(0, xlim[2] * 2))
-  col_both <- rep(cols,each=nrow(xi1))
-  lty_both <- rep(ltys,each=nrow(xi1))
-  arrows
-  segments(left, yvals, right, yvals, col = col_both, lty = lty_both,lwd=lwd,lend=lend)
-  # points(xi[, "lwr"], yvals, pch = "(", col = col_both,cex=1.5)
-  # points(xi[, "upr"], yvals, pch = ")", col = col_both,cex=1.5)
-  points(xi[, "Estimate"], yvals, pch = 20, col = col_both,cex=1.5)
-  if (attr(x1, "type") == "adjusted") {
-    subt <- paste(format(100 * attr(xi1, "conf.level"), 
-                         2), "% family-wise confidence level", sep = "")
-  } else {
-    subt <- paste(format(100 * attr(xi1, "conf.level"), 
-                         2), "% confidence level", sep = "")
-  }
-  title(main,cex.main = cex.main, line= 2)
-  mtext(text = subt,side = 3, line = 1,cex = cex.subt, font = 1)
-  title(xlab = xlab, cex.lab = cex.lab)
-  # box("figure",col="lightgray" )
-  par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
-  plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-  legend("bottom",c("unadjusted","GxL adjusted"), horiz = T, lty = ltys, col = cols,
-         box.col = "grey10", text.font = 3, cex = cex_leg,lwd=lwd,
-         xpd = TRUE,inset = c(0,0), bty = "n")
-  par(old.par)
+library(ggplot2)
+plot_confints <- function(ci_obj_ua = o$co$ci,ci_obj_adj = o$co$ci_new, xlab = o$measure_details$parameter_name, cols = c("#1F78B4", "#33A02C"))
+{  
+  ci_data <- rbind(
+    data.frame(is.adj = "GxL adjusted",ci_obj_adj$confint,comparison = rownames(ci_obj_ua$confint)),
+    data.frame(is.adj = "Unadjusted",ci_obj_ua$confint,comparison = rownames(ci_obj_ua$confint)))
+    
+  ciplot <- ggplot(ci_data) + 
+    geom_hline(yintercept = 0, colour = gray(1/2), lty = 2) + 
+    aes(x = factor(comparison), y = Estimate, ymin = lwr ,ymax = upr, colour = is.adj, group = is.adj) +
+    geom_pointrange( lwd = 1, position = position_dodge(width = 0.5), shape = 20, fill = "WHITE") +
+    coord_flip() + theme_bw() + 
+    scale_colour_manual(values = rev(cols))+
+    ylab(paste(xlab,"difference")) +
+    xlab("Comparison")
+  ciplot
 }
+
+# plot_confint_glht_old <- function (x1,x2, xlab = "Measure",
+#                                main = "",
+#                                cex.axis = 0.9,
+#                                cex_leg = 1,
+#                                cex.main = 1,
+#                                cex.subt = 0.95,
+#                                cex.lab = 1,
+#                                notch = 0.12,
+#                                text.font = 3,
+#                                font.axis = 3,
+#                                inset = 0.1,
+#                                ltys = c(1,1),
+#                                cols = c("#1F78B4", "#33A02C"),
+#                                lwd = 2.8,
+#                                lend = 0)
+# {
+#   old.par <- par(no.readonly = TRUE) # c(5, 4, 4, 2) + 0.1
+#   par(mar = c(5.5, 5.5, 4, 2) + 0.1)
+#   par(bg = NA)
+#   
+#   xi1 <- x1$confint
+#   xi2 <- x2$confint
+#   ylab <- unlist(lapply(strsplit(rownames(xi1),split = " - "),paste0,collapse = " -\n"))
+#   xi <- rbind(xi1,xi2)
+#   xrange <- c(min(xi[, "lwr"]), max(xi[, "upr"]))
+#   if (!is.finite(xrange[1])) 
+#     xrange[1] <- min(xi[, "Estimate"])
+#   if (!is.finite(xrange[2])) 
+#     xrange[2] <- max(xi[, "Estimate"])
+#   yvals <- c( (nrow(xi1):1)+notch, (nrow(xi1):1)-notch )
+#   xlim <- xrange
+#   ylim <- c(0.3, nrow(xi1) + 0.5)
+#   
+#   xrange
+#   plot(c(xi[, "lwr"], xi[, "upr"]), rep.int(yvals, 2), type = "n", 
+#        axes = FALSE, xlab = NA,sub = NA, ylab = "", xlim = xlim, ylim = ylim)
+#   rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = 
+#          "white")
+#   
+#   box(col="grey50")
+#   axis(1, cex.axis = cex.axis,font = 1)
+#   axis(2, at = nrow(xi1):1, labels = ylab, las = 1,  cex.axis = cex.axis,font = 1)
+#   # abline(h = yvals, lty = 1, lwd = 1, col = "lightgray")
+#   abline(v = 0, lty = 3, lwd = 1,  col = "grey10")
+#   left <- xi[, "lwr"]
+#   left[!is.finite(left)] <- min(c(0, xlim[1] * 2))
+#   right <- xi[, "upr"]
+#   right[!is.finite(right)] <- max(c(0, xlim[2] * 2))
+#   col_both <- rep(cols,each=nrow(xi1))
+#   lty_both <- rep(ltys,each=nrow(xi1))
+#   arrows
+#   segments(left, yvals, right, yvals, col = col_both, lty = lty_both,lwd=lwd,lend=lend)
+#   # points(xi[, "lwr"], yvals, pch = "(", col = col_both,cex=1.5)
+#   # points(xi[, "upr"], yvals, pch = ")", col = col_both,cex=1.5)
+#   points(xi[, "Estimate"], yvals, pch = 20, col = col_both,cex=1.5)
+#   if (attr(x1, "type") == "adjusted") {
+#     subt <- paste(format(100 * attr(xi1, "conf.level"), 
+#                          2), "% family-wise confidence level", sep = "")
+#   } else {
+#     subt <- paste(format(100 * attr(xi1, "conf.level"), 
+#                          2), "% confidence level", sep = "")
+#   }
+#   title(main,cex.main = cex.main, line= 2)
+#   mtext(text = subt,side = 3, line = 1,cex = cex.subt, font = 1)
+#   title(xlab = xlab, cex.lab = cex.lab)
+#   # box("figure",col="lightgray" )
+#   par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+#   plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+#   legend("bottom",c("unadjusted","GxL adjusted"), horiz = T, lty = ltys, col = cols,
+#          box.col = "grey10", text.font = 3, cex = cex_leg,lwd=lwd,
+#          xpd = TRUE,inset = c(0,0), bty = "n")
+#   par(old.par)
+# }
 
 tooltip_pv <- function(x)
 {
@@ -109,18 +125,19 @@ tooltip_pv <- function(x)
          </table>'
       )
 }
+
+
   
-plot_diagram <- function(tbl_singles,tbl_pairs,alpha)
+plot_diagram <- function(tbl_singles,tbl_pairs,alpha, xMeasure = "Measure")
 {
-  inset_x <- 2
-  inset_y <- 1
+   
   cols <- c("#BDBDBD","#969696","#737373","#525252","#252525") #brewer.pal(n=9,"Greys")[4:8] 
   cols_2l = c("#1F78B4", "#33A02C")
 
   # get x,y,name of left points
   tbl_singles1 <- tbl_singles %>%
     arrange(desc(mean)) %>%
-    mutate(x1 = inset_x, y1 = -1 + inset_y + nrow(.):1) %>% 
+    mutate(x1 = 0.25*diff(range(mean)), y1 = mean) %>% 
     select(-mean) 
   
   # add to pairs table pv levels, pv simbols, connect to two single locations 
@@ -131,7 +148,7 @@ plot_diagram <- function(tbl_singles,tbl_pairs,alpha)
       #            p_simbols_adj=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),labels = c("***","**","*",".",""))) %>% 
       inner_join(tbl_singles1,c("name1" = "name")) %>% 
       inner_join(tbl_singles1,c("name2" = "name")) %>% 
-      mutate(y=(y1.x+y1.y)/2,x=inset_x+abs(y1.x-y1.y)/sqrt(2),pair_id=row_number())
+      mutate(y=(y1.x+y1.y)/2,x=x1.x + abs(y1.x-y1.y)/sqrt(2),pair_id=row_number())
   )
     
   tbl_seg1 <- tbl_points %>% select(name1,name2,x1 = x1.x,y1 = y1.x,x2 = x, y2 = y,pair_id)
@@ -143,27 +160,29 @@ plot_diagram <- function(tbl_singles,tbl_pairs,alpha)
   
   ggv <- ggvis() %>%
     add_data(tbl_seg_long) %>%
-    scale_numeric("x", domain = c(0, max(tbl_seg_long$x)+0.5*inset_x)) %>% 
-    scale_numeric("y", domain = c(0, max(tbl_seg_long$y)+0.5*inset_y)) %>% 
+    scale_numeric("x",domain = c(0,NA)) %>% 
+    scale_numeric("y") %>% #, domain = c(min(tbl_seg_long$x) - 0.5*inset_y ,max(tbl_seg_long$x)+ 0.5*inset_y)) %>% 
     #scale_ordinal("stroke",domain = p_levels,reverse = T,range = cols) %>% 
     layer_paths(x = ~x , y = ~y,strokeWidth := 4,stroke := cols[2]) %>%  # =~p_levels) %>% 
     add_data(tbl_points) %>%
     layer_points(x = ~x , y = ~y, size := 40 , fill :=cols[4] ,key := ~pair_id) %>% 
     layer_points(x = ~x , y = ~y, size := 140, fillOpacity := 0,stroke := cols_2l[1],strokeWidth := 2,key := ~pair_id, data = tbl_points %>% filter(p_value<=alpha)) %>% 
     layer_points(x = ~x , y = ~y, size := 280, fillOpacity := 0,stroke := cols_2l[2],strokeWidth := 2,key := ~pair_id, data = tbl_points %>% filter(p_value_adj<=alpha)) %>% 
-    hide_axis("x") %>% hide_axis("y") %>% 
+    hide_axis("x") %>% 
+    add_axis("y",title = xMeasure) %>% 
     layer_text(x=~x1,y=~y1,text:=~name,data = tbl_singles1,
                align:="right",baseline:="middle",dx:=-10,fontSize:=16) %>% 
-    scale_ordinal("stroke",domain = c("GxL Adjusted","unadjusted"),range = rev(cols_2l)) %>% 
+    scale_ordinal("stroke",domain = c("GxL adjusted","Unadjusted"),range = rev(cols_2l)) %>% 
     add_legend(title = paste0("significant (alpha = ",alpha,")"),scales = c("stroke","size"),
                properties = legend_props(symbols = list(strokeWidth = 2,size = 140),
                                          labels = list(fontSize=13),
                                          title = list(fontSize=15,fontWeight ="normal"),
-                                         legend = NULL))
+                                         legend = NULL)) %>% 
+    set_options(width = 400, height = 400, keep_aspect = TRUE)
     
   ggv %>% add_tooltip(tooltip_pv,c("hover"))
 }
-      
+
 #     
 #     
 #     

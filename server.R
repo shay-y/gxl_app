@@ -4,6 +4,16 @@ shinyServer(function(input, output, session) {
   
   values <- reactiveValues(Example1_iteration = 0, Example2_iteration = 0, genotypes_tested = NULL,expr_design_syn = NULL)
   
+  # observe(label="console",{
+  #   if(input$console != 0) {
+  #     options(browserNLdisabled=TRUE)
+  #     saved_console<-".RDuetConsole"
+  #     if (file.exists(saved_console)) load(saved_console)
+  #     isolate(browser())
+  #     save(file=saved_console,list=ls(environment()))
+  #   }
+  # })
+  
 #---- input manipulations:----  
   
   ## when experiment is selected update values expr_design_syn and genotypes_tested
@@ -106,7 +116,7 @@ shinyServer(function(input, output, session) {
     if (is.na(SOP_selected))
       NULL
     else
-      paste0("<a href='",SOP_selected,"' target='_blank'>Link to Standard Operating Procedure</a>")
+      paste0("<strong><a href='",SOP_selected,"' target='_blank'>Link to Official Protocol</a></strong>")
     })
   
   ## when genotypes are selected, create a list with table to be filled with experiment results,
@@ -178,7 +188,8 @@ shinyServer(function(input, output, session) {
       as.character()
     withMathJax(HTML("\\(S^2_{int.}/S^2_{error}=\\) ",S2_ratio,
                      "<br><strong>Units:</strong> ",parameter_unit,
-                     "<br><strong>Transformation:</strong> ",parameter_trans_symbol))
+                     "<br><strong>Transformation:</strong> ",parameter_trans_symbol,
+                     "<p></p>"))
   })
   
 # ---- reset operations ----
@@ -283,12 +294,16 @@ shinyServer(function(input, output, session) {
     if(!is.null(o))
     {
       bind_shiny(vis = reactive({
-        tbl_res <- o$tbl_res[,1:2]
+        
+        # load("o.Rdata")
+        
+        
+        tbl_res <- o$tbl_res[,1:3]
         pair_names <- matrix(unlist((strsplit(rownames(tbl_res)," - "))),ncol=2,byrow = T)
         tbl_pairs <- data.frame(name1 = pair_names[,1],name2 = pair_names[,2],tbl_res)
         tbl_singles <- data.frame(name=o$genotypes_tested,mean=o$stats_matrix[,1])
-        plot_diagram(tbl_singles,tbl_pairs,input$alpha)
-      }), plot_id = "dia_plot",session = session)
+        plot_diagram(tbl_singles,tbl_pairs,alpha = 0.05, xMeasure = as.character(o$measure_details$parameter_name))
+      }), plot_id = "dia_plot",session = session, ,bg = "white", ,background = "white")
     }
   })
   
@@ -313,7 +328,7 @@ shinyServer(function(input, output, session) {
     o <- get_comparisons_object()
     if(!is.null(o))
     {
-      plot_confint_glht(o$co$ci,o$co$ci_new,xlab = o$measure_details$parameter_name)
+      plot_confints(ci_obj_ua = o$co$ci,ci_obj_adj = o$co$ci_new, xlab = o$measure_details$parameter_name)
 #      plot_h <<- nrow(o$tbl_res)
     }
       
