@@ -1,10 +1,6 @@
-.Rproj.user
 .Rhistory
-.RData
-.RDuetConsole
+.Rproj.user
 .httr-oauth
 actions.txt
-examples
+examples.txt
 o.Rdata
-shiny_app_token.rds
-gxl_app.Rproj
