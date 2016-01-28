@@ -125,7 +125,7 @@ plot_diagram <- function(tbl_singles,tbl_pairs,alpha)
   
   # add to pairs table pv levels, pv simbols, connect to two single locations 
   suppressWarnings(
-    tbl_points <<- tbl_pairs %>%
+    tbl_points <- tbl_pairs %>%
       #     mutate(p_levels=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),p_levels),
       #            p_simbols=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),labels = c("***","**","*",".","")),
       #            p_simbols_adj=cut(p_value,breaks = c(0,0.001,0.01,0.05,0.1,1),labels = c("***","**","*",".",""))) %>% 

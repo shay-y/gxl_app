@@ -44,27 +44,27 @@ shinyServer(function(input, output, session) {
   })
   
   ## when inputs in step 1 are changed, update the experiment identifier
-  observeEvent({input$lab_name; values$genotypes_tested; input$proc_gender; values$expr_design_syn},{
-    
-    lab_name_init <- gsub('([[:punct:]])|\\s+','_',input$lab_name)
-    genotypes_tested_init <- paste(substr(values$genotypes_tested,1,1),collapse = ".")
-    proc_gender_init <- switch(input$proc_gender,
-           "Males" = "Males",
-           "Females" = "Females",
-           "Males & Females" = "Both")
-    expr_design_init <-  values$expr_design_syn
-    
-    name <- paste(lab_name_init,
-                  expr_design_init,
-                  genotypes_tested_init,
-                  proc_gender_init,
-                  humanDate(),sep = "_")
-    
-    if (is.null(values$genotypes_tested) || values$genotypes_tested=="")
-      reset("experiment_identifier")
-    else
-      updateTextInput(session,"experiment_identifier",value = name)
-  })
+  # observeEvent({input$lab_name; values$genotypes_tested; input$proc_gender; values$expr_design_syn},{
+  #   
+  #   lab_name_init <- gsub('([[:punct:]])|\\s+','_',input$lab_name)
+  #   genotypes_tested_init <- paste(substr(values$genotypes_tested,1,1),collapse = ".")
+  #   proc_gender_init <- switch(input$proc_gender,
+  #          "Males" = "Males",
+  #          "Females" = "Females",
+  #          "Males & Females" = "Both")
+  #   expr_design_init <-  values$expr_design_syn
+  #   
+  #   name <- paste(lab_name_init,
+  #                 expr_design_init,
+  #                 genotypes_tested_init,
+  #                 proc_gender_init,
+  #                 humanDate(),sep = "_")
+  #   
+  #   if (is.null(values$genotypes_tested) || values$genotypes_tested=="")
+  #     reset("experiment_identifier")
+  #   else
+  #     updateTextInput(session,"experiment_identifier",value = name)
+  # })
   
   ## when another procedure is selected i) update meta data editor ii) update measures table
   observeEvent(input$proc_name,{
@@ -375,37 +375,68 @@ shinyServer(function(input, output, session) {
       removeClass(id = "dl_button", class = "disabled")
   })
 # ---- Examples ----
-  
+
   ## Example 1:
   
   observeEvent(input$Example1,{
-    updateTextInput(session, "lab_name",value = "Exmpl1")
+    updateTextInput(session, "lab_name",value = "HMGU")
     updateRadioButtons(session,"expr_design",selected = "Tukey")
-    updateSelectizeInput(session,"genotypes_tested_pairwise",selected = c("g1","g2","g3","g4"))
+    updateSelectizeInput(session,"genotypes_tested_pairwise",selected = c("Arhgef4","baseline","Elk4","Setmar","Slc38a10","Tnfaip1","Ttll4"))
     updateRadioButtons(session,inputId =  "proc_gender",selected = "Females")
-    updateSelectizeInput(session, "proc_name", selected = "Open Field Test")
+    updateSelectizeInput(session, "proc_name", selected = "DEXA")
     updateNumericInput(session,inputId =  "proc_age", value = "12")
-    updateNumericInput(session,"proc_duration", value = 10)
+    updateNumericInput(session,"proc_duration", value = NA)
   })
   
   observeEvent(input$proc_name,{
     if (input$Example1 > values$Example1_iteration)
     {
-      updateSelectInput(session,inputId = "measure_name",selected = "bolus count")
-      updateTextInput(session, inputId = "g1_mean",value = 0.84)
-      updateTextInput(session, inputId = "g2_mean",value = 0.19)
-      updateTextInput(session, inputId = "g3_mean",value = 1.52)
-      updateTextInput(session, inputId = "g4_mean",value = 1.27)
-      
-      updateTextInput(session, inputId = "g1_SD",value = 0.38)
-      updateTextInput(session, inputId = "g2_SD",value = 0.30)
-      updateTextInput(session, inputId = "g3_SD",value = 0.37)
-      updateTextInput(session, inputId = "g4_SD",value = 0.35)
-      
-      updateTextInput(session, inputId = "g1_N",value = 10)
-      updateTextInput(session, inputId = "g2_N",value = 16)
-      updateTextInput(session, inputId = "g3_N",value = 12)
-      updateTextInput(session, inputId = "g4_N",value = 12)
+      updateSelectInput(session,inputId = "measure_name",selected = "Fat mass")
+      updateTextInput(session, inputId = "Arhgef4_mean",value = 0.9322188)
+      updateTextInput(session, inputId = "baseline_mean",value = 1.3072999)
+      updateTextInput(session, inputId = "Elk4_mean",value = 1.1512591)
+      updateTextInput(session, inputId = "Setmar_mean",value = 1.2584906)
+      # updateTextInput(session, inputId = "Slc38a10_mean",value = 1.4916619)
+      # updateTextInput(session, inputId = "Tnfaip1_mean",value = 1.9265151)
+      # updateTextInput(session, inputId = "Ttll4_mean",value = 0.9269960)
+      updateTextInput(session, inputId = "Arhgef4_SD",value = 0.54814483)
+      updateTextInput(session, inputId = "baseline_SD",value = 0.53475226)
+      updateTextInput(session, inputId = "Elk4_SD",value = 0.42346114)
+      updateTextInput(session, inputId = "Setmar_SD",value = 0.55743598)
+      # updateTextInput(session, inputId = "Slc38a10_SD",value = 0.51253074)
+      # updateTextInput(session, inputId = "Tnfaip1_SD",value = 0.55578986)
+      # updateTextInput(session, inputId = "Ttll4_SD",value = 0.32304317)
+      updateTextInput(session, inputId = "Arhgef4_N",value = 7)
+      updateTextInput(session, inputId = "baseline_N",value = 290)
+      updateTextInput(session, inputId = "Elk4_N",value = 13)
+      updateTextInput(session, inputId = "Setmar_N",value = 7)
+      # updateTextInput(session, inputId = "Slc38a10_N",value = 9)
+      # updateTextInput(session, inputId = "Tnfaip1_N",value = 8)
+      # updateTextInput(session, inputId = "Ttll4_N",value = 2)
+      # 
+      # updateSelectInput(session,inputId = "measure_name",selected = "bolus count")
+      # updateTextInput(session, inputId = "_mean",value = 0.9322188)
+      # updateTextInput(session, inputId = "_mean",value = 1.3072999)
+      # updateTextInput(session, inputId = "_mean",value = 1.1512591)
+      # updateTextInput(session, inputId = "_mean",value = 1.2584906)
+      # updateTextInput(session, inputId = "_mean",value = 1.4916619)
+      # updateTextInput(session, inputId = "_mean",value = 1.9265151)
+      # updateTextInput(session, inputId = "_mean",value = 0.9269960)
+      # updateTextInput(session, inputId = "_SD",value = 0.54814483)
+      # updateTextInput(session, inputId = "_SD",value = 0.53475226)
+      # updateTextInput(session, inputId = "_SD",value = 0.42346114)
+      # updateTextInput(session, inputId = "_SD",value = 0.55743598)
+      # updateTextInput(session, inputId = "_SD",value = 0.51253074)
+      # updateTextInput(session, inputId = "_SD",value = 0.55578986)
+      # updateTextInput(session, inputId = "_SD",value = 0.32304317)
+      # updateTextInput(session, inputId = "_N",value = 7)
+      # updateTextInput(session, inputId = "_N",value = 290)
+      # updateTextInput(session, inputId = "_N",value = 13)
+      # updateTextInput(session, inputId = "_N",value = 7)
+      # updateTextInput(session, inputId = "_N",value = 9)
+      # updateTextInput(session, inputId = "_N",value = 8)
+      # updateTextInput(session, inputId = "_N",value = 2)
+      # 
       
       updateCheckboxInput(session,"mult_correct",value = T)
       
@@ -413,61 +444,102 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  ## Example 2:
   
-#   output$ctrl <- renderText({
-#     input$gctrl_mean
+    
+  # ## Example 1:
+  # 
+  # observeEvent(input$Example1,{
+  #   updateTextInput(session, "lab_name",value = "Exmpl1")
+  #   updateRadioButtons(session,"expr_design",selected = "Tukey")
+  #   updateSelectizeInput(session,"genotypes_tested_pairwise",selected = c("g1","g2","g3","g4"))
+  #   updateRadioButtons(session,inputId =  "proc_gender",selected = "Females")
+  #   updateSelectizeInput(session, "proc_name", selected = "Open Field Test")
+  #   updateNumericInput(session,inputId =  "proc_age", value = "12")
+  #   updateNumericInput(session,"proc_duration", value = 10)
+  # })
+  # 
+  # observeEvent(input$proc_name,{
+  #   if (input$Example1 > values$Example1_iteration)
+  #   {
+  #     updateSelectInput(session,inputId = "measure_name",selected = "bolus count")
+  #     updateTextInput(session, inputId = "g1_mean",value = 0.84)
+  #     updateTextInput(session, inputId = "g2_mean",value = 0.19)
+  #     updateTextInput(session, inputId = "g3_mean",value = 1.52)
+  #     updateTextInput(session, inputId = "g4_mean",value = 1.27)
+  #     
+  #     updateTextInput(session, inputId = "g1_SD",value = 0.38)
+  #     updateTextInput(session, inputId = "g2_SD",value = 0.30)
+  #     updateTextInput(session, inputId = "g3_SD",value = 0.37)
+  #     updateTextInput(session, inputId = "g4_SD",value = 0.35)
+  #     
+  #     updateTextInput(session, inputId = "g1_N",value = 10)
+  #     updateTextInput(session, inputId = "g2_N",value = 16)
+  #     updateTextInput(session, inputId = "g3_N",value = 12)
+  #     updateTextInput(session, inputId = "g4_N",value = 12)
+  #     
+  #     updateCheckboxInput(session,"mult_correct",value = T)
+  #     
+  #     values$Example1_iteration <- input$Example1
+  #   }
+  # })
+  
+#   ## Example 2:
+#   
+# #   output$ctrl <- renderText({
+# #     input$gctrl_mean
+# #   })
+#   
+#   observeEvent(input$Example2,{
+#     updateTextInput(session, "lab_name",value = "Exmpl2")
+#     updateRadioButtons(session,"expr_design",selected = "Dunnet")  
+#     updateRadioButtons(session,inputId =  "proc_gender",selected = "Males")
+#     updateSelectizeInput(session, "proc_name", selected = "Grip-Strength")
+#     updateNumericInput(session,inputId =  "proc_age", value = "10")
+#     updateNumericInput(session,"proc_duration", value = 20)
+#   })
+# 
+#   observeEvent(input$proc_name,{
+#     if (input$Example2 > values$Example2_iteration)
+#       updateSelectInput(session,inputId = "measure_name",selected = "Forelimb grip strength normalised against body weight")
+#   })
+#   
+#   observeEvent(input$expr_design,{
+#     if (input$Example2 > values$Example2_iteration)
+#       updateSelectizeInput(session,"genotypes_tested_control",selected = "gctrl")
+#   })
+#       
+#   observeEvent(input$genotypes_tested_control,{
+#     if (input$Example2 > values$Example2_iteration)
+#        updateSelectizeInput(session,"genotypes_tested_cases",selected = c("g1","g2","g3"))
+#   })
+# 
+#   observeEvent(input$genotypes_tested_cases,{
+#     if (input$Example2 > values$Example2_iteration)
+#     {
+#       updateTextInput(session, inputId = "g1_mean",value = 1.84)
+#       updateTextInput(session, inputId = "g2_mean",value = 1.99)
+#       updateTextInput(session, inputId = "g3_mean",value = 2.55)
+#       
+#       updateTextInput(session, inputId = "g1_SD",value = 0.42)
+#       updateTextInput(session, inputId = "g2_SD",value = 0.18)
+#       updateTextInput(session, inputId = "g3_SD",value = 0.37)
+#       
+#       updateTextInput(session, inputId = "g1_N",value = 16)
+#       updateTextInput(session, inputId = "g2_N",value = 16)
+#       updateTextInput(session, inputId = "g3_N",value = 16)
+#     }
+#   })
+#   
+#   observeEvent(input$g1_mean,{
+#     if (input$Example2 > values$Example2_iteration)
+#     {
+#       Sys.sleep(1)
+#       updateTextInput(session, inputId = "gctrl_mean",value = 2.27)
+#       updateTextInput(session, inputId = "gctrl_SD",value = 0.45)
+#       updateTextInput(session, inputId = "gctrl_N",value = 12)
+#       values$Example2_iteration <- input$Example2
+#     }
 #   })
   
-  observeEvent(input$Example2,{
-    updateTextInput(session, "lab_name",value = "Exmpl2")
-    updateRadioButtons(session,"expr_design",selected = "Dunnet")  
-    updateRadioButtons(session,inputId =  "proc_gender",selected = "Males")
-    updateSelectizeInput(session, "proc_name", selected = "Grip-Strength")
-    updateNumericInput(session,inputId =  "proc_age", value = "10")
-    updateNumericInput(session,"proc_duration", value = 20)
-  })
-
-  observeEvent(input$proc_name,{
-    if (input$Example2 > values$Example2_iteration)
-      updateSelectInput(session,inputId = "measure_name",selected = "Forelimb grip strength normalised against body weight")
-  })
   
-  observeEvent(input$expr_design,{
-    if (input$Example2 > values$Example2_iteration)
-      updateSelectizeInput(session,"genotypes_tested_control",selected = "gctrl")
-  })
-      
-  observeEvent(input$genotypes_tested_control,{
-    if (input$Example2 > values$Example2_iteration)
-       updateSelectizeInput(session,"genotypes_tested_cases",selected = c("g1","g2","g3"))
-  })
-
-  observeEvent(input$genotypes_tested_cases,{
-    if (input$Example2 > values$Example2_iteration)
-    {
-      updateTextInput(session, inputId = "g1_mean",value = 1.84)
-      updateTextInput(session, inputId = "g2_mean",value = 1.99)
-      updateTextInput(session, inputId = "g3_mean",value = 2.55)
-      
-      updateTextInput(session, inputId = "g1_SD",value = 0.42)
-      updateTextInput(session, inputId = "g2_SD",value = 0.18)
-      updateTextInput(session, inputId = "g3_SD",value = 0.37)
-      
-      updateTextInput(session, inputId = "g1_N",value = 16)
-      updateTextInput(session, inputId = "g2_N",value = 16)
-      updateTextInput(session, inputId = "g3_N",value = 16)
-    }
-  })
-  
-  observeEvent(input$g1_mean,{
-    if (input$Example2 > values$Example2_iteration)
-    {
-      Sys.sleep(1)
-      updateTextInput(session, inputId = "gctrl_mean",value = 2.27)
-      updateTextInput(session, inputId = "gctrl_SD",value = 0.45)
-      updateTextInput(session, inputId = "gctrl_N",value = 12)
-      values$Example2_iteration <- input$Example2
-    }
-  })
 })

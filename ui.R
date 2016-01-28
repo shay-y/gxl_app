@@ -11,19 +11,19 @@ shinyUI(
                           h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
                           
                           hr(),
-                          actionButton("Example2", "Example 2",class="ResetBtn",icon = icon("refresh")),
-                          actionButton("Example1", "Example 1",class="ResetBtn",icon = icon("refresh")),
+                          #actionButton("Example2", "Example 2",class="ResetBtn",icon = icon("refresh")),
+                          actionButton("Example1", "Example",class="ResetBtn",icon = icon("refresh")),
                           # actionButton("Example1_step1", "Example 4 param.",class="ResetBtn",icon = icon("refresh")),
-                          br(),br(),br(),
+                          br(),
                           HTML("<h5><div class='step'>Step 1:</div> Fill in lab name and the genotype groups participated in the experiment ; Choose the pair-wise comparisons design ; Choose a unique experiment identifier or use default:</h5>"),
                           
                           wellPanel(
                             #selectizeInput("lab_name",'Lab name:', choices = lab_names_vec, multiple = F, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list or add one',onInitialize = I('function() { this.setValue(""); }'))),
-                            textInput("lab_name", "Lab name:",value = "your_lab_name"),
+                            textInput("lab_name", "Lab name:",value = ""),
                             radioButtons("expr_design",'Comparisons design:', choices = list("All pairs" = "Tukey","Many to one (Cases vs. control)" = "Dunnet"),selected = "Tukey",inline = T),
                             uiOutput("genotype_selection_block"),
                             radioButtons("proc_gender",'Gender:', choices = c("Males","Females","Males & Females"),inline = T),
-                            textInput("experiment_identifier", "Experiment identifier:",value = ""),
+                            #textInput("experiment_identifier", "Experiment identifier:",value = ""),
                             actionButton("reset_experiment", " Reset",class="ResetBtn",icon = icon("refresh")),
                             HTML("<div style='clear: both;'></div>")
                           ),
@@ -38,7 +38,7 @@ shinyUI(
                             p("Following are the default meta-data for the procedure. Correct or add values as used in your experiment:"),
                             aceEditor("meta_data_editor",".",theme="ambiance",mode = "r",height = "200px",fontSize = 15),
                             numericInput("proc_age", "Age at testing [weeks]:", ""),
-                            numericInput("proc_duration", "Procedure duration [min]:", ""),
+                          #  numericInput("proc_duration", "Procedure duration [min]:", ""),
                             HTML(
                               "<div class='form-group shiny-input-container'>
                               <label for='proc_notes'>Procedure notes:</label>
@@ -65,10 +65,11 @@ shinyUI(
                           
                           wellPanel(
                             # textOutput("ctrl"),
-                            conditionalPanel(
-                              condition = 'values.genotypes_tested != NULL',
-                              htmlOutput("stats_tbl") # stats table for each meassure, add note about multiplicity
-                            ),
+                            #conditionalPanel(
+                            #  condition = "typeof values !== 'undefined'", # values.genotypes_tested
+                            # stats table for each meassure, add note about multiplicity
+                            #),
+                            htmlOutput("stats_tbl"),
                             actionButton("reset_stats_tbl", " Reset",class="ResetBtn",icon = icon("refresh")),
                             HTML("<div style='clear: both;'></div>")
                           ),
