@@ -3,4 +3,6 @@
 .httr-oauth
 actions.txt
 examples.txt
-o.Rdata
+*.Rdata
+*.Rproj
+rsconnect
