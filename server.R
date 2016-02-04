@@ -73,15 +73,16 @@ shinyServer(function(input, output, session) {
     ## i) update meta data editor
     tbl_meta_selected <- tbl_meta %>%
       filter(procedure_name == proc_name_selected, parameter_name != "Standard Operating Procedure") %>%
-      select("Parameter Name" = parameter_name, "Default Value" = default ,Units = parameter_unit) %>% 
+      select(  Parameter = parameter_name, Value = default ,Units = parameter_unit) %>% 
+      bind_rows(data.frame("Parameter" ="=========","Value" = "=====" ,Units = "====="),.) %>%  
       as.data.frame()
     
     tbl_meta_selected_txt <- paste0(capture.output(print(tbl_meta_selected,right = F, row.names = FALSE)),collapse="\n")
     
     if (nrow(tbl_meta_selected)==0)
-      updateAceEditor(session,"meta_data_editor",value = ".",theme="ambiance",mode = "r")
+      updateAceEditor(session,"meta_data_editor",value = ".")
     else
-      updateAceEditor(session,"meta_data_editor",value = tbl_meta_selected_txt, theme="ambiance",mode = "r")
+      updateAceEditor(session,"meta_data_editor",value = tbl_meta_selected_txt)
     
     ## ii) update measures table
     tbl_measures_selected <- tbl_measures %>%

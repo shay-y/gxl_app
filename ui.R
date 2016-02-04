@@ -1,20 +1,19 @@
 shinyUI(
-  navbarPage(title = HTML("Genotype-Lab Replicability Analyzer"),fluid = F,
+  navbarPage(title = HTML("Genotype-Lab Replicability Analyzer"),fluid = T,
              tabPanel("App",
                       useShinyjs(),
                       tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css")),
                       # actionButton("console","server console"),
                       fixedRow(
-                        column(12,
+                        column(3,
                           
-                          h2("Genotype-Lab Replicability Analyzer",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
-                          h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
-                          
-                          hr(),
+                          # h3("Genotype-Lab Replicability Analyzer",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
+                          # h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
+                        
                           #actionButton("Example2", "Example 2",class="ResetBtn",icon = icon("refresh")),
-                          actionButton("Example1", "Example",class="ResetBtn",icon = icon("refresh")),
+                          
                           # actionButton("Example1_step1", "Example 4 param.",class="ResetBtn",icon = icon("refresh")),
-                          br(),
+                         
                           HTML("<h5><div class='step'>Step 1:</div> Fill in lab name and the genotype groups participated in the experiment ; Choose the pair-wise comparisons design ; Choose a unique experiment identifier or use default:</h5>"),
                           
                           wellPanel(
@@ -36,7 +35,7 @@ shinyUI(
                                            options = list(onInitialize = I('function() { this.setValue(""); }'))),
                             htmlOutput("proc_SOP_link"),
                             p("Following are the default meta-data for the procedure. Correct or add values as used in your experiment:"),
-                            aceEditor("meta_data_editor",".",theme="ambiance",mode = "r",height = "200px",fontSize = 15),
+                            aceEditor("meta_data_editor",".",theme="clouds",mode = "r",height = "200px",fontSize = 13,showLineNumbers = FALSE),
                             numericInput("proc_age", "Age at testing [weeks]:", ""),
                           #  numericInput("proc_duration", "Procedure duration [min]:", ""),
                             HTML(
@@ -48,10 +47,11 @@ shinyUI(
                             actionButton("reset_proc", " Reset",class="ResetBtn",icon = icon("refresh")),
                             HTML("<div style='clear: both;'></div>")
                             #actionButton(inputId = "submit_editor",label = "Submit"),
-                            ),
+                            )
+                        ),
+                        column(3,
                           
                           HTML("<h5><div class='step'>Step 3:</div> Select phenotypic measure\\s (note the meassuring unit and transformation):</h5>"),
-                          
                           wellPanel(
                             selectizeInput("measure_name",'Measure',
                                            choices = measure_name_list ,#  setNames(nm = paste0(dat$Meassure[1],"[",dat$unit[1],",",dat$trans[1],"]"),object = as.list(paste0(dat$Meassure[1],"[",dat$unit[1],",",dat$trans[1],"]"))),width = "auto"),
@@ -83,7 +83,10 @@ shinyUI(
                             checkboxInput("mult_correct","Apply multiplicity correction"),
                             checkboxInput("checkbox_agrees_share","Contribute the project by sending the experiment settings and results to our database."), # improve
                             div(id = "wrap_submit_data", actionButton("submit_data", "Submit", icon = icon("cog")))
-                            ),
+                            )
+                        ),
+                        column(6,
+                               actionButton("Example1", "Example",class="ResetBtn",icon = icon("refresh")),
                           HTML("<h5><div class='step'>Results:</div> </h5>"),
                           wellPanel(
                               withTags(
