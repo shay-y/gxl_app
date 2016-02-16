@@ -3,6 +3,9 @@
 .httr-oauth
 actions.txt
 examples.txt
-*.Rdata
+*.RData
+*.RDataTmp
 *.Rproj
 rsconnect
+o.Rdata
+shiny_app_token.rds

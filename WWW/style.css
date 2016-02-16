@@ -4,10 +4,10 @@ h1, h3,  h6, .h1, .h3, .h6 ,body {
   font-family: "Source Sans Pro";
 }  
 
-html{font-size: 17px;}
+html{font-size: 14px;}
 
 h5 {
-  font-size: 17px;
+  font-size: 14px;
   line-height: 1.5em;
   font-family: "Source Sans Pro";
 }
@@ -28,13 +28,13 @@ h2, h4, .h2, .h4 {
 }
 
 .MathJax {
-font-size: 1.3em !important;
+font-size: 1.1em !important;
 }
 
 .selectize-input, .form-control{
   width:initial;
   min-width: 250px;
-  font-size: 15px
+  font-size: 13px
 }
 
 .col-sm-8, .col-sm-offset-2 {
@@ -112,7 +112,7 @@ font-size: 1.3em !important;
   border-top: 3px solid #ddd;
 }
 
-.ResetBtn {font-size: 14px; float:right;}
+.ResetBtn {font-size: 10px; float:right;}
 
 #wrap_submit_data{
   padding: 2px;

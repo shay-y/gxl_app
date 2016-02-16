@@ -48,7 +48,7 @@ plot_h <- 1
 ## read datasets:
 tbl_measures <- read.csv("data/app_measures_tbl_v1.csv") %>% tbl_df()
 tbl_meta <- read.csv("data/app_meta_tbl_v1.csv") %>% tbl_df()
-genotypes_vec <- c("129S1/SvImJ","A/J","AKR/J","BALB/cByJ","BTBR_T/1_tf/tf","C3H/HeJ","C57BL/6J","C57BL/6N","C57L/J","C58/J","CAST/Ei","DBA/2J","FVB/NJ","MOLF/Ei","NOD/LtJ","NZB/B1NJ","PERA/Ei","PL/J","SJL/J","SM/J","SPRET/Ei","SWR/J","C57BL/6N","DBA/2","g1","g2","g3","g4","gctrl")
+genotypes_vec <- c("129S1/SvImJ","A/J","AKR/J","BALB/cByJ","BTBR_T/1_tf/tf","C3H/HeJ","C57BL/6J","C57L/J","C58/J","CAST/Ei","DBA/2J","FVB/NJ","MOLF/Ei","NOD/LtJ","NZB/B1NJ","PERA/Ei","PL/J","SJL/J","SM/J","SPRET/Ei","SWR/J","C57BL/6N","DBA/2","g1","g2","g3","g4","gctrl","Arhgef4","baseline","Elk4","Setmar")#,"Slc38a10","Tnfaip1","Ttll4")
 lab_names_vec <- NULL
 measure_name_list <- NULL
 
