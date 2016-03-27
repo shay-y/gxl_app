@@ -1,0 +1,93 @@
+sex,parameter_id_eslim,parameter_stable_id,procedure_name,parameter_name,s2_interaction,s2_error,s2_lab,transformation_function,transformation_symbol,n_lab,n_genotype
+female,ESLIM_004_001_701,IMPC_IPG_012_001,Simplified IPGTT,Glucose response AUC,7796.772,32690.934,28737.091,x,none,3,7
+female,ESLIM_005_001_002,IMPC_DXA_002_001,DEXA,Fat mass,0.01213,0.1493,0.23204,x,none,3,7
+female,ESLIM_005_001_004,IMPC_DXA_004_001,DEXA,Bone Mineral Density (excluding skull),0.00127,0.00354,0.00657,x,none,3,7
+female,ESLIM_005_001_005,IMPC_DXA_005_001,DEXA,Bone Mineral Content,0.00117,0.00231,0.00432,x,none,,7
+female,ESLIM_005_001_701,IMPC_DXA_007_001,DEXA,BMC/Body weight,0,0,1.00E-05,x,none,3,7
+female,ESLIM_005_001_702,IMPC_DXA_008_001,DEXA,Lean/Body weight,0,0.0024,0.00321,x,none,,7
+female,ESLIM_005_001_703,IMPC_DXA_009_001,DEXA,Fat/Body weight,0.00032,0.00431,0.00882,x,none,3,7
+female,ESLIM_005_001_704,IMPC_DXA_010_001,DEXA,Bone area (BMC/BMD),0.23116,0.96399,0.70306,x,none,3,7
+female,ESLIM_007_001_005,IMPC_OFD_009_001,Open-field,Whole arena average speed,0.00025,0.04718,0.49195,x,none,3,7
+female,ESLIM_007_001_006,IMPC_OFD_010_001,Open-field,Periphery distance travelled,0,0.07584,0.33177,x,none,3,7
+female,ESLIM_007_001_007,IMPC_OFD_011_001,Open-field,Periphery resting time,1332.821,5417.734,15893.337,x,none,3,7
+female,ESLIM_007_001_008,IMPC_OFD_012_001,Open-field,Periphery permanence time,0.0599,0.30822,0.30463,x,none,3,7
+female,ESLIM_007_001_009,IMPC_OFD_013_001,Open-field,Periphery average speed,0.00043,0.04651,0.5003,x,none,3,7
+female,ESLIM_007_001_011,IMPC_OFD_015_001,Open-field,Centre resting time,0.26682,2.00791,1.40404,log(x),log,3,7
+female,ESLIM_007_001_013,IMPC_OFD_017_001,Open-field,Centre average speed,0,0.07558,0.22871,log(x+0.5*min(x[x!=0 & !is.na(x)])),log(x+0.5*min(x)),3,7
+female,ESLIM_007_001_014,IMPC_OFD_018_001,Open-field,Latency to centre entry,0.35363,3.13341,0.46483,log(x),log,3,7
+female,ESLIM_007_001_015,IMPC_OFD_019_001,Open-field,Number of centre entries,0.52792,3.17195,47.41749,log(x+0.5*min(x[x!=0 & !is.na(x)])),log(x+0.5*min(x)),3,7
+female,ESLIM_007_001_701,IMPC_OFD_020_001,Open-field,Distance travelled - total,0.00258,0.05078,0.45753,sqrt(x),sqrt,3,7
+female,ESLIM_007_001_703,IMPC_OFD_022_001,Open-field,Percentage centre time,0.0762,0.34896,2.26379,sqrt(x),sqrt,3,7
+female,ESLIM_008_001_008,IMPC_CSD_032_001,Modified SHIRPA,Locomotor activity,0.03349,0.12731,0.0341,log(x),log,3,7
+female,ESLIM_009_001_701,IMPC_GRS_008_001,Grip-Strength,Forelimb grip strength measurement mean,146.9511,242.2491,857.6109,log(x/(100-x)),log(x/(100-x)),3,7
+female,ESLIM_009_001_702,IMPC_GRS_009_001,Grip-Strength,Forelimb and hindlimb grip strength measurement mean,270.7166,636.8791,2087.1281,x,none,3,7
+female,ESLIM_009_001_703,IMPC_GRS_010_001,Grip-Strength,Forelimb grip strength normalised against body weight,0.02639,0.05761,0.28686,x,none,3,7
+female,ESLIM_009_001_704,IMPC_GRS_011_001,Grip-Strength,Forelimb and hindlimb grip strength normalised against body weight,0.01673,0.03791,0.17964,log(x),log,3,7
+female,ESLIM_011_001_001,IMPC_ACS_001_001,Acoustic Startle&PPI,BN startle magnitude,0.14013,0.19224,0.78648,log(x),log,3,7
+female,ESLIM_011_001_002,IMPC_ACS_002_001,Acoustic Startle&PPI,PP1 startle magnitude,0.0681,0.21431,0.4009,log(x),log,3,7
+female,ESLIM_011_001_003,IMPC_ACS_003_001,Acoustic Startle&PPI,PP2 startle magnitude,0.04425,0.16456,0.63922,log(x),log,3,7
+female,ESLIM_011_001_004,IMPC_ACS_004_001,Acoustic Startle&PPI,PP3 startle magnitude,0.0227,0.19434,0.51321,log(x),log,3,7
+female,ESLIM_011_001_005,IMPC_ACS_005_001,Acoustic Startle&PPI,PP4 startle magnitude,0.02682,0.2333,0.29971,log(x),log,3,7
+female,ESLIM_011_001_006,IMPC_ACS_006_001,Acoustic Startle&PPI,110dB startle magnitude,0.98146,32.05058,22.80298,log(x),log,3,7
+female,ESLIM_011_001_007,IMPC_ACS_007_001,Acoustic Startle&PPI,PP1 + pulse startle magnitude,1.39482,31.19477,30.83777,sqrt(x),sqrt,3,7
+female,ESLIM_011_001_008,IMPC_ACS_008_001,Acoustic Startle&PPI,PP2 + pulse startle magnitude,0.94135,25.40215,30.2143,sqrt(x),sqrt,3,7
+female,ESLIM_011_001_009,IMPC_ACS_009_001,Acoustic Startle&PPI,PP3 + pulse startle magnitude,0.01177,0.31002,0.99855,sqrt(x),sqrt,3,7
+female,ESLIM_011_001_010,IMPC_ACS_010_001,Acoustic Startle&PPI,PP4 + pulse startle magnitude,0.01487,0.2338,0.97387,log(x),log,3,7
+female,ESLIM_011_001_701,IMPC_ACS_033_001,Acoustic Startle&PPI,Prepulse inhibition - PP1,5.59996,738.86608,236.16874,log(x),log,3,7
+female,ESLIM_011_001_702,IMPC_ACS_034_001,Acoustic Startle&PPI,Prepulse inhibition - PP2,3.00E-05,474.6069,177.7848,x,none,3,7
+female,ESLIM_011_001_704,IMPC_ACS_036_001,Acoustic Startle&PPI,Prepulse inhibition - PP4,0,343.025,228.3223,x,none,3,7
+female,ESLIM_021_001_001,IMPC_CBC_018_001,Fasted Clinical Chemistry,Glucose,0,0.05439,0.00011,log(x),log,3,7
+female,ESLIM_021_001_002,IMPC_CBC_015_001,Fasted Clinical Chemistry,Total cholesterol,0,0.08482,0.00195,x,none,3,7
+female,ESLIM_021_001_004,IMPC_CBC_026_001,Fasted Clinical Chemistry,Free fatty acids,0.02531,0.06371,0.02073,log(x),log,3,7
+female,ESLIM_021_001_005,IMPC_CBC_016_001,Fasted Clinical Chemistry,HDL-cholesterol,0,0.02813,0.00313,log(x),log,3,7
+female,ESLIM_021_001_007,IMPC_CBC_027_001,Fasted Clinical Chemistry,Glycerol,0.0183,0.06131,0.03065,log(x),log,3,7
+female,ESLIM_022_001_709,IMPC_GRS_003_001,Body Weight,Grip Strength Body Weight,0.00043,0.006,0.00172,log(x),log,3,7
+female,ESLIM_022_001_710,,Body Weight,Rotarod Body Weight,0.00031,0.00595,0.00183,log(x),log,3,7
+female,ESLIM_022_001_711,,Body Weight,Acoustic Startle & PPI Body Weight,0.00024,0.00571,0.00143,log(x),log,3,7
+female,ESLIM_022_001_712,,Body Weight,Hot Plate Body Weight,0.00078,0.00598,0.00186,log(x),log,3,7
+male,ESLIM_004_001_701,IMPC_IPG_012_001,Simplified IPGTT,Glucose response AUC,7796.772,32690.934,28737.091,x,none,3,7
+male,ESLIM_005_001_002,IMPC_DXA_002_001,DEXA,Fat mass,0.01213,0.1493,0.23204,x,none,3,7
+male,ESLIM_005_001_004,IMPC_DXA_004_001,DEXA,Bone Mineral Density (excluding skull),0.00127,0.00354,0.00657,x,none,3,7
+male,ESLIM_005_001_005,IMPC_DXA_005_001,DEXA,Bone Mineral Content,0.00117,0.00231,0.00432,x,none,3,7
+male,ESLIM_005_001_701,IMPC_DXA_007_001,DEXA,BMC/Body weight,0,0,1.00E-05,x,none,3,7
+male,ESLIM_005_001_702,IMPC_DXA_008_001,DEXA,Lean/Body weight,0,0.0024,0.00321,x,none,3,7
+male,ESLIM_005_001_703,IMPC_DXA_009_001,DEXA,Fat/Body weight,0.00032,0.00431,0.00882,x,none,3,7
+male,ESLIM_005_001_704,IMPC_DXA_010_001,DEXA,Bone area (BMC/BMD),0.23116,0.96399,0.70306,x,none,3,7
+male,ESLIM_007_001_005,IMPC_OFD_009_001,Open-field,Whole arena average speed,0.00025,0.04718,0.49195,x,none,3,7
+male,ESLIM_007_001_006,IMPC_OFD_010_001,Open-field,Periphery distance travelled,0,0.07584,0.33177,x,none,3,7
+male,ESLIM_007_001_007,IMPC_OFD_011_001,Open-field,Periphery resting time,1332.821,5417.734,15893.337,x,none,3,7
+male,ESLIM_007_001_008,IMPC_OFD_012_001,Open-field,Periphery permanence time,0.0599,0.30822,0.30463,x,none,3,7
+male,ESLIM_007_001_009,IMPC_OFD_013_001,Open-field,Periphery average speed,0.00043,0.04651,0.5003,x,none,3,7
+male,ESLIM_007_001_011,IMPC_OFD_015_001,Open-field,Centre resting time,0.26682,2.00791,1.40404,log(x),log,3,7
+male,ESLIM_007_001_013,IMPC_OFD_017_001,Open-field,Centre average speed,0,0.07558,0.22871,log(x+0.5*min(x[x!=0 & !is.na(x)])),log(x+0.5*min(x[x!=0 & !is.na(x)])),3,7
+male,ESLIM_007_001_014,IMPC_OFD_018_001,Open-field,Latency to centre entry,0.35363,3.13341,0.46483,log(x),log,3,7
+male,ESLIM_007_001_015,IMPC_OFD_019_001,Open-field,Number of centre entries,0.52792,3.17195,47.41749,log(x+0.5*min(x[x!=0 & !is.na(x)])),log(x+0.5*min(x[x!=0 & !is.na(x)])),3,7
+male,ESLIM_007_001_701,IMPC_OFD_020_001,Open-field,Distance travelled - total,0.00258,0.05078,0.45753,sqrt(x),sqrt,3,7
+male,ESLIM_007_001_703,IMPC_OFD_022_001,Open-field,Percentage centre time,0.0762,0.34896,2.26379,sqrt(x),sqrt,3,7
+male,ESLIM_008_001_008,IMPC_CSD_032_001,Modified SHIRPA,Locomotor activity,0.03349,0.12731,0.0341,log(x),log,3,7
+male,ESLIM_009_001_701,IMPC_GRS_008_001,Grip-Strength,Forelimb grip strength measurement mean,146.9511,242.2491,857.6109,log(x/(100-x)),log(x/(100-x)),3,7
+male,ESLIM_009_001_702,IMPC_GRS_009_001,Grip-Strength,Forelimb and hindlimb grip strength measurement mean,270.7166,636.8791,2087.1281,x,none,3,7
+male,ESLIM_009_001_703,IMPC_GRS_010_001,Grip-Strength,Forelimb grip strength normalised against body weight,0.02639,0.05761,0.28686,x,none,3,7
+male,ESLIM_009_001_704,IMPC_GRS_011_001,Grip-Strength,Forelimb and hindlimb grip strength normalised against body weight,0.01673,0.03791,0.17964,log(x),log,3,7
+male,ESLIM_011_001_001,IMPC_ACS_001_001,Acoustic Startle&PPI,BN startle magnitude,0.14013,0.19224,0.78648,log(x),log,3,7
+male,ESLIM_011_001_002,IMPC_ACS_002_001,Acoustic Startle&PPI,PP1 startle magnitude,0.0681,0.21431,0.4009,log(x),log,3,7
+male,ESLIM_011_001_003,IMPC_ACS_003_001,Acoustic Startle&PPI,PP2 startle magnitude,0.04425,0.16456,0.63922,log(x),log,3,7
+male,ESLIM_011_001_004,IMPC_ACS_004_001,Acoustic Startle&PPI,PP3 startle magnitude,0.0227,0.19434,0.51321,log(x),log,3,7
+male,ESLIM_011_001_005,IMPC_ACS_005_001,Acoustic Startle&PPI,PP4 startle magnitude,0.02682,0.2333,0.29971,log(x),log,3,7
+male,ESLIM_011_001_006,IMPC_ACS_006_001,Acoustic Startle&PPI,110dB startle magnitude,0.98146,32.05058,22.80298,log(x),log,3,7
+male,ESLIM_011_001_007,IMPC_ACS_007_001,Acoustic Startle&PPI,PP1 + pulse startle magnitude,1.39482,31.19477,30.83777,sqrt(x),sqrt,3,7
+male,ESLIM_011_001_008,IMPC_ACS_008_001,Acoustic Startle&PPI,PP2 + pulse startle magnitude,0.94135,25.40215,30.2143,sqrt(x),sqrt,3,7
+male,ESLIM_011_001_009,IMPC_ACS_009_001,Acoustic Startle&PPI,PP3 + pulse startle magnitude,0.01177,0.31002,0.99855,sqrt(x),sqrt,3,7
+male,ESLIM_011_001_010,IMPC_ACS_010_001,Acoustic Startle&PPI,PP4 + pulse startle magnitude,0.01487,0.2338,0.97387,log(x),log,3,7
+male,ESLIM_011_001_701,IMPC_ACS_033_001,Acoustic Startle&PPI,Prepulse inhibition - PP1,5.59996,738.86608,236.16874,log(x),log,3,7
+male,ESLIM_011_001_702,IMPC_ACS_034_001,Acoustic Startle&PPI,Prepulse inhibition - PP2,3.00E-05,474.6069,177.7848,x,none,3,7
+male,ESLIM_011_001_704,IMPC_ACS_036_001,Acoustic Startle&PPI,Prepulse inhibition - PP4,0,343.025,228.3223,x,none,3,7
+male,ESLIM_021_001_001,IMPC_CBC_018_001,Fasted Clinical Chemistry,Glucose,0,0.05439,0.00011,log(x),log,3,7
+male,ESLIM_021_001_002,IMPC_CBC_015_001,Fasted Clinical Chemistry,Total cholesterol,0,0.08482,0.00195,x,none,3,7
+male,ESLIM_021_001_004,IMPC_CBC_026_001,Fasted Clinical Chemistry,Free fatty acids,0.02531,0.06371,0.02073,log(x),log,3,7
+male,ESLIM_021_001_005,IMPC_CBC_016_001,Fasted Clinical Chemistry,HDL-cholesterol,0,0.02813,0.00313,log(x),log,3,6
+male,ESLIM_021_001_007,IMPC_CBC_027_001,Fasted Clinical Chemistry,Glycerol,0.0183,0.06131,0.03065,log(x),log,3,7
+male,ESLIM_022_001_709,IMPC_GRS_003_001,Body Weight,Grip Strength Body Weight,0.00043,0.006,0.00172,log(x),log,3,7
+male,ESLIM_022_001_710,,Body Weight,Rotarod Body Weight,0.00031,0.00595,0.00183,log(x),log,3,7
+male,ESLIM_022_001_711,,Body Weight,Acoustic Startle & PPI Body Weight,0.00024,0.00571,0.00143,log(x),log,3,7
+male,ESLIM_022_001_712,,Body Weight,Hot Plate Body Weight,0.00078,0.00598,0.00186,log(x),log,3,7
