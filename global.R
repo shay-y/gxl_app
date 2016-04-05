@@ -9,12 +9,17 @@
 #   ))
 # setwd("~/Dropbox/App_GxL/gxl_app")
 
+# install.packages("RColorBrewer")
+# library(RColorBrewer)
+# (cols <- brewer.pal(4,"Paired")[c(2,4)])
+
+library(ggplot2)
 library(shiny)
 library(dplyr,warn.conflicts = F)
 library(shinyjs)
 library(stringr)
 library(tidyr)
-
+options(dplyr.width = Inf,dplyr.print_max = 100,width = 1000)
 lab_names_vec <- NULL
 load("Startup_objects.RData")
 

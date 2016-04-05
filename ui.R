@@ -1,16 +1,24 @@
 tagList(
   useShinyjs(),
-  tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css")),
+  # tags$head(
+  #   tags$link(
+  #     rel = "stylesheet",
+  #     type = "text/css",
+  #     href = "style.css"
+  #     )
+  #   ),
+  # tags$head(tags$script(src="scroll.js")),
+  #shiny::includeScript
   navbarPage(
     title = HTML("Genotype-Lab Replicability Analyzer"),
     fluid = T,
-    theme = "bootstrap.css",
+    theme = "theme.css",
     tabPanel(
       title = "App",
       fluidRow(
         actionButton("console","server console"),
         column(
-          width = 3,
+          width = 4,
           wellPanel(
             selectInput(
               inputId = "procedure_name",
@@ -18,7 +26,7 @@ tagList(
               choices = c("",procedure_name_list)
             ),
             uiOutput("proc_SOP_link"),
-            uiOutput("metadata_input",style = "overflow-y:scroll; max-height: 600px"),
+            uiOutput("metadata_input"),# ,style = "overflow-y:scroll; max-height: 600px"),
             # selectInput(
             #   inputId = "measure_name",
             #   label = "Phenotypic Measure:",
@@ -60,13 +68,6 @@ tagList(
                 value = 0.05,
                 width = "100px")), #display:inline-block; width:100px;min-width:100px   
             
-            # radioButtons(
-            #   inputId = "mc_method",
-            #   label = "Multiplicity Correction:",
-            #   choices = list("FWER (Tukey HSD)" = "tukey",
-            #                  "FDR (BH)" = "bh")
-            # ),
-            
             checkboxInput(
               inputId = "send_data",
               "Send Data?"),
@@ -79,7 +80,7 @@ tagList(
             #)
         ),
         column(
-          width = 6,
+          width = 8,
           checkboxInput(
             inputId = "gxl_adjust",
             label = "GxL adjust",
@@ -95,7 +96,16 @@ tagList(
             label = "CI on original scale",
             value = F
           ),
-          dataTableOutput("results_table"),
+          tabsetPanel(
+            tabPanel(
+              title = "Table",
+              dataTableOutput("results_table")
+              ),
+            tabPanel(
+              title = "CIs Plot",
+              plotOutput("cis_plot",width = "80%",height = "500px")
+            )
+          ),
           downloadButton("download_button","Download Results")#,class = "disabled")
         )
       )
