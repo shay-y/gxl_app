@@ -1,5 +1,7 @@
 
 function(input, output, session) {
+  
+  ## create temporary debugging concole:
   observe(label="console",{
     if(input$console != 0) {
       options(browserNLdisabled=TRUE)
@@ -10,6 +12,7 @@ function(input, output, session) {
     }
   })
   
+  ## initialize reactive values:
   values <- reactiveValues(
     genotypes_tested = NULL,
     tbl_metadata_selected = NULL,
@@ -18,11 +21,23 @@ function(input, output, session) {
     tbl_summaries = NULL,
     tbl_raw_input = NULL)
 
-  ## metadata input fields
+  ## create metadata input object for selected procedure:
   output$metadata_input <- renderUI({
     req(input$procedure_name)
+    
     values$tbl_metadata_selected <- tbl_metadata_1 %>% 
       filter(procedure_name == input$procedure_name)
+    values$tbl_measures_selected <-
+      tbl_measure_1 %>%
+      filter(procedure_name == input$procedure_name)
+    
+    values$measure_name_list <-
+      values$tbl_measures_selected %>% 
+      .$parameter_name %>%
+      as.character() %>%
+      as.list() %>%
+      {setNames(.,.)}
+    
     tags$table(
       tags$thead(
         tags$tr(
@@ -45,29 +60,30 @@ function(input, output, session) {
               tags$td(row$unit)
             )
           }
+        ),
+        tags$tr(
+          br()
+        ),
+        tags$tr(
+          tags$td("Meassure"),
+          tags$td(
+            selectizeInput(
+              inputId = "measure_selected",
+              label = NULL,
+              choices = values$measure_name_list,
+              options = list(create = TRUE))),
+          tags$td("")
         )
       )
     )
   })
   
-  ## measures input
-  observeEvent(input$procedure_name,{
-    req(input$procedure_name)
-    
-    values$tbl_measures_selected <-
-      tbl_measure_1 %>%
-      filter(procedure_name == input$procedure_name)
-    
-    values$measure_name_list <-
-      values$tbl_measures_selected %>% 
-      .$parameter_name %>%
-      as.character() %>%
-      as.list() %>%
-      {setNames(.,.)}
-    updateSelectInput(session,"measure_name", choices = values$measure_name_list)
-  })
+  ## populate measure input with measures avaliable for selected procedure:
+  # observeEvent(values$measure_name_list,{
+  #   updateSelectInput(session,"measure_name", choices = values$measure_name_list)
+  # })
   
-  ## SOP link 
+  ## create link to SOP page at IMPRESS for selected procedure:
   output$proc_SOP_link <- renderUI({
     req(input$procedure_name)
     
@@ -79,31 +95,32 @@ function(input, output, session) {
     
     a(href = selected_url,
       target='_blank',
-      "Link to Protocol")
+      "Link to Standard Operating Procedure")
   })
   
-  ## when measue is selected ->> print measure details
+  ## render details table for selected measure:
   output$selected_measure_details <- renderUI({
-    req(input$measure_name,input$procedure_name)
-    values$measure_selected <-
+    req(input$measure_selected,input$procedure_name)
+    values$measure_selected_row <-
       tbl_measure_1 %>%
       filter(procedure_name == input$procedure_name &
-               parameter_name==input$measure_name)
+               parameter_name==input$measure_selected)
     with(
-      values$measure_selected,
+      values$measure_selected_row,
       withMathJax(
-        HTML(
-          "\\(S^2_{int.}/S^2_{error}=\\)",
-          s2_ratio %>% format(digits=5,nsmall=3),
-          "<br><strong>Units:</strong> ",
-          unit,
-          "<br><strong>Transformation:</strong> ",
-          transformation_symbol
-        )
+        "\\(S^2_{int.}/S^2_{error}=\\)",
+        s2_ratio %>% format(digits=5,nsmall=3),
+        br(),
+        strong("Units:"),
+        unit,
+        br(),
+        strong("Transformation:"),
+        transformation_symbol
       )
     )
   })
   
+  ## create input object to recieve raw data file:
   output$file_input <- renderUI({
     input$reset_upload
     fileInput(
@@ -113,16 +130,14 @@ function(input, output, session) {
       width="80%")
   })
   
+  ## reset objects raw table, summaries table and groups:
   observeEvent(input$reset_upload,{
     values$tbl_raw_input <- NULL
     values$tbl_summaries <- NULL
     reset("groups")
-  }
-  #priority = 1,
-  #suspended = T
-  )
+  })
   
-  ## when file is selected ->> read raw table 
+  ## populate raw table with file input:
   observeEvent(input$upload_file,{
     values$tbl_raw_input <- 
       read.csv(
@@ -132,10 +147,10 @@ function(input, output, session) {
       )
   },priority = -1)  
   
-  ## upon raw table upload ->> create summaries table with and without transformation
-  observeEvent(values$tbl_raw_input,{
-    req(values$measure_selected$transformation_function)
-    trans_fun <- eval(parse(text=paste("function(x)",values$measure_selected$transformation_function)))
+  ## summarize and transform raw table:
+  observeEvent({values$tbl_raw_input;values$measure_selected_row},{
+    req(nrow(values$measure_selected_row)!=0)
+    trans_fun <- eval(parse(text=paste("function(x)",values$measure_selected_row$transformation_expr)))
 
     if(is.null(values$tbl_raw_input))
       values$tbl_summaries <- NULL
@@ -153,7 +168,7 @@ function(input, output, session) {
     }
   })
  
-  ## ...and render the table as HTML, + add rows for summaries after transformation
+  ## render summaries table as input for additional edits:
   output$input_summaries <- renderUI({
     tags$table(
       tags$thead(
@@ -165,15 +180,15 @@ function(input, output, session) {
         if (!is.null(values$tbl_summaries))
         {
           values$tbl_summaries %>%
-            add_rownames() %>% 
+            mutate(group_id = 1:n()) %>% 
             rowwise() %>% 
             transmute(
               html_row =
                 tags$tr(   
                   tags$td(V1),
-                  tags$td(numericInput(inputId = paste(rowname,"mean","."), label = NULL, value = mean_t)),
-                  tags$td(numericInput(inputId = paste(rowname,"sd","."), label = NULL, value = sd_t, min = 0)),
-                  tags$td(numericInput(inputId = paste(rowname,"n","."), label = NULL, value = n, step = 1,min = 0))
+                  tags$td(numericInput(inputId = paste("grp",group_id,V1,"mean",sep = "_"), label = NULL, value = mean_t)),
+                  tags$td(numericInput(inputId = paste("grp",group_id,V1,"sd",sep = "_"), label = NULL, value = sd_t, min = 0)),
+                  tags$td(numericInput(inputId = paste("grp",group_id,V1,"n",sep = "_"), label = NULL, value = n, step = 1,min = 0))
                 ) %>%
                 as.character()
             ) %>% 
@@ -183,14 +198,15 @@ function(input, output, session) {
         
         if(!is.null(input$groups))
         {
+          n_rows <- ifelse(!is.null(values$tbl_summaries),nrow(values$tbl_summaries),0) 
           lapply(
-            1:length(input$groups),function(gene_id)
+            n_rows + 1:length(input$groups),function(group_id)
             {
               tags$tr(
-                tags$td(input$groups[gene_id]),
-                tags$td(numericInput(inputId = paste(gene_id,"mean","."), label = NULL, value = "")),
-                tags$td(numericInput(inputId = paste(gene_id,"sd","."), label = NULL, value = "", min = 0)),
-                tags$td(numericInput(inputId = paste(gene_id,"n","."), label = NULL, value = "", step = 1,min = 0))
+                tags$td(input$groups[group_id - n_rows]),
+                tags$td(numericInput(inputId = paste("grp",group_id,input$groups[group_id - n_rows],"mean",sep = "_"), label = NULL, value = "")),
+                tags$td(numericInput(inputId = paste("grp",group_id,input$groups[group_id - n_rows],"sd",sep = "_"), label = NULL, value = "", min = 0)),
+                tags$td(numericInput(inputId = paste("grp",group_id,input$groups[group_id - n_rows],"n",sep = "_"), label = NULL, value = "", step = 1,min = 0))
               )
             }
           )
@@ -199,7 +215,7 @@ function(input, output, session) {
     )
   })
   
-  ## workaroud to link to file using relative path (the example data to download)
+  ## link the example raw data file 
   output$example_raw_input <- downloadHandler(
     filename = "Simplified IPGTT Glucose response AUC - example.csv",
     content = function(con) {
@@ -207,137 +223,154 @@ function(input, output, session) {
     }
   )
   
-    
-# ---- reset operations ----
-# 
-#   observeEvent(input$reset_experiment, {
-#     reset("lab_name")
-#     reset("proc_gender") 
-#     updateSelectizeInput(session,"genotypes_tested_pairwise", options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
-#     updateSelectizeInput(session,"genotypes_tested_control", options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list one',onInitialize = I('function() { this.setValue(""); }')))
-#     updateSelectizeInput(session,"genotypes_tested_cases", options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
-#     reset("expr_design")
-#     
-#     updateSelectizeInput(session,inputId = "proc_name",options = list(onInitialize = I('function() { this.setValue(""); }')))
-#     reset("proc_age")
-#     reset("proc_duration")
-#     runjs("$('textarea').val('')")
-#   })
-#   
-#   observeEvent(input$reset_proc, {
-#     updateSelectizeInput(session,inputId = "proc_name",options = list(onInitialize = I('function() { this.setValue(""); }')))
-#     reset("proc_age")
-#     reset("proc_duration")
-#     runjs("$('textarea').val('')")
-#   })
-#   
-#   observeEvent(input$reset_measure, {
-#     reset("measure_name")
-#   })
+  # read input objects and create summaries table and pairs table
+  observeEvent(
+    {input$submit; values$measure_selected_row},
+    {
+      req(values$measure_selected_row,input$submit)
+      attach(values$measure_selected_row) # for s2_interaction, n_labs_s2gxl, n_groups_s2gxl, back_transform_expr
+      
+      ## read input ids corresponding to the summaries table (including manual additions) and place in a df
+      tbl_summaries_ids <- str_split_fixed(names(input),"_",n = 4) %>%
+        as.data.frame() %>%
+        tbl_df() %>%
+        filter(V1 == "grp") %>% 
+        mutate(input_name = paste(V1,V2,V3,V4,sep = "_"))
+      
+      ## read corresponding input values:
+      tbl_summaries_values <- sapply(tbl_summaries_ids$input_name, function(x) input[[x]]) %>% 
+        data_frame(input_name = names(.),value = .)
+      #browser()
+      ## combine both, calculate S2_pooled, df and gxl-adjusted df
+      tbl_summaries_tidy <- 
+        inner_join(
+          tbl_summaries_ids,
+          tbl_summaries_values) %>% 
+        select(group_id = V2, group_name = V3, key = V4, value) %>% 
+        spread(key = key,value = value) %>% 
+        mutate(
+          df = sum(n)-n(),
+          s2_pooled = sum(sd^2*(n-1))/df,
+          ## Satterthwaite approximation for pooled
+          "df GxL-Adj." = (s2_pooled + 2*s2_interaction )^2  /( s2_pooled^2/(sum(n)-n()) + (2*s2_interaction)^2 /( (n_labs_s2gxl-1)*(n_groups_s2gxl-1) ) )
+        )
+      
+      ## generate all pairs combinations:
+      pairs_ind_comb <- nrow(tbl_summaries_tidy) %>% 
+        combn(2) %>% 
+        t() %>% 
+        as.data.frame(stringsAsFactors=FALSE) %>% 
+        tbl_df() %>% 
+        transmute(group_id1 = as.factor(V1),group_id2 = as.factor(V2))
+
+      ## create pairs table:
+      values$tbl_pairs <- pairs_ind_comb %>% 
+        inner_join(tbl_summaries_tidy,by = c("group_id1"="group_id")) %>% 
+        inner_join(tbl_summaries_tidy,c("group_id2"="group_id","s2_pooled","df","df GxL-Adj."))
+      
+      # make two tables reactive:
+      values$tbl_summaries_tidy  <- tbl_summaries_tidy  
+      detach(values$measure_selected_row)
+    })
   
-# ---- main function ----
+  ## calculate (estimate, se, statistic ,p-value, conf.lower, conf.higher)X(unadjusted, adjusted GxL)X(unadjusted, adjusted BH)X(back transform yes\no)
+  observeEvent(
+    {values$tbl_pairs; input$alpha},
+    {
+      req(values$tbl_pairs,input$alpha)
+      alpha <- input$alpha
+      attach(values$measure_selected_row) # for s2_interaction, n_labs_s2gxl, n_groups_s2gxl, back_transform_expr
+      back_trans_fun <- eval(parse(text=paste("function(y)",back_transform_expr)))
 
-# as ----------------------------------------------------------------------
+      values$tbl_pairs_calc <- values$tbl_pairs %>% 
+        mutate(
+          pair_id   = paste0(group_id1,"-",group_id2),
+          `Pair Names` = paste(group_name.x,"-",group_name.y), # term
+          Difference   = mean.x-mean.y,                       # estimate
+          `Standard Error`      = sqrt(s2_pooled*(1/n.x+1/n.y)),
+          `Standard Error GxL-Adj.` = sqrt(s2_pooled*(1/n.x+1/n.y)+2*s2_interaction),
+          Statistic = Difference/`Standard Error`,
+          `Statistic GxL-Adj.` = Difference/`Standard Error GxL-Adj.`,
+          `p-value` = 2*pt(q = Statistic,df = df),
+          `p-value GxL-Adj.` = 2*pt(q = `Statistic GxL-Adj.`,df = `df GxL-Adj.`),
+          `p-value BH-Adj.` = p.adjust(`p-value`,"BH"),
+          `p-value GxL-Adj. BH-Adj.` = p.adjust(`p-value GxL-Adj.`,"BH"),
+          `CI-Low` = Difference - qt(1-alpha,df = df)*`Standard Error`,
+          `CI-High` = Difference + qt(1-alpha,df = df)*`Standard Error`,
+          `CI-Low  GxL-Adj.` = Difference - qt(1-alpha,df = df)*`Standard Error GxL-Adj.`,
+          `CI-High GxL-Adj.` = Difference + qt(1-alpha,df = df)*`Standard Error GxL-Adj.`,
+          m = n(),
+          R = `p-value GxL-Adj.` <= alpha,
+          `R GxL-Adj` = `p-value GxL-Adj. BH-Adj.` <= alpha,
+          `CI-Low  BH-Adj.` = Difference - qt(1-alpha*R/m,df = df)*`Standard Error`,
+          `CI-High BH-Adj.` = Difference + qt(1-alpha*R/m,df = df)*`Standard Error`,
+          `CI-Low  GxL-Adj. BH-Adj.` = Difference - qt(1-alpha*`R GxL-Adj`/m,df = `df GxL-Adj.` )*`Standard Error GxL-Adj.`,
+          `CI-High GxL-Adj. BH-Adj.` = Difference + qt(1-alpha*`R GxL-Adj`/m,df = `df GxL-Adj.` )*`Standard Error GxL-Adj.`,
+          `Difference (Orig. Scale)` = back_trans_fun(Difference),
+          `CI-Low  (Orig. Scale)` = back_trans_fun(`CI-Low`),
+          `CI-High (Orig. Scale)` = back_trans_fun(`CI-High`),
+          `CI-Low  GxL-Adj.(Orig. Scale)` = back_trans_fun(`CI-Low  GxL-Adj.`),
+          `CI-High GxL-Adj.(Orig. Scale)` = back_trans_fun(`CI-High GxL-Adj.`),
+          `CI-Low   BH-Adj.(Orig. Scale)` = back_trans_fun(`CI-Low  BH-Adj.`),
+          `CI-High  BH-Adj.(Orig. Scale)` = back_trans_fun(`CI-High BH-Adj.`),
+          `CI-Low  GxL-Adj. BH-Adj.(Orig. Scale)` = back_trans_fun(`CI-Low  GxL-Adj. BH-Adj.`),
+          `CI-High GxL-Adj. BH-Adj.(Orig. Scale)` = back_trans_fun(`CI-High GxL-Adj. BH-Adj.`)
+        )
+      detach(values$measure_selected_row)
+    })
+  
+  ## render DT 
+  output$results_table <- renderDataTable(
+    # {
+    #   values$tbl_pairs_calc;
+    #   input$fdr_adjust;
+    #   input$gxl_adjust;
+    #   input$back_transformed},
+    {
+      req(values$tbl_pairs_calc)
+      
+      values$tbl_pairs_calc %>% 
+        select(-pair_id,-m,-R,-`R GxL-Adj`,-contains("Statistic")) %>% 
+        {
+          if(input$back_transformed)
+            select(.,`Pair Names`,contains("(Orig. Scale)"),contains("p-value"))
+          else
+            select(.,-contains("(Orig. Scale)"))
+        } %>% 
+        {
+          if(input$gxl_adjust)
+            select(.,`Pair Names`,contains("Difference"),contains("GxL-Adj."))
+          else
+            select(.,-contains("GxL-Adj."))
+        } %>% 
+        {
+          if(input$fdr_adjust)
+            select(.,`Pair Names`,contains("Difference"),contains("Standard"),contains("BH-Adj."))
+          else
+            select(.,-contains("BH-Adj."))
+        }
+    })  
+          
+  output$download_button <- downloadHandler(
+    filename = function()
+      paste0("Results_",Sys.Date(),".txt"),
+    content  = function(file)
+    {
+      input
+      input$send_data
+      values$tbl_measures_selected
+      values$tbl_metadata_selected
+      values$tbl_summaries_tidy
+      values$tbl_pairs_calc
+    }  
+  )
+
+  # observe({
+  #   if (input$submit>0)
+  #     removeClass(id = "download_button", class = "disabled")
+  # })
 
 
-#  ------------------------------------------------------------------------
-
-
-#  ------------------------------------------------------------------------
-
-
-#  ------------------------------------------------------------------------
-
-
-# a -----------------------------------------------------------------------
-
-
-  ## when form is submited, read data from stats table, create comparisons
-#   get_comparisons_object <- eventReactive(input$submit_data,{
-#     
-#     # read data:
-#     measure_details <- selected_measure_details()
-#     
-#     genotypes_tested <- values$genotypes_tested
-#     expr_design <- input$expr_design
-#     genotypes_tested <- values$genotypes_tested
-#     S2_int <- measure_details$S2_interaction
-#     n_lab <- measure_details$n_lab
-#     n_genotype <- measure_details$n_genotype
-#     
-#     type <- ifelse(input$mult_correct,"single-step","none")
-#     alpha <- input$alpha
-# 
-#     # read input to df
-#     ids_vec <- c(paste0("input$'",genotypes_tested,"_mean'"),
-#                  paste0("input$'",genotypes_tested,"_SD'"),
-#                  paste0("input$'",genotypes_tested,"_N'"))
-#     
-#     stats_vec <- unlist(sapply(ids_vec, function(x)eval(parse(text=x))))
-#     if (is.null(stats_vec))
-#       return(NULL)
-#     stats_matrix <- matrix(stats_vec,ncol = 3)
-#     colnames(stats_matrix) <- c("mean","SD","N")
-#     rownames(stats_matrix) <- genotypes_tested
-#       
-#     # create comparisons object
-#     co <- gxl_adjust(type = type, name_vec = genotypes_tested,
-#                      mean_vec = stats_matrix[,1], SD_vec = stats_matrix[,2], N_vec = stats_matrix[,3],
-#                      design = expr_design, S2_int, n_lab, n_genotype, alpha = alpha)
-#     tbl_res <- get_res_table(co)
-#     
-#     measure_list <- measure_details[c("Gender","parameter_id","procedure_name","parameter_name","S2_interaction","parameter_trans_symbol","parameter_unit","S2_ratio")]
-#     details <- sapply(measure_list,as.character)
-#     
-#     return(list(
-#       measure_details=measure_details,
-#       tbl_res=tbl_res,
-#       co=co,
-#       stats_matrix=stats_matrix,
-#       genotypes_tested = genotypes_tested,
-#       expr_design = expr_design,
-#       alpha=alpha,
-#       input_stats_matrix = stats_matrix,
-#       details = details,
-#       results_table=tbl_res))
-#   },ignoreNULL = F)
-#   
-#   ## when main object created, use it to print table
-#   output$out_tbl <- DT::renderDataTable({
-#     input$alpha # invalidate when alpha is changed (for immidiate reactivity)
-#     o <- get_comparisons_object()
-#     if (is.null(o))
-#     {
-#       tbl_NAs <- data.frame(as.list(rep(NA,7)))
-#       colnames(tbl_NAs) <- c("p_value","p_value_adj", "est", "ci_lwr", "ci_upr",  "ci_lwr_adj", "ci_upr_adj")
-#       rownames(tbl_NAs) <- "-"
-#       get_datatable(tbl_NAs,NULL)
-#     }else{
-#       get_datatable(o$tbl_res,o$measure_details$parameter_name)
-#     }
-#   })
-#   
-#   outputOptions(output,"out_tbl",suspendWhenHidden = F)
-#   
-#   ## when main object created, plot diagram
-#   observe({
-#     o <- get_comparisons_object()
-#     if(!is.null(o))
-#     {
-#       bind_shiny(vis = reactive({
-#         
-#         # load("o.Rdata")
-#         
-#         
-#         tbl_res <- o$tbl_res[,1:3]
-#         pair_names <- matrix(unlist((strsplit(rownames(tbl_res)," - "))),ncol=2,byrow = T)
-#         tbl_pairs <- data.frame(name1 = pair_names[,1],name2 = pair_names[,2],tbl_res)
-#         tbl_singles <- data.frame(name=o$genotypes_tested,mean=o$stats_matrix[,1])
-#         plot_diagram(tbl_singles,tbl_pairs,alpha = 0.05, xMeasure = as.character(o$measure_details$parameter_name))
-#       }), plot_id = "dia_plot",session = session, ,bg = "white", ,background = "white")
-#     }
-#   })
-#   
 # 
 #   observe({
 #     if (input$submit_data)
@@ -387,31 +420,6 @@ function(input, output, session) {
 # 
 #   
 
-  # output$dl_button <- downloadHandler(
-  #   filename = function() 
-  #   {
-  #     if (input$dl_type=="all")
-  #       paste0("Results_",input$experiment_identifier,".txt")
-  #     else
-  #       paste0("Table_",input$experiment_identifier,".csv")
-  #   }
-  #     ,
-  #   content  = function(file)
-  #   {
-  #     o <- get_comparisons_object()
-  #     if (input$dl_type=="all")
-  #     {
-  #       capture.output(o[-(1:4)], file = file)
-  #     } else {
-  #       write.csv(o$results_table,file)
-  #     }
-  #   }
-  # )
-  # 
-  # observe({
-  #   if (input$submit_data>0)
-  #     removeClass(id = "dl_button", class = "disabled")
-  # })
 # ---- Examples ----
 
   ## Example 1:

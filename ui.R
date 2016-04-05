@@ -19,11 +19,11 @@ tagList(
             ),
             uiOutput("proc_SOP_link"),
             uiOutput("metadata_input",style = "overflow-y:scroll; max-height: 600px"),
-            selectInput(
-              inputId = "measure_name",
-              label = "Phenotypic Measure:",
-              choices = ""
-            ),
+            # selectInput(
+            #   inputId = "measure_name",
+            #   label = "Phenotypic Measure:",
+            #   choices = ""
+            # ),
             uiOutput("selected_measure_details"),
             # radioButtons(
             #   inputId = "input_method",
@@ -51,62 +51,76 @@ tagList(
             uiOutput("input_summaries"),
             
             withMathJax(
-              numericInput( )
-              
-              
+              numericInput(
+                inputId = "alpha",
+                label = "\\(\\alpha\\) - level:",
+                min = 0.001 ,
+                max = 0.5,
+                step = 0.01,
+                value = 0.05,
+                width = "100px")), #display:inline-block; width:100px;min-width:100px   
             
+            # radioButtons(
+            #   inputId = "mc_method",
+            #   label = "Multiplicity Correction:",
+            #   choices = list("FWER (Tukey HSD)" = "tukey",
+            #                  "FDR (BH)" = "bh")
+            # ),
             
-            #   numeric  
-            #   
-            #   tags$div(
-            #     class='form-group shiny-input-container',
-            #     <label for='alpha'>\\(\\alpha\\) - level:</label>
-            #                  <input id='alpha' type='number' class='form-control' value='0.05' min='0' max='0.5' step='0.01',style='display:inline-block; width:100px; min-width:100px'/></div>")),
-            # checkboxInput("mult_correct","Apply multiplicity correction"),
-            # checkboxInput("checkbox_agrees_share","Contribute the project by sending the experiment settings and results to our database."), # improve
-            # div(id = "wrap_submit_data", actionButton("submit_data", "Submit", icon = icon("cog")))
-            # 
-       
-          )
+            checkboxInput(
+              inputId = "send_data",
+              "Send Data?"),
+            # div(
+            #   id = "wrap_main_submit",
+              actionButton(
+                inputId = "submit",
+                label =  "Submit",
+                icon = icon("cog")))
+            #)
+        ),
+        column(
+          width = 6,
+          checkboxInput(
+            inputId = "gxl_adjust",
+            label = "GxL adjust",
+            value = T
+          ),
+          checkboxInput(
+            inputId = "fdr_adjust",
+            label = "BH adjust",
+            value = T
+          ),
+          checkboxInput(
+            inputId = "back_transformed",
+            label = "CI on original scale",
+            value = F
+          ),
+          dataTableOutput("results_table"),
+          downloadButton("download_button","Download Results")#,class = "disabled")
         )
       )
     )
   )
 )
-        
-            
+
 # data table table-bordered table-condensed
 # HTML(""),
 # hr(),
-# 
 # "stats_tbl"
 # actionButton("reset_stats_tbl", " Reset",class="ResetBtn",icon = icon("refresh")),
+# HTML("<h5><div class='step'>Results:</div> </h5>")
+# label(" Comparisons Diagram:"),
+# hidden(div(id="dia_plot_h", ggvisOutput("dia_plot"), align = "center",width = "70%")),
+# div(imageOutput("dia_plot_ph",width = "auto",height = "auto"), align = "center"),
+# label(" Differences Confidence Intervals Plot:"),
+# hidden(div(id="ci_plot_h",plotOutput("ci_plot",width = "80%",height = "500px"), align = "center")),
+# div(imageOutput("ci_plot_ph",width = "auto",height = "auto"), align = "center"),
+# br(),
+# p("Download the detailed results in a text file or the table only in comma-separated file:"),
+# dataTableOutput("dt_results", width = "80%"),
+# radioButtons("dl_type", label = NULL, choices = list("Detailed (.txt file)"="all","Table only (.csv file)"="table")),
+# downloadButton("dl_button","Download",class = "disabled")
 
-
-
-  #         # actionButton("Example1", "Example",class="ResetBtn",icon = icon("refresh")),
-  #         # HTML("<h5><div class='step'>Results:</div> </h5>"),
-  #         # wellPanel(
-  #         #   withTags(
-  #         #     div(id = "results_sec",
-  #         #         label(" Summary Table:"),
-  #         #         DT::dataTableOutput("out_tbl", width = "80%"),
-  #         #         br(),
-  #         #         label(" Comparisons Diagram:"),
-  #         #         hidden(div(id="dia_plot_h", ggvisOutput("dia_plot"), align = "center",width = "70%")),
-  #         #         div(imageOutput("dia_plot_ph",width = "auto",height = "auto"), align = "center"),
-  #         #         label(" Differences Confidence Intervals Plot:"),
-  #         #         hidden(div(id="ci_plot_h",plotOutput("ci_plot",width = "80%",height = "500px"), align = "center")),
-  #         #         div(imageOutput("ci_plot_ph",width = "auto",height = "auto"), align = "center"),
-  #         #         br(),
-  #         #         p("Download the detailed results in a text file or the table only in comma-separated file:"),
-  #         #         radioButtons("dl_type", label = NULL, choices = list("Detailed (.txt file)"="all","Table only (.csv file)"="table")),
-  #         #         downloadButton("dl_button","Download",class = "disabled")
-  #         #     )
-  #         #   )
-  #         # )
-  #       )
-  #     ),
   #     fixedRow(
   #       column(
   #         8,
