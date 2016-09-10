@@ -1,17 +1,6 @@
 /* General font styling */
 
-h1, h3,  h6, .h1, .h3, .h6 ,body {
-  font-family: "Source Sans Pro";
-}  
-
-html{font-size: 14px;}
-
-h5 {
-  font-size: 14px;
-  line-height: 1.5em;
-  font-family: "Source Sans Pro";
-}
-
+html{font-size: 15px;}
 body {
   background-image: url('tiny_grid.png');
   background-repeat: repeat;
@@ -19,13 +8,41 @@ body {
   font-family: "Source Sans Pro";
 }
 
-h2, h4, .h2, .h4 {
-  text-shadow: 1px 0 1px rgba(0, 0, 0, 0.3);
-  color:#555;
-  font-family: "Source Sans Pro";
-  text-align: center;
-
+.navbar-nav {
+  float:left;
 }
+
+nav .container{
+  margin-left:0;
+  margin-right:0;
+}
+
+#title {
+  text-shadow: 4px 4px 3px rgba(0,0,0,0.3);
+  color: rgba(0,0,0,.6);
+  font-family: "HelveticaNeue-Light","Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial,"Lucida Grande", sans-serif;
+  font-weight: 300;
+  font-size:27px
+}
+
+#subtitle {
+  display:block;
+  color: rgba(0,0,0,.6);
+  font-family: "HelveticaNeue-Light","Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial,"Lucida Grande", sans-serif;
+  font-weight: 300;
+  font-size:17px
+}
+
+h1, h3,  h6, .h1, .h3, .h6 ,body {
+  font-family: "Source Sans Pro";
+}  
+
+h5 {
+  font-size: 15px;
+  line-height: 1.5em;
+  font-family: "Source Sans Pro";
+}
+
 
 .MathJax {
 font-size: 1.1em !important;
@@ -42,9 +59,6 @@ font-size: 1.1em !important;
   padding-left: 40px;
 }
 
-#experiment_identifier {
-  width: 450px;
-}
 .step{
     /*position: absolute;    
     left: -1.2em;
@@ -113,6 +127,7 @@ font-size: 1.1em !important;
 }
 
 .ResetBtn {font-size: 10px; float:right;}
+.example_btn {font-size: 12px; float:right;}
 
 #wrap_submit_data{
   padding: 2px;
@@ -121,10 +136,6 @@ font-size: 1.1em !important;
   display: inline-block;
   box-shadow: 1px 1px 1px #BBB;
 }
-
-  
-
-
 
 .nav > li > a{
   text-shadow: 1px 0 1px rgba(0, 0, 0, 0.2);
@@ -241,3 +252,5 @@ font-size: 1.1em !important;
 .navbar-inner .navbar-link:hover {
   color: #424242;
 }
+
+

@@ -1,15 +1,21 @@
 function(input, output, session) {
   
   ## create temporary debugging concole: ----
-  observe(label="console",{
-    if(input$console != 0) {
-      options(browserNLdisabled=TRUE)
-      saved_console<-".RDuetConsole"
-      if (file.exists(saved_console)) load(saved_console)
-      isolate(browser())
-      save(file=saved_console,list=ls(environment()))
-    }
-  })
+  # observe(label="console",{
+  #   if(input$console != 0) {
+  #     options(browserNLdisabled=TRUE)
+  #     saved_console<-".RDuetConsole"
+  #     if (file.exists(saved_console)) load(saved_console)
+  #     isolate(browser())
+  #     save(file=saved_console,list=ls(environment()))
+  #   }
+  # })
+  
+  ## pressing on "read more" directs to instruction tab ----
+  observeEvent(
+    input$read_more,
+    updateNavbarPage(session = session,inputId = "nav",selected = "Information")
+    )
   
   ## initialize reactive values: ----
   values <- reactiveValues(
@@ -189,9 +195,9 @@ function(input, output, session) {
         mutate(transformed = trans_fun(V2)) %>% 
         group_by(V1) %>% 
         summarise(mean_t = mean(transformed,na.rm = T),
-                  mean = mean(V2,na.rm = T),
+                  mean = mean(var_name,na.rm = T),
                   sd_t =sd(transformed,na.rm = T),
-                  sd =sd(V2,na.rm = T),
+                  sd =sd(var_name,na.rm = T),
                   n =sum(!is.na(transformed)))
     }
   })
@@ -226,7 +232,7 @@ function(input, output, session) {
         
         if(!is.null(input$groups))
         {
-          n_rows <- ifelse(!is.null(values$tbl_summaries_from_file),nrow(values$tbl_summaries_from_file),0) 
+          n_rows <- ifelse(!is.null(values$tbl_summaries_from_file),nrow(values$tbl_summaries_from_file),0)
           lapply(
             n_rows + 1:length(input$groups),function(group_id)
             {
@@ -379,6 +385,8 @@ function(input, output, session) {
         } # %>% mutate(Sign. = ifelse(contains("p-value")<=input$alpha,"*",""))
     })  
   
+  ## prepare txt file to download: ----
+  
   output$download_button <- downloadHandler(
     filename = function()
       paste0("Results_",Sys.Date(),".txt"),
@@ -402,6 +410,56 @@ function(input, output, session) {
       sink()
     }  
   )
+  
+  observe({
+    req(input$submit_data)
+    shinyjs::removeClass(id = "dl_button", class = "disabled")
+  })
+  
+  observeEvent(
+    input$checkbox_agrees_share,
+    {
+      if(input$checkbox_agrees_share)
+        shinyjs::enable(id = "email")
+      else
+        shinyjs::disable(id = "email")
+    }
+  )
+  
+  observeEvent(
+    input$submit_data,
+    {
+      req(input$submit_data)
+      if(input$checkbox_agrees_share)
+      {
+        file_name <- paste0(input$email,as.integer(Sys.time()),".txt")
+        
+        capture.output(
+          {
+            print("####---------------------------")
+            print(Sys.time())
+            print(input$email)
+            print("####---------------------------")
+            SDRAERYAESBYEASRBYE
+          },
+          file = file_name,
+          append = T)
+        
+        drop_upload(
+          file = file_name,
+          dest = log_file_drop_dir,
+          overwrite = F)
+        unlink(file_name)
+      }
+    }
+  )
+  
+  
+  
+  
+  ## prepare plots: ----
+  
+  
   # when main object created, plot cis
   # output$ci_plot <- renderPlot(
   #   {

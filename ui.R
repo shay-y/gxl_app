@@ -1,54 +1,91 @@
-tagList(
-  useShinyjs(),
-  # tags$head(
-  #   tags$link(
-  #     rel = "stylesheet",
-  #     type = "text/css",
-  #     href = "style.css"
-  #     )
-  #   ),
-  # tags$head(tags$script(src="scroll.js")),
-  #shiny::includeScript
+shinyUI(
   navbarPage(
-    title = HTML("Genotype-Lab Replicability Analyzer"),
+    id ="nav",
+    # theme = "theme.css",
+    title = div(
+      span(id = "title", "GxL Replicability Adjuster "),
+      span(" - A tool for genotype lab replicability assessment of single lab mouse phenotyping results")),
+    windowTitle = "GxL Replicabilty Adjuster",
     fluid = T,
-    theme = "theme.css",
     tabPanel(
       title = "App",
-      fluidRow(
-        actionButton("console","server console"),
+      useShinyjs(),
+      tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css")),
+      tags$head(includeScript("google-analytics.js")),
+      tags$head(tags$script(src="scroll.js")),
+      
+      # actionButton("console","server console"),
+      
+      fixedRow(
         column(
           width = 4,
           wellPanel(
-            selectInput(
+            h5(div(class='step',"Introduction:")),
+            p(
+              "The application takes mouse phenotyping results from different genotypes measured in your laboratory, and estimates how likely they are to be replicated in other laboratories, utilizing the ",
+              tags$i("GxL-Adjustment"),
+              " method as detailed in our manuscript \"Addressing reproducibility in single-laboratory phenotyping experiments\" (submitted).",
+              actionLink(
+                inputId = "read_more",
+                label = "Read more...",href = "#intro")
+            ),
+            hr(),
+            actionButton("Example1", "Fill in example data",class="example_btn"), # uiOutput("example_button"),
+            h5(
+              div(
+                class='step',
+                "Step 1"
+              ),
+              strong(
+                "Fill in Experiment and procedure details:"
+              )
+            ),
+            span(
+              "Our database includes GxL estimates for various mouse phenotyping procedures and thier measures conducted in several experimental conditions.
+              Use the dropdown menu to select the phenotyping procedure name which match the one you have conducted in your lab. A table with the relevant experimental conditions will be populated. Check that the details match the ones in your experiment or enter new values.
+              The procedure details follow the ",
+              a("IMPRESS",href="https://www.mousephenotype.org/impress",target="_blank"),
+              "Standard operating procedure (SOP)",
+              "Next, select the phenotipic measure name you are about to analyse. The measure units will be presented."
+            ),
+            selectInput(  
               inputId = "procedure_name",
-              label = "Procedure Name:",
+              label = "Procedure name:",
               choices = c("",procedure_name_list)
             ),
             uiOutput("proc_SOP_link"),
             uiOutput("metadata_input"),# ,style = "overflow-y:scroll; max-height: 600px"),
-            # selectInput(
-            #   inputId = "measure_name",
-            #   label = "Phenotypic Measure:",
-            #   choices = ""
-            # ),
             uiOutput("selected_measure_details"),
+            
+            h5(
+              div(
+                class='step',
+                "Step 2"
+              ),
+              strong(
+                "Phenotypic measure data input:"
+              )
+            ),
+            span(
+              "You may enter the measurments values by uploading a comma-delimited(.csv) file with the observations values (before transformation).
+              Upload a comma-delimited file with one observation in each row, where the first column contains the group name (genotype name) and the second column contains the observation measurment value.
+              The file should not contain headers. Do not apply transformation on the values in the file. The data will be transformed later according to the indicated transformation for this measure",
+              "Alternative input method is entering the groups summary statistics. Fill in the groups name (space delimited) in the input box, and then the groups means, standard deviations and number of observations. Note that the means and standard deviations should be calculated after the specified transformation"
+            ),
+            
             # radioButtons(
             #   inputId = "input_method",
             #   label = "Input method:",
             #   choices = list("Uploading a file with observations before transformation" = "file",
             #                  "filling group summaries, after transformation" = "summaries")
             # ),
-            
             uiOutput("file_input"),
-            
             actionButton("reset_upload","Reset",style = "size:80%"), #class="ResetBtn",icon = icon("refresh"),
-            
             downloadLink(
               outputId = "example_raw_input",
               label = "Example input file"
-              ),
-           
+            ),
+            
             selectizeInput(
               inputId = "groups",
               label = "Genotypes tested:",
@@ -58,29 +95,51 @@ tagList(
             
             uiOutput("input_summaries"),
             
-            withMathJax(
-              numericInput(
-                inputId = "alpha",
-                label = "\\(\\alpha\\) - level:",
-                min = 0.001 ,
-                max = 0.5,
-                step = 0.01,
-                value = 0.05,
-                width = "100px")), #display:inline-block; width:100px;min-width:100px   
-            
+            h5(
+              div(
+                class='step',
+                ""
+              ),
+              strong(
+                "participation in our program"
+              )
+            ),
             checkboxInput(
-              inputId = "send_data",
-              "Send Data?"),
-            # div(
-            #   id = "wrap_main_submit",
-              actionButton(
-                inputId = "submit",
-                label =  "Submit",
-                icon = icon("cog")))
-            #)
+              inputId = "checkbox_agrees_share",
+              label = 
+                span(
+                  "Agree to contribute your experimental results and conditions to enrich our ",tags$i("GxL interaction variance estimates database")," and help us yield better estimates in future analyses.",
+                  br(),
+                  "Contact information: ",
+                  disabled(textInput(inputId = "email",label = "",value = ""))),
+              value = FALSE
+            ),
+            div(id = "wrap_submit_data", actionButton("submit_data", "Calculate comparisons", icon = icon("cog")))
+          )
         ),
         column(
           width = 8,
+          
+          h5(
+            div(
+              class='step',
+              "Analysis parameters"
+            ),
+            strong(
+              "Analysis parameters"
+            )
+          ),
+          
+          HTML("<div class='form-group shiny-input-container'><label for='c_level'>Confidence level:</label><input id='c_level' type='number' class='form-control' value='0.95' min='0' max='1' step='0.005',style='display:inline-block; width:100px; min-width:100px'/></div>"),
+          withMathJax(
+            numericInput(
+              inputId = "alpha",
+              label = "\\(\\alpha\\) - level:",
+              min = 0.001 ,
+              max = 0.5,
+              step = 0.01,
+              value = 0.05,
+              width = "100px")), #display:inline-block; width:100px;min-width:100px   
           checkboxInput(
             inputId = "gxl_adjust",
             label = "GxL adjust",
@@ -96,20 +155,113 @@ tagList(
             label = "CI on original scale",
             value = F
           ),
+          
           tabsetPanel(
             tabPanel(
               title = "Table",
               dataTableOutput("results_table")
-              ),
+            ),
             tabPanel(
               title = "CIs Plot",
               plotOutput("cis_plot",width = "80%",height = "500px")
             )
           ),
           downloadButton("download_button","Download Results")#,class = "disabled")
+          #downloadButton("dl_button","Download",class = "disabled")
         )
-      )
+      ),
+      fixedRow(
+        column(
+          12,
+          hr(),
+          wellPanel(
+            p(
+              "This app is a project by the ",
+              a(href = "http://www.replicability.tau.ac.il/", target='_blank',"Replicability Research Group"),
+              br(),
+              "It's construction is supported by the European Research Council (ERC) under the European Community’s 7th Framework Program (FP/2007-2013) and ERC grant agreement (PSARPS-294519).",
+              br(),
+              "The app was built with ",
+              a(href = "http://shiny.rstudio.com/", target="_blank", "Shiny web application framework by Rstudio"),
+              " and is hosted in ",
+              a(href = "http://www.shinyapps.io/", target="_blank","shinyapps.io"),".",
+              br(),
+              "Source code is available on github: ",
+              a(href = "http://github.com/shay-y/gxl_app/tree/v0.2-prod", target="_blank","shay-y/gxl_app/tree/v0.2-prod"),".",
+              br(),
+              "For further information or technical support please contact Shay Yaacoby on github or send an email: ",
+              a(href="mailto:shay66[at]gmail.com", target="_blank","shay66[at]gmail.com"),"."
+            )
+          )
+        )
+      ),
+      tabPanel(
+        id = "Information",
+        title = "Information",
+        fixedRow(
+          column(
+            width = 8,
+            offset = 2,
+            wellPanel(
+              h5(div(class='step',"Introduction:"),id="intro"),
+              p(
+                tags$ul(
+                  tags$li(
+                    "The application takes mouse phenotyping results from different genotypes measured in your laboratory, and estimates how likely they are to be replicated in other laboratories, utilizing the ",
+                    tags$i("GxL-Adjustment"),
+                    " method as detailed in our manuscript \"Addressing reproducibility in single-laboratory phenotyping experiments\" (submitted)."
+                  ),
+                  tags$li(
+                    "The application takes as input summary statistics from your single lab experiment results - means, standard deviations and number of mices of each genotype."
+                  ),
+                  tags$li(
+                    "The application then calculates ",
+                    tags$i("GxL-Adjusted"),
+                    " t-tests for the pairwise differences between the genotypes for a specified phenotypic measure."
+                  ),
+                  tags$li(
+                    "The Replicability Analyser outputs the",
+                    tags$i("GxL-Adjusted"),
+                    " p-values and confidence intervals of the genotype differences, alongside the standard p-values and confidence intervals."
+                  ),
+                  tags$li(
+                    "Prior to the input of the experimental results, The experiment, the procedure and the phenotypic measure details should be specified. The app will find the most appropriate estimate of the GxL interaction variance."
+                  ),
+                  tags$li(
+                    "The ",
+                    tags$i("GxL interaction variance estimate "),"(",
+                    withMathJax("\\(S^2_{GxL}\\)"),
+                    ") is then used in the calculation of the adjusted p-values and confidence intervals."
+                  ),
+                  tags$li(
+                    "Contributing your experimental results and the procedure details will enrich our database of ",
+                    tags$i("GxL interaction variance estimates"),", yielding better estimates for future users."
+                  )
+                )
+              ),
+              h5(div(class='step',"brief instructions:")),
+              p("You can start by running the built-in example. Clicking the 'Example' button will fill experiment, procedure and measure details and corresponding summary values 
+                taken from data presented in the article (see above).",
+                br(),
+                "Click 'Submit' to see the results. At the end of an exploration, hit F5 key to refresh the app."
+              ),
+              p("In the table under the \"Results\" section will be listed the difference of means estimates between the genotype pairs, and the corresponding p-values and confidence intervals (GxL-Adjusted and unadjusted)"),
+              p("Whenever you want to clear the input fields in any of the sections, click the ",
+                tags$code("reset"),
+                " button next to the section."
+              ),
+              hr(),
+              h4("References:"),
+              p(
+                "S. H. Richter, J. P. Garner, B. Zipser, L. Lewejohann, N. Sachser, C. Touma, B. Schindler, S. Chourbaji, C. Brandwein, P. Gass, N. van Stipdonk, J. van der Harst, B. Spruijt, V. V?ikar, D. P. Wolfer, H. W?rbel, ",
+                strong("Effect of population heterogenization on the reproducibility of mouse behavior: a multi-laboratory study"),em("PLoS One"),
+                " 6(1):e16461 (2011). doi: 10.1371/journal.pone.0016461."
+              )
+            )
+          )
+          )
     )
+      )
   )
 )
 
@@ -131,95 +283,3 @@ tagList(
 # radioButtons("dl_type", label = NULL, choices = list("Detailed (.txt file)"="all","Table only (.csv file)"="table")),
 # downloadButton("dl_button","Download",class = "disabled")
 
-  #     fixedRow(
-  #       column(
-  #         8,
-  #         offset = 2,
-  #         hr(),
-  #         wellPanel(
-  #           p(
-  #             HTML(
-  #               "The <strong><em>Genotype-Lab Replicability Analyzer</em></strong> is a project by the <a href = \"http://www.replicability.tau.ac.il/\" target='_blank'>Replicability Research Group</a>. <br>
-  #               It's construction is supported by the European Research Council (ERC) under the European Community’s 7th Framework Program (FP/2007-2013) and ERC grant agreement (PSARPS-294519).<br>
-  #               <br>
-  #               The application is built with <a href = \"http://shiny.rstudio.com/\" target=\"_blank\">Shiny</a> web application framework and is hosted in <a href = \"http://www.shinyapps.io/\" target=\"_blank\">shinyapps.io</a> . The source code will be avaliable in github soon.
-  #               <br>
-  #               For further information and technical support please contact Shay Yaacoby at : <a href=\"mailto:shay66[at]gmail.com\" target=\"_blank\">shay66[at]gmail.com</a>.
-  #               "
-  #                             )
-  #                             )
-  #                           )
-  #                         ) # end column
-  #                       ) # end row
-  #                     ), # tabPanel
-  #            
-  #            tabPanel(
-  #              "Introduction",
-  #                     fixedRow(
-  #                       column(
-  #                         8,
-  #                         offset = 2,
-  #                              h3("Introduction"),
-  #                              p("This application takes mouse phenotyping results measured in your laboratory, and estimates how likely they are to be replicated in other laboratories, using the Random Lab Model with the GxL-adjusting method, as detailed in our manuscript \"Assessing the replicability of single-laboratory discoveries in phenotyping experiments\" (submitted)."),
-  #                         p("The application takes as input single-lab phenotyping results from animals belonging to several genotype groups (for example: knockouts vs wildtype controls). The method outputs the p-value of the difference between the groups, using the standard t-test or ANOVA, and the adjusted pvalue using previously estimated Genotype-by-Laboratory interaction (GxL). This replicability across laboratory p-value is the more reliable p-value for assessing the replicability of any single-lab genotype effect."),
-  #                         p("Knowing the relevant GxL is the difficult part. The application is therefore limited to phenotypic tests, phenotyping measures and testing conditions for which we can currently us by contributing your phenotyping results and specifying the housing and testing conditions in your laboratory. These will be used to calculate a better estimate of GxL variability, based on more genotypes, more laboratories and more conditions, that will serve you and other researchers over the world in ensuring the replicability of their future phenotyping results. You also have the option not to contribute your results, for example if you do not trust them, or if you are only testing the application with hypothetical values."),
-  #                         h3("Instructions"),
-  #                         h4("Example"),
-  #                         p("You can start by running a built-in example:"),
-  #                         tags$ol(
-  #                           tags$li("Click \"Example 1\" or \"Example 2\" (on the upper right) to fill test properties and measurments."),
-  #                           tags$li("Click \"Submit\"."),
-  #                           tags$li("At the end of exploration, hit F5 key to refresh the app.")
-  #                         ),
-  #                         p("Under “Results” you will get the difference between the genotype means, the p-value of the genotype effect using standard t-test (or ANOVA if there’s more than 2 genotypes), and the the adjusted p-value for the Genotype x Lab (GxL) interaction."),
-  #                         p("Whenever you want to clear any of the sections, click the <code>reset</code> button next to this section. You can insert your own data."),
-  #                         hr(),
-  #                         h4("References"),
-  #                         p(HTML("S. H. Richter, J. P. Garner, B. Zipser, L. Lewejohann, N. Sachser, C. Touma, B. Schindler, S. Chourbaji, C. Brandwein, P. Gass, N. van Stipdonk, J. van der Harst, B. Spruijt, V. V?ikar, D. P. Wolfer, H. W?rbel, <strong>Effect of population heterogenization on the reproducibility of mouse behavior: a multi-laboratory study.</strong> <em>PLoS One</em> 6(1):e16461 (2011). doi: 10.1371/journal.pone.0016461."))
-  #           )
-  #         )
-  #     )
-  # )
-
-
-# h3("Genotype-Lab Replicability Analyzer",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
-# h4("A tool for replicability assessment of mouse phenotyping results across laboratories",style = 'font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;font-weight: 300;'),
-#actionButton("Example2", "Example 2",class="ResetBtn",icon = icon("refresh")),
-# actionButton("Example1_step1", "Example 4 param.",class="ResetBtn",icon = icon("refresh")),
-# HTML("<h5><div class='step'>Step 1:</div> Fill in lab name and the genotype groups participated in the experiment ; Choose the pair-wise comparisons design ; Choose a unique experiment identifier or use default:</h5>"),
-
-# wellPanel(
-# selectizeInput("lab_name",'Lab name:', choices = lab_names_vec, multiple = F, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list or add one',onInitialize = I('function() { this.setValue(""); }'))),
-# textInput("lab_name", "Lab name:",value = ""),
-# radioButtons("expr_design",'Comparisons design:', choices = list("All pairs" = "Tukey","Many to one (Cases vs. control)" = "Dunnet"),selected = "Tukey",inline = T),
-# uiOutput("genotype_selection_block"),
-# radioButtons("proc_gender",'Gender:', choices = c("Males","Females","Males & Females"),inline = T),
-# textInput("experiment_identifier", "Experiment identifier:",value = ""),
-# actionButton("reset_experiment", " Reset",class="ResetBtn",icon = icon("refresh")),
-# HTML("<div style='clear: both;'></div>")
-# ),
-# HTML("<h5><div class='step'>Step 2:</div> Select procedure (test), verify procedure's details in the link to Standard Operating Procedure and fill-in any changed meta-data parameters:</h5>"),
-
-# conditionalPanel(condition = "input.expr_design == 'Tukey'",
-#                  selectizeInput("genotypes_tested_pairwise",'Genotypes tested:', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
-# ),
-# conditionalPanel(condition = "input.expr_design == 'Dunnet'",
-#                  selectizeInput("genotypes_tested_control",'Genotype tested (control group):', choices = genotypes_vec, multiple = FALSE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list one',onInitialize = I('function() { this.setValue(""); }'))),
-#                  selectizeInput("genotypes_tested_cases",'Genotypes tested (cases groups):', choices = genotypes_vec, multiple = TRUE, options = list(create = TRUE, maxOptions = 5, placeholder = 'Select from the list two or more',onInitialize = I('function() { this.setValue(""); }')))
-# ),
-#                         The example currently uses existing data for the Open Field Test (OFT), the phenotypic measure of “total path moved”, and the genotypes C57BL6NCrl and DBA/2NCrl.</p>
-#                         insert a Name or Identifier ,the Lab Address and the genotypes. Choose at least two genotypes for the comparison. More that two genotypes can be entered and all pairwise comparisons will be calculated.  <br>
-#                           In <strong>section 2</strong> choose first in “Test Type” the phenotypic test you used to measure your results. The application currently has a selection of 6 phenotypic tests. The application cannot be used for a test missing from the list. <br>
-#                           Once the test is chosen, the windows for the test conditions become available below it. Insert the values used in your study. <br>
-#                           In <strong>section 3</strong> choose the phenotypic measure. Every Test Type has a list of at least one available measures. The application cannot be used for a measure missing from the list. <br>
-#                           In <strong>section 4</strong> enter the test results, group mean, group standard deviation and group size for each genotype.</p>
-#                           <h4 id='open-field-test'>Open field test</h4>
-#                           <p>The Open Field Test (OFT) is probably the most frequently used of all behavioral tests in pharmacology and neuroscience. However, there is a wide variety of OFT procedures using different arena shapes and sizes, tracking technologies, tracking systems, session lengths and many specific parameters which might affect the results. Our available data currently represent Richter et al. 2011, which describe its methods as follows: <br>
-#                           The apparatus consisted of an open box, 40 cm x 40 cm minimum size, virtually divided into various zones (corners, 5 cm wall zone, centre). Mice were placed into the centre of the empty open field arena and video tracked for 10 min. The time spent in, the distance travelled within, and the number of entries into each zone, were calculated. In addition, the total distance moved during the 10 min session was analyzed and the number of fecal boli dropped was counted at the end of each trial. <br>
-#                           The application works for specific phenotypic tests and phenotypic measures. <br>
-#                           Available phenotypic measures:</p>
-#                           <h5 id='total-path-moved'>Total path moved</h5>
-#                           <p>This is the total length of the path. It is sometimes termed “distance traveled” or “ambulatory distance”.</p>
-#                           <h5 id='center-time'>Center time</h5>
-#                           <p>The time spent in the center of the arena.</p>
-#                                       <a href\"\" target=\"\"></a>
