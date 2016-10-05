@@ -1,21 +1,71 @@
 /* General font styling */
+@import 'https://fonts.googleapis.com/css?family=BioRhyme|Bitter|Noto+Sans'; /*Noto+Serif|Open+Sans*/
 
-html{font-size: 15px;}
+@media (min-width: 1400px) {
+  
+    .container{
+            width: 1380px;
+    }
+}
+
+
+
+/* The default styles (background, fontface, font color) are part of the light theme and apply in the courses pages */
+/*
 body {
-  background-image: url('tiny_grid.png');
-  background-repeat: repeat;
-  font-size: 100%;
-  font-family: "Source Sans Pro";
+	font-size: 15px;
+	font-family: 'Bitter', serif;
+	background: url("img/billie_holiday.png") repeat;
+  background: url("img/farmer.png") repeat;
+	background: url("img/old_mathematics.png") repeat;
+	background: url("img/ricepaper2.png") repeat;
+	background: url("img/absurdidad.png") repeat;
+	background: url("img/brillant.png") repeat; 
+
+	color: #020201;
+}*/
+
+.table-gxl .selectize-input{
+   min-height: 24px;
+   min-width: 100px;
+   /*width: 100px;*/
+   padding:3px;
+   vertical-align: middle;
+ }
+
+.table-gxl .selectize-control {
+    margin-bottom: 2px;
+}
+.table-gxl .form-group {
+    margin-bottom: 1px;
 }
 
-.navbar-nav {
+.table-gxl td, .table-gxl th{
+  vertical-align: middle !important;
+  padding:4px !important;
+} 
+
+#table-groups .selectize-input{
+  width: 80%;
+}
+
+
+body {
+  /*background-image: url('tiny_grid.png');*/
+  /*background-repeat: repeat;*/
+  /*font-size: 100%;*/
+  /*font-family: "Source Sans Pro";*/
+  /*font-size: 15px;*/
+}
+
+/*.navbar-nav {
   float:left;
-}
+}*/
 
-nav .container{
+/*nav .container{
   margin-left:0;
   margin-right:0;
-}
+}*/
 
 #title {
   text-shadow: 4px 4px 3px rgba(0,0,0,0.3);
@@ -34,29 +84,17 @@ nav .container{
 }
 
 h1, h3,  h6, .h1, .h3, .h6 ,body {
-  font-family: "Source Sans Pro";
+  /*font-family: "Source Sans Pro";*/
 }  
 
 h5 {
   font-size: 15px;
   line-height: 1.5em;
-  font-family: "Source Sans Pro";
 }
 
 
 .MathJax {
 font-size: 1.1em !important;
-}
-
-.selectize-input, .form-control{
-  width:initial;
-  min-width: 250px;
-  font-size: 13px
-}
-
-.col-sm-8, .col-sm-offset-2 {
-  padding-right: 40px;
-  padding-left: 40px;
 }
 
 .step{
@@ -94,36 +132,6 @@ font-size: 1.1em !important;
   margin-right: 0.1em;
   margin-bottom: 0.2em;
   
-}
-
-#results_sec > label{
-    border-bottom: solid 2px #7BA543;
-}
-
-
-#stats_tbl .tb { 
-  width: 70px;
-  color: #555;
-  background-color: #fff;
-  background-image: none;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-  box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-  -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
-  -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-  transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-  margin: 3px;
-}
-
-#stats_tbl th {
-  text-align: center;
-}
-
-#stats_tbl hr{
-  margin-top: 10px;
-  margin-bottom: 10px;
-  border-top: 3px solid #ddd;
 }
 
 .ResetBtn {font-size: 10px; float:right;}
