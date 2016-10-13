@@ -12,10 +12,10 @@ function(input, output, session) {
   # })
   
   ## pressing on "read more" directs to instruction tab ----
-  observeEvent(
-    input$read_more,
-    updateNavbarPage(session = session,inputId = "nav",selected = "Information")
-    )
+  # observeEvent(
+  #   input$read_more,
+  #   updateNavbarPage(session = session,inputId = "nav",selected = "Information")
+  #   )
   
   #addClass(class = "table-gxl", selector = "#table-metadata, #table-details, #table-groups, #file_summaries")
   
@@ -82,14 +82,18 @@ function(input, output, session) {
         #   )
         # ),
         tags$tr(
-          tags$th("Meassure"),
+          tags$th(
+            span(
+              class='step',
+              ""),
+            "Measured phenotype"),
           tags$td(
             selectizeInput(
               inputId = "measure_selected",
               label = NULL,
               choices = measure_name_list,
               options = list(create = TRUE))),
-          tags$td("")
+          tags$td(uiOutput("unit"))
         )
       )
     )
@@ -139,7 +143,7 @@ function(input, output, session) {
       req(nrow(get_gxl_matchs())>1)
       x_pred <- input$duration
       x <- get_gxl_matchs()$duration
-      y <- get_gxl_matchs()$s2_ratio  ## TODO: predict s2_ratio or s2_interaction
+      y <- get_gxl_matchs()$s2_ratio  
 
       y_pred <- predict.lm (lm(y~x,data = data.frame(y,x)), newdata = data.frame(x = x_pred))
 
@@ -167,7 +171,10 @@ function(input, output, session) {
   )
       
       
-  
+  output$unit <- renderUI({
+    req(collect_gxl_details())
+    collect_gxl_details()$unit
+  })
   
   
   ## render details table for selected measure: ----
@@ -175,50 +182,19 @@ function(input, output, session) {
     req(collect_gxl_details())
     with(
       collect_gxl_details(),
-      withMathJax(
-        tags$table(
-          id = "table-details",
-          class = "table table-bordered table-gxl",
-          tags$thead(
-            tags$tr(
-              tags$th(
-                "\\(S^2_{int.}/S^2_{error}=\\)"
-              ),
-              tags$td(
-                s2_ratio %>% signif(digits=5)
-              )
-            ),
-            tags$tr(
-              tags$th(
-                "Units:"
-              ),
-              tags$td(
-                unit
-              )
-            ),
-            tags$tr(
-              tags$th(
-                "Transformation:"
-              ),
-              tags$td(
-                transformation_symbol
-              )
-            )
-          )
-        )
+      tagList(
+        "GxL replicability ratio estimate: ",
+        withMathJax("\\(S^2_{G\\times L}/S^2_{error}=\\)"),
+        s2_ratio %>% signif(digits=6),
+        br(),
+        if (collect_gxl_details()$transformation_symbol != "none")
+          paste("Transformation taken prior to analysis: ",transformation_symbol)
+        else
+          "No transformation is taken prior to analysis"
       )
     )
   })
-  
-  ## show\hide input methods alternating ----
-  # observeEvent(
-  #   input$input_method,
-  #   {
-  #     toggle("file_form",condition = input$input_method=="file")
-  #     toggle("groups",condition = input$input_method=="summ")
-  #   }
-  # )
-  
+
   ## create input object to recieve raw data file: ----
   output$file_form <- renderUI({
     req(input$input_method=="file")
@@ -262,6 +238,7 @@ function(input, output, session) {
           stringsAsFactors = F
       )
     })  
+  
   observe(print(input$upload_file))
   ## summarize and transform raw table: ----
   tbl_summaries <- reactive(
@@ -269,15 +246,14 @@ function(input, output, session) {
       req(get_raw_df(),collect_gxl_details(),input$input_method=="file")
       trans_fun<- eval(parse(text=paste("function(x)",collect_gxl_details()$transformation_expr)))
       get_raw_df()  %>% 
-        mutate(transformed = trans_fun(V2)) %>% 
-        group_by(V1) %>% 
+        mutate(group_name = as.factor(V1), transformed = trans_fun(V2)) %>% 
+        group_by(group_name) %>% 
         summarise(mean.t = mean(transformed,na.rm = T),
                   mean = mean(V2,na.rm = T),
                   sd.t =sd(transformed,na.rm = T),
                   sd =sd(V2,na.rm = T),
                   n =sum(!is.na(transformed))) %>% 
-        add_rownames() %>% 
-        rename(group_id  = rowname, group_name = V1)
+        rownames_to_column(var = "group_id")
     })
     
  
@@ -398,41 +374,44 @@ function(input, output, session) {
           df = sum(n)-n(),
           s2_pooled = sum(sd.t^2*(n-1))/df,
           ## Satterthwaite approximation for pooled
-          df_gxl = (s2_pooled + 2*s2_interaction )^2  /( s2_pooled^2/(sum(n)-n()) + (2*s2_interaction)^2 /( (n_labs_s2gxl-1)*(n_groups_s2gxl-1) ) )
+          df_gxl = (s2_pooled + 2*s2_interaction )^2  /( s2_pooled^2/(sum(n)-n()) + (2*s2_interaction)^2 /( (n_labs_s2gxl-1)*(n_groups_s2gxl-1) ) ),
+          x = 0,
+          y = mean.t
         )
     })
-  
-  observe(print(req(tbl_summaries_tidy())))
   
   ## calculate (estimate, se, statistic ,p-value, conf.lower, conf.higher)X(unadjusted, adjusted GxL) ----
   tbl_pairs <- reactive(
     {
       req(tbl_summaries_tidy(),collect_gxl_details())
-      alpha <- input$alpha
-      s2_interaction <- collect_gxl_details()$s2_interaction
-      back_transform_expr <- collect_gxl_details()$back_transform_expr
-      back_trans_fun <- eval(parse(text=paste("function(y)",back_transform_expr)))
-      
+      alpha <- 1-input$conf_level
+      s2_ratio <- collect_gxl_details()$s2_ratio
+      tbl_summaries <- tbl_summaries_tidy()
+        
+
       ## generate all pairs combinations:
-      pairs_ind_comb <- nrow(tbl_summaries_tidy()) %>%
+      pairs_ind_comb <- nrow(tbl_summaries) %>%
         combn(2) %>%
         t() %>%
         as.data.frame(stringsAsFactors=FALSE) %>%
         tbl_df() %>%
-        transmute(group_id1 = as.factor(V1),group_id2 = as.factor(V2))
+        transmute(group_id1 = as.character(V1),group_id2 = as.character(V2))
+      
+      nmeans_tukey <-  nrow(tbl_summaries)
 
       ## create pairs table:
       tbl_pairs <- pairs_ind_comb %>%
-        inner_join(tbl_summaries_tidy(),by = c("group_id1"="group_id")) %>%
-        inner_join(tbl_summaries_tidy(),c("group_id2"="group_id","s2_pooled","df","df_gxl")) %>% 
+        inner_join(tbl_summaries,by = c("group_id1"="group_id")) %>%
+        inner_join(tbl_summaries,c("group_id2"="group_id","s2_pooled","df","df_gxl")) %>% 
         transmute(
           pair_id = paste0(group_id1,"-",group_id2),
+          name_pair = paste(group_name.x,"-",group_name.y),
           grp1  = group_name.x,
           grp2  = group_name.y,
           #`Pair Names` paste(group_name.x,"-",group_name.y), # term
           diff  = mean.x-mean.y,                       # estimate
           se    = sqrt(s2_pooled*(1/n.x+1/n.y)),
-          se_gxl= sqrt(s2_pooled*(1/n.x+1/n.y)+2*s2_interaction),
+          se_gxl= sqrt(s2_pooled*(1/n.x+1/n.y+2*s2_ratio)),
           stat    = abs(diff)/se,
           stat_gxl= abs(diff)/se_gxl,
           pv      = 2*(1-pt(q = stat    ,df = df))     %>% pmin(1),
@@ -440,28 +419,54 @@ function(input, output, session) {
           Q_ = 1,
           Q_gxl = 1,
           df,
-          df_gxl
-        ) %>% 
+          df_gxl,
+          x.x,
+          y.x,
+          x.y,
+          y.y
+        ) %>%
         {
-          if(input$fdr_adjust)
+          if (input$mult_adjust == "Tukey HSD")
             mutate(
               .,
-              pv = p.adjust(pv,"BH"),
-              pv_gxl = p.adjust(pv_gxl,"BH"),
-              Q_ = sum(pv <= alpha) / n(),
-              Q_gxl = sum(pv_gxl <= alpha) / n()
-            )
+              pv = ptukey(q = stat,nmeans = nmeans_tukey , df = df, lower.tail = FALSE) %>% pmin(1),
+              pv_gxl = ptukey(q = stat_gxl, nmeans = nmeans_tukey, df = df_gxl ,lower.tail = FALSE) %>% pmin(1),
+              lwr  = diff - qtukey(p = 1-alpha/2, nmeans = nmeans_tukey, df = df)*se/sqrt(2),
+              upr  = diff + qtukey(p = 1-alpha/2, nmeans = nmeans_tukey, df = df)*se/sqrt(2),
+              lwr_gxl = diff - qtukey(p = 1-alpha/2, nmeans = nmeans_tukey, df = df_gxl)*se_gxl/sqrt(2),
+              upr_gxl = diff + qtukey(p = 1-alpha/2, nmeans = nmeans_tukey, df = df_gxl)*se_gxl/sqrt(2))
           else
-            .
-        } %>% 
-        mutate(
-          lwr = if (Q_==0) NA else diff - qt(1-alpha/2*Q_ ,df = df)*se %>% as.numeric(),
-          upr = if (Q_==0) NA else diff + qt(1-alpha/2*Q_ ,df = df)*se %>% as.numeric(),
-          lwr_gxl = if (Q_gxl==0) NA else diff - qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric(),
-          upr_gxl = if (Q_gxl==0) NA else diff + qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric()
-        )
+            if(input$mult_adjust == "BH selected")
+              mutate(
+                .,
+                pv = p.adjust(pv,"BH"),
+                pv_gxl = p.adjust(pv_gxl,"BH"),
+                Q_ = max(1,sum(pv <= alpha)) / n(),
+                Q_gxl = max(1,sum(pv_gxl <= alpha)) / n(),
+                lwr = diff - qt(1-alpha/2*Q_ ,df = df)*se %>% as.numeric(),
+                upr = diff + qt(1-alpha/2*Q_ ,df = df)*se %>% as.numeric(),
+                lwr_gxl = diff - qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric(),
+                upr_gxl = diff + qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric())
+            else 
+              mutate(
+                .,
+                lwr = diff - qt(1-alpha/2*Q_ ,df = df)*se %>% as.numeric(),
+                upr = diff + qt(1-alpha/2*Q_ ,df = df)*se %>% as.numeric(),
+                lwr_gxl = diff - qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric(),
+                upr_gxl = diff + qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric()
+              )
+        }
+      return(tbl_pairs)
+    })
+  
+  tbl_pairs_bt <- reactive(
+    {
+      req(collect_gxl_details()$transformation_symbol != "none")
+      back_transform_expr <- collect_gxl_details()$back_transform_expr
+      back_trans_fun <- eval(parse(text=paste("function(y)",back_transform_expr)))
       
-      tbl_pairs_bt <- tbl_pairs %>% 
+      tbl_pairs() %>% 
+        req() %>% 
         transmute(
           pair_id = pair_id,
           grp1 = grp1,
@@ -474,9 +479,9 @@ function(input, output, session) {
           lwr_gxl = back_trans_fun(lwr_gxl),
           upr_gxl = back_trans_fun(upr_gxl)
         )
-      return(list(tbl_pairs = tbl_pairs,tbl_pairs_bt = tbl_pairs_bt))
-    })
-
+    }
+  )
+  
   ## render DT1: ----
   output$results_table <- DT::renderDataTable(
     expr = 
@@ -498,7 +503,7 @@ function(input, output, session) {
             #   'print'
             # ) 
         # extensions = 'Buttons',
-        data = tbl_pairs()$tbl_pairs %>% select(grp1,grp2,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl),
+        data = tbl_pairs() %>% select(grp1,grp2,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl),
         rownames = FALSE,
         container =
           withTags(
@@ -527,13 +532,13 @@ function(input, output, session) {
           {
             tags$caption(
               'Pairwise comparisons differences', 
-              if (input$fdr_adjust) {' (BH adjusted for selection):'} else ':')
+              if (input$mult_adjust == "BH selected") {' (BH adjusted for selection):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else ':')
           } else 
           {
             tags$caption(
-              'Table 1: Pairwise comparisons differences on ',tags$strong('transformed'),' scale',
-              if (input$fdr_adjust) {' (BH adjusted for selection):'} else ':')
-          }
+              'Table 1: Pairwise comparisons differences on ',tags$strong('transformed'),' scale'
+             # if (input$mult_adjust == "BH selected") {' (BH adjusted for selection):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else':')
+          )}
         ) %>% formatSignif(3:9,digits = 5)
     }
   )
@@ -542,7 +547,7 @@ function(input, output, session) {
   output$results_table_bt <- renderDataTable(
     expr = 
     {
-      req(tbl_pairs(),collect_gxl_details()$transformation_symbol != "none")
+      req(tbl_pairs_bt())
       datatable(
         class = "display compact", # BS: table table-striped table-bordered table-condensed table-hover
         options = 
@@ -560,7 +565,7 @@ function(input, output, session) {
             #   'print'
             # ) 
         #extensions = 'Buttons',
-        data = tbl_pairs()$tbl_pairs_bt %>% select(grp1,grp2,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl),
+        data = tbl_pairs_bt() %>% select(grp1,grp2,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl),
         rownames = FALSE,
         container =
           withTags(
@@ -569,7 +574,7 @@ function(input, output, session) {
                 tr(
                   th(rowspan = 2, 'Group 1'),
                   th(rowspan = 2, 'Group 2'),
-                  th(rowspan = 2, 'Difference (G1 -G2)'),
+                  th(rowspan = 2, 'Difference (G1-G2)'),
                   th(colspan = 3, 'Unadjusted'),
                   th(colspan = 3, 'GxL-Adjusted')
                 ),
@@ -586,11 +591,64 @@ function(input, output, session) {
           ),
         caption = 
           tags$caption(
-            'Table 2: Pairwise comparisons differences on ',tags$strong('original'),' scale',
-            if (input$fdr_adjust) {' (BH adjusted for selection):'} else ':')
-        ) %>% formatSignif(3:9,digits = 5)
+            'Table 2: Pairwise comparisons differences on ',tags$strong('original'),' scale'
+            #if (input$fdr_adjust) {' (BH adjusted for selection):'} else ':')
+        )) %>% formatSignif(3:9,digits = 5)
       }
   )
+  
+  ## render pcci plot (back transformed): ----
+  output$pcci_plot <- renderPlot(
+    {
+      po <<- list(tbl_pairs = req(tbl_pairs()),tbl_summaries = req(tbl_summaries_tidy()))
+      plot_pcci(pcci_obj = po,title = paste("Means Differences Confidence Intervals of",collect_gxl_details()$parameter_name),
+                ylab = 
+                  if (collect_gxl_details()$transformation_symbol != "none")
+                    paste(collect_gxl_details()$unit,"after",collect_gxl_details()$transformation_symbol,"transformation")
+                else
+                  paste(collect_gxl_details()$unit)
+                )
+    }
+  )
+
+  ## render boxplot : ----
+  output$box_plot <- renderPlot(
+    {
+      req(tbl_pairs())
+      trans_fun<- eval(parse(text=paste("function(x)",collect_gxl_details()$transformation_expr)))
+      
+      ggplot(data = get_raw_df() %>% req() %>% 
+               mutate(group_name = as.factor(V1), measure = trans_fun(V2))
+             ) + 
+        aes(x = group_name, y = measure) + 
+        geom_boxplot() + #width = bw
+        ylab(
+          if (collect_gxl_details()$transformation_symbol != "none")
+            paste(collect_gxl_details()$unit,"after",collect_gxl_details()$transformation_symbol,"transformation")
+          else
+            paste(collect_gxl_details()$unit)
+        ) + 
+        ggtitle(paste("Groups boxplots of",collect_gxl_details()$parameter_name)) +
+        theme_minimal()
+    })
+    
+  ## render boxplot (back transformed): ----
+  output$box_plot_bt <- renderPlot(
+    {
+      req(tbl_pairs_bt())
+      ggplot(data = 
+               get_raw_df() %>% req() %>% 
+               mutate(group_name = as.factor(V1), measure = V2)
+      ) + 
+        aes(x = group_name, y = measure) + 
+        geom_boxplot() + #width = bw
+        ylab(
+          collect_gxl_details()$unit
+        ) + 
+        ggtitle(paste("Groups boxplots of",collect_gxl_details()$parameter_name," before transformation")) +
+        theme_minimal()
+    })
+  
   
   ## prepare txt file to download: ----
   
@@ -600,7 +658,6 @@ function(input, output, session) {
   #   content  = function(file)
   #   {
   #     to_print <- list(
-  #       alpha = input$alpha,
   #       groups = input$groups,
   #       procedure_name = input$procedure_name,
   #       send_data = input$send_data,    

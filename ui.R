@@ -8,7 +8,7 @@ shinyUI(
     windowTitle = "GxL Replicabilty Adjuster",
     fluid = F,
     tabPanel(
-      title = "App",
+      title = "",
       useShinyjs(),
       tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "style.css")),
       tags$head(includeScript("google-analytics.js")),
@@ -28,34 +28,36 @@ shinyUI(
                 label = "Read more...",href = "#intro")
             ),
             hr(),
-            #actionButton("Example1", "Fill in example data",class="example_btn"), # uiOutput("example_button"),
             h5(
               div(
                 class='step',
                 "1."
               ),
               strong(
-                "Fill in Experiment and procedure details:"
-              )
+                "Fill in the experiment procedure details:"
+              ),
+              popify(
+                el = icon("info-circle"),
+                title = NULL,
+                content = 
+                  paste0(
+                    "Our database includes GxL estimates for mouse phenotyping measures as measured in several procedures with variations of the experimental conditions. Use the dropdown menu to select the phenotyping procedure name which match the one you have conducted in your lab. A table with the relevant experimental conditions will be populated. Check that the details match the ones in your experiment or select the apropiat ones. You may enter a new value. The procedure details follow the ",
+                    a("IMPRESS",href="https://www.mousephenotype.org/impress",target="_blank"),
+                    "Standard operating procedure (SOP)",
+                    br(),
+                    "Next, select the phenotipic measure name you are about to analyse."
+                  ),
+                placement = "right",
+                trigger = "hover",
+                options = NULL)
             ),
-            # span(
-            #   "Our database includes GxL estimates for various mouse phenotyping procedures and thier measures conducted in several experimental conditions.
-            #   Use the dropdown menu to select the phenotyping procedure name which match the one you have conducted in your lab. A table with the relevant experimental conditions will be populated. Check that the details match the ones in your experiment or enter new values.
-            #   The procedure details follow the ",
-            #   a("IMPRESS",href="https://www.mousephenotype.org/impress",target="_blank"),
-            #   "Standard operating procedure (SOP)",
-            #   "Next, select the phenotipic measure name you are about to analyse. The measure units will be presented."
-            # ),
             selectInput(  
               inputId = "procedure_name",
               label = "Procedure name:",
               choices = c("",procedure_name_list)
             ),
-            # uiOutput("proc_SOP_link"),
             uiOutput("metadata_input"),# ,style = "overflow-y:scroll; max-height: 600px"),
             uiOutput("series_input"),
-            uiOutput("selected_measure_details"),
-            
             h5(
               div(
                 class='step',
@@ -63,21 +65,20 @@ shinyUI(
               ),
               strong(
                 "Phenotypic measure data input:"
-              )
+              ),
+              popify(
+                el = icon("info-circle"),
+                title = NULL,
+                content = 
+                  paste0(
+                    "You may enter the measurments values by uploading a comma-delimited(.csv) file with the observations values (before transformation). Upload a comma-delimited file with one observation in each row, where the first column contains the group name (genotype name) and the second column contains the observation measurment value. The file should not contain headers. Do not apply transformation on the values in the file. The data will be transformed later according to the indicated transformation for this measure",
+                    br(),
+                    "Alternative input method is entering the groups summary statistics. Fill in the groups name (space delimited) in the input box, and then the groups means, standard deviations and number of observations. Note that the means and standard deviations should be calculated after the specified transformation"
+                  ),
+                placement = "right",
+                trigger = "hover",
+                options = NULL)
             ),
-            # span(
-            #   "You may enter the measurments values by uploading a comma-delimited(.csv) file with the observations values (before transformation).
-            #   Upload a comma-delimited file with one observation in each row, where the first column contains the group name (genotype name) and the second column contains the observation measurment value.
-            #   The file should not contain headers. Do not apply transformation on the values in the file. The data will be transformed later according to the indicated transformation for this measure",
-            #   "Alternative input method is entering the groups summary statistics. Fill in the groups name (space delimited) in the input box, and then the groups means, standard deviations and number of observations. Note that the means and standard deviations should be calculated after the specified transformation"
-            # ),
-            
-            # radioButtons(
-            #   inputId = "input_method",
-            #   label = "Input method:",
-            #   choices = list("Uploading a file with observations before transformation" = "file",
-            #                  "filling group summaries, after transformation" = "summaries")
-            # ),
             radioButtons( 
               inputId = "input_method",
               label = "Input method",
@@ -85,6 +86,7 @@ shinyUI(
             ),
             uiOutput("file_form"),
             uiOutput("groups_form"),
+            htmlTemplate(filename = "examples_dropdown.html"),
             tableOutput("file_summaries"),
             uiOutput("groups_summaries"),
             h5(
@@ -94,7 +96,15 @@ shinyUI(
               ),
               strong(
                 "participation in our program"
-              )
+              ),
+              popify(
+                el = icon("info-circle"),
+                title = NULL,
+                content = 
+                  "FILL IN TEXT",
+                placement = "right",
+                trigger = "hover",
+                options = NULL)
             ),
             checkboxInput(
               inputId = "checkbox_agrees_share",
@@ -103,18 +113,38 @@ shinyUI(
               value = FALSE
             ),
             disabled(
-              div(
-                class="form-group shiny-input-container",
-                tags$label("Email:"),
-                tags$input(id = "email",value = "", type="text", class="form-control",
-                           style = 'display:inline-block;')
+              fixedRow(
+                column(
+                  width = 6,
+                  div(
+                    class="form-group shiny-input-container",
+                    tags$label("Lab name:"),
+                    tags$input(id = "lab",value = "", type="text", class="form-control",
+                               style = 'display:inline-block;')
+                  )
+                ),
+                column(
+                  width = 6,
+                  div(
+                    class="form-group shiny-input-container",
+                    tags$label("Your email:"),
+                    tags$input(id = "email",value = "", type="text", class="form-control",
+                               style = 'display:inline-block;')
+                  )
+                )
               )
             ),
-            div(id = "wrap_submit_data", actionButton("submit", "Calculate comparisons", icon = icon("cog")))
+            div(
+              id = "wrap_submit_data",
+              actionButton(
+                "submit",
+                "Calculate comparisons",
+                icon = icon("cog")
+              )
+            )
           ),
           column(
             width = 6,
-            tableOutput("check"),
             h5(
               div(
                 class='step',
@@ -125,20 +155,45 @@ shinyUI(
               )
             ),
             fixedRow(
-              column(3,
-                     div(
-                       class="form-group shiny-input-container",
-                       withMathJax(tags$label("\\(\\alpha\\) - level:")),
-                       tags$input(id="alpha", type="number", class="form-control", value="0.05", min="0.001", max="0.5", step="0.01",
-                                  style = 'display:inline-block; width:70px; min-width:70px')
-                     )
+              column(
+                6,
+                div(
+                  class="form-group shiny-input-container",
+                  tags$label(
+                    "confidence level ",
+                    withMathJax(("\\((1-\\alpha)\\)")),
+                    popify(
+                      el = icon("info-circle"),
+                      title = NULL,
+                      content = 
+                        "FILL IN TEXT",
+                      placement = "right",
+                      trigger = "hover",
+                      options = NULL),
+                    ":"),
+                  tags$input(id="conf_level", type="number", class="form-control", value="0.95", min="0.001", max="0.5", step="0.01",
+                             style = 'display:inline-block; width:70px; min-width:70px')
+                )
               ),
-              column(2,
-                     checkboxInput(
-                       inputId = "fdr_adjust",
-                       label = "BH adjust",
-                       value = F
-                     )
+              column(
+                6,
+                radioButtons(
+                  inputId = "mult_adjust",
+                  label = 
+                    tagList(
+                      "Multiplicity adjustment",
+                      popify(
+                        el = icon("info-circle"),
+                        title = NULL,
+                        content = 
+                          "FILL IN TEXT",
+                        placement = "right",
+                        trigger = "hover",
+                        options = NULL)
+                    ),
+                  choices = c("BH selected"="BH selected","Tukey HSD"="Tukey HSD","none" = "none"),
+                  inline = F
+                )
               )
             ),
             h5(
@@ -150,21 +205,24 @@ shinyUI(
                 ""
               )
             ),
+            uiOutput("selected_measure_details"),
             dataTableOutput("results_table"),
             dataTableOutput("results_table_bt"),
             hr(),
             tabsetPanel(
               tabPanel(
                 title = "Comparisons plot",
-                ""
+                
+                plotOutput("pcci_plot")
               ),
               tabPanel(
-                title = "Boxplots",""
-                #plotOutput("cis_plot",width = "80%",height = "500px")
+                title = "Boxplots",
+                plotOutput("box_plot"),
+                plotOutput("box_plot_bt")
               )
-            ),
-            hr(),
-            downloadButton("download_button","Download Results",class = "disabled")
+            )
+            #hr()
+            # downloadButton("download_button","Download Results",class = "disabled")
           )
         )
       ),
@@ -194,14 +252,16 @@ shinyUI(
         )
       )
     ),
-    tabPanel(
+    bsModal(
       id = "Information",
       title = "Information",
-      fixedRow(
-        column(
-          width = 8,
-          offset = 2,
-          wellPanel(
+      size = "large",
+      trigger = "read_more",
+      # fixedRow(
+      #   column(
+      #     width = 8,
+      #     offset = 2,
+      #     wellPanel(
             h5(div(class='step',"Introduction:"),id="intro"),
             p(
               tags$ul(
@@ -256,9 +316,9 @@ shinyUI(
               strong("Effect of population heterogenization on the reproducibility of mouse behavior: a multi-laboratory study"),em("PLoS One"),
               " 6(1):e16461 (2011). doi: 10.1371/journal.pone.0016461."
             )
-          )
-        )
-      )
+     #      )
+     #    )
+     # )
     )
   )
 )
