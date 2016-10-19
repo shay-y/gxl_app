@@ -24,14 +24,25 @@ body {
 
 	color: #020201;
 }*/
+.table-gxl{
+ /* background-color:#FFF;*/
+}
 
 .table-gxl .selectize-input{
    min-height: 24px;
+   height: 24px;
    min-width: 100px;
    /*width: 100px;*/
    padding:3px;
    vertical-align: middle;
  }
+
+#table-groups input{
+  height: 24px;
+  float: right;
+
+  /*width:65%;*/
+}
 
 .table-gxl .selectize-control {
     margin-bottom: 2px;
@@ -45,9 +56,35 @@ body {
   padding:4px !important;
 } 
 
-#table-groups .selectize-input{
+
+.tabs-above .tab-content {
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    background-color:#FFF;
+  
+}
+
+.nav-tabs {
+    margin-bottom: 0;
+}
+
+.popover{
+    width:450px;
+    max-width: none;
+}
+
+.popover-content ul{
+    list-style-type: disc;
+    padding-left: 17px;
+}
+
+#table-groups .selectize-input, #table-groups-info  .selectize-input{
   width: 80%;
 }
+
+
 
 .shiny-plot-output{
     border: 1px solid #ddd;
@@ -142,8 +179,12 @@ font-size: 1.1em !important;
   
 }
 
-.ResetBtn {font-size: 10px; float:right;}
-.example_btn {font-size: 12px; float:right;}
+.progress {
+    height: 20px;
+    margin-bottom: 4px;
+}
+
+.btn_right {float:right;}
 
 #wrap_submit_data{
   padding: 2px;

@@ -1,5 +1,5 @@
-plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Intervals",
-                     ylab = "Measure", labels = FALSE, colors = NULL, error_bar_height = NULL)
+plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Intervals", ylab = "Measure",
+                      labels = FALSE, colors = NULL, error_bar_height = NULL)
 {
   if (is.null(colors))
     cols = rev(c("#7570B3","#D95F02"))
@@ -8,7 +8,7 @@ plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Interva
     if (length(colors) ==2)
       cols <- colors
     else
-      stop("length(colors) not equals 2")
+      stop("length(colors) must equal 2")
   }
   
   tbl_pairs <- pcci_obj$tbl_pairs
@@ -77,12 +77,16 @@ plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Interva
     theme(legend.position = "bottom", legend.box = "horizontal")
   
   
-  # if (labels)
-  #   pcci <-  pcci +
-  #     geom_label_repel(
-  #       aes(x = abs(xend), y = yend, label = format(xend,digits = 3,nsmall = 3,scientific = 4)),
-  #       data = tbl_pairs_to_plot %>% filter(Adjustment == "Unadjusted"),colour = gray(0.2))
-  
+  if (labels)
+  {
+    require(ggrepel)
+    pcci <-  pcci +
+      geom_label_repel(
+        aes(x = abs(xend), y = yend, label = format(xend,digits = 3,nsmall = 3,scientific = 4)),
+        data = tbl_pairs_to_plot %>% filter(Adjustment == "Unadjusted"),colour = gray(0.2))
+  }
+    
+
   pcci <-  pcci +
     geom_text(
       aes(x = x, y = y, label = group_name),

@@ -11,19 +11,12 @@ function(input, output, session) {
   #   }
   # })
   
-  ## pressing on "read more" directs to instruction tab ----
-  # observeEvent(
-  #   input$read_more,
-  #   updateNavbarPage(session = session,inputId = "nav",selected = "Information")
-  #   )
-  
-  #addClass(class = "table-gxl", selector = "#table-metadata, #table-details, #table-groups, #file_summaries")
-  
   ## initialize reactive values: ----
   values <- reactiveValues(
+    raw_data_file = NULL
     )
 
-  ## create metadata input object for selected procedure: ----
+  ## create metadata and measure inputs table for the selected procedure: ----
   output$metadata_input <- renderUI({
     req(input$procedure_name)
     
@@ -32,8 +25,10 @@ function(input, output, session) {
       filter(procedure_name == input$procedure_name) %>%
       select(url) %>% 
       .$url
+    
     tbl_metadata_selected <- tbl_metadata_1 %>% 
       filter(procedure_name == input$procedure_name)
+    
     measure_name_list <-
       tbl_measure_1 %>%
       filter(procedure_name == input$procedure_name) %>% 
@@ -46,11 +41,11 @@ function(input, output, session) {
       id = "table-metadata",
       class = "table table-bordered table-gxl",
       tags$caption(
-        "Parameters for ",
-        input$procedure_name,
-        " (",
-        a(href = selected_url,target='_blank',"Standard Operating Procedure at IMPRESS"),
-        ")"
+        tags$b("Parameters for the ",tags$i(input$procedure_name)," procedure:"),
+        br(),
+        "(See extensive information about the procedure in its Standard Operating Procedure document on ",
+        a(href = selected_url,target='_blank',"IMPReSS"),
+        " site)"
       ),        
       tags$thead(
         tags$tr(
@@ -73,20 +68,13 @@ function(input, output, session) {
               tags$td(row$unit)
             )
           }
-        )
-      ),
-      tags$tfoot(
-        # tags$tr(
-        #   tags$td(colspan = 3,
-        #     tags$hr()
-        #   )
-        # ),
+        ),
         tags$tr(
           tags$th(
             span(
               class='step',
               ""),
-            "Measured phenotype"),
+            "phenotypic measure"),
           tags$td(
             selectizeInput(
               inputId = "measure_selected",
@@ -94,26 +82,36 @@ function(input, output, session) {
               choices = measure_name_list,
               options = list(create = TRUE))),
           tags$td(uiOutput("unit"))
+        ),
+        hidden(
+          tags$tr(id = "duration_line",
+            tags$td(
+              "Duration"
+            ),
+            tags$td(
+              numericInput(
+                inputId = "duration",
+                label = NULL,
+                min = 0,
+                max = 60,
+                value = 5
+              )
+            ),
+            tags$td(
+              "minutes"
+            )
+          )
         )
       )
     )
   })
   
-  ## create link to SOP page at IMPRESS for selected procedure: ----
-  # output$proc_SOP_link <- renderUI({
-  #   req(input$procedure_name)
-  #   
-  #   selected_url <- 
-  #     tbl_procedures_1 %>% 
-  #     filter(procedure_name == input$procedure_name) %>%
-  #     select(url) %>% 
-  #     .$url
-  #   
-  #   a(href = selected_url,
-  #     target='_blank',
-  #     "Link to Standard Operating Procedure")
-  # })
+  ## if measure has duration (it is series) then add input for the duration:----
+  observe({
+    toggle(id = "duration_line",anim = F, condition = !is.null(get_gxl_matchs()) & !is.na(get_gxl_matchs()$duration))
+  })
   
+  ## filter the measures table to get only rows that match the user input (sex, procedure, measure):----
   get_gxl_matchs <- reactive(
     {
       req(input$measure_selected,input$procedure_name,input$INT_001)
@@ -123,29 +121,17 @@ function(input, output, session) {
                sex == input$INT_001)
     }
   )
-  
-  output$series_input <- renderUI(
-    {
-      req(get_gxl_matchs(),nrow(get_gxl_matchs())>1)
-      numericInput(
-        inputId = "duration",
-        label = "Duration at measurement",
-        min = 0,
-        max = 40,
-        value = 5
-      )
-    }
-  )
+
   
   get_gxl_estimate <- reactive(
     {
       req(get_gxl_matchs(),input$duration)
-      req(nrow(get_gxl_matchs())>1)
+      req(!is.na(get_gxl_matchs()$duration))
       x_pred <- input$duration
       x <- get_gxl_matchs()$duration
       y <- get_gxl_matchs()$s2_ratio  
 
-      y_pred <- predict.lm (lm(y~x,data = data.frame(y,x)), newdata = data.frame(x = x_pred))
+      y_pred <- predict.lm(lm(y~x,data = data.frame(y,x)), newdata = data.frame(x = x_pred))
 
       return(y_pred)
     }
@@ -170,7 +156,7 @@ function(input, output, session) {
     }
   )
       
-      
+  
   output$unit <- renderUI({
     req(collect_gxl_details())
     collect_gxl_details()$unit
@@ -180,36 +166,77 @@ function(input, output, session) {
   ## render details table for selected measure: ----
   output$selected_measure_details <- renderUI({
     req(collect_gxl_details())
-    with(
-      collect_gxl_details(),
-      tagList(
-        "GxL replicability ratio estimate: ",
-        withMathJax("\\(S^2_{G\\times L}/S^2_{error}=\\)"),
-        s2_ratio %>% signif(digits=6),
-        br(),
-        if (collect_gxl_details()$transformation_symbol != "none")
-          paste("Transformation taken prior to analysis: ",transformation_symbol)
-        else
-          "No transformation is taken prior to analysis"
+    withTags(
+      with(
+        collect_gxl_details(),
+        ul(
+          li(
+            b("GxL replicability ratio estimate: "),
+            withMathJax("\\(S^2_{G\\times L}/S^2_{error}=\\)"),
+            s2_ratio %>% signif(digits=6)
+          ),
+          li(
+            if (collect_gxl_details()$transformation_symbol != "none")
+              list(b("Transformation taken prior to analysis: "), transformation_symbol) #
+            else
+              b("No transformation is taken prior to analysis")
+          )
+        )
       )
     )
   })
-
-  ## create input object to recieve raw data file: ----
+  
+  ## create input object to receive raw data file: ----
   output$file_form <- renderUI({
     req(input$input_method=="file")
-    #input$procedure_name
-    tagList(
-      br(),br(),
-      fileInput(
-      inputId = "upload_file",
-      label = "Upload CSV file (no header):",
-      accept = 'text/csv',
-      width="80%"),
-      #actionButton("reset_upload","Reset",style = "size:80%"), #class="ResetBtn",icon = icon("refresh"),
-      downloadButton(outputId = "example_raw_input",label = "Example input file")
+    input$reset_upload
+    #take dependencies on previous selections
+    input$procedure_name
+    input$measure_selected
+    
+    div(
+      actionButton(inputId = "reset_upload",label = "Reset", icon = icon("refresh"),class = "btn_right btn-sm"),
+      downloadButton(outputId = "example_raw_input",label = "Example input file", class = "btn_right btn-sm"),
+       #class="ResetBtn",,
+      div(
+        class="form-group shiny-input-container",
+        style="width: 70%;",
+        #<label></label>
+        tags$input(
+          id="upload_file",
+          name="upload_file",
+          type="file",
+          accept="text/csv"),
+        div(
+          id="upload_file_progress",
+          class="progress progress-striped active shiny-file-input-progress",
+          div(class="progress-bar"
+          )
+        )
+      )
     )
   })
+  
+  observe({
+    
+    #take dependencies on previous selections
+    input$procedure_name
+    input$measure_selected
+    input$reset_upload
+    values$file <- NULL
+  })
+  
+  observe({
+    values$file <- input$upload_file
+  })
+  
+  ## link the example raw data file:  ----
+  output$example_raw_input <- downloadHandler(
+    filename = "Simplified IPGTT Glucose response AUC - example.csv",
+    content = function(con) {
+      write.table(x = tbl_example_measure_input,file = con,row.names = F,col.names = F, qmethod = "double",sep = ",")
+    }
+  )
   
   output$groups_form <- renderUI({
     req(input$input_method=="summ")
@@ -231,20 +258,21 @@ function(input, output, session) {
   ## read raw data from file: ----
   get_raw_df <- reactive(
     {
-      req(input$upload_file,input$input_method=="file")
+      req(values$file,input$input_method=="file")
       read.csv(
-          file = input$upload_file$datapath,
+          file = values$file$datapath,
           header = F,
           stringsAsFactors = F
       )
     })  
   
-  observe(print(input$upload_file))
+  observe(print(values$file))
+  
   ## summarize and transform raw table: ----
   tbl_summaries <- reactive(
     {
       req(get_raw_df(),collect_gxl_details(),input$input_method=="file")
-      trans_fun<- eval(parse(text=paste("function(x)",collect_gxl_details()$transformation_expr)))
+      trans_fun <- eval(parse(text=paste("function(x)",collect_gxl_details()$transformation_expr)))
       get_raw_df()  %>% 
         mutate(group_name = as.factor(V1), transformed = trans_fun(V2)) %>% 
         group_by(group_name) %>% 
@@ -259,10 +287,13 @@ function(input, output, session) {
  
   ## render summaries table as input for additional edits: ----
   
-  output$file_summaries <- renderTable(
+  output$file_summaries <- renderDataTable(
     {
       req(tbl_summaries())
-      tbl_summaries() %>% select(Group = group_name, Mean = mean.t,`Standard Deviation`	= sd.t,`Num. of Observations` =	n)
+      datatable(
+        caption = "Groups summaries",
+        data =  tbl_summaries() %>% select(Group = group_name, Mean = mean.t,`Standard Deviation`	= sd.t,`Num. of Observations` =	n)
+      ) %>% formatSignif(2:3,digits = 5)
     }
   )
   
@@ -271,7 +302,7 @@ function(input, output, session) {
       req(input$groups,input$input_method=="summ")
       tags$table(
         id = "table-groups",
-        class = "table table-condensed table-gxl",
+        class = "table table-gxl",
         tags$thead(
           tags$tr(
             tags$th("Group"),tags$th("Mean"),tags$th("Standard Deviation"),tags$th("Num. of Observations")
@@ -293,6 +324,37 @@ function(input, output, session) {
       )
     }
   )
+  
+  output$groups_info <- renderUI(
+    {
+      req(tbl_summaries_tidy())
+      tags$table(
+        id = "table-groups-info",
+        class = "table table-bordered table-gxl",
+        tags$thead(
+          tags$tr(
+            tags$th("Group"),tags$th("Background strain"),tags$th("Gene symbol"),tags$th("Treatment")
+          )
+        ),
+        tags$tbody(
+          lapply(
+            1:length(tbl_summaries_tidy()$group_id),function(group_id)
+            {
+              tags$tr(
+                tags$td(tbl_summaries_tidy()$group_name[group_id]),
+                tags$td(selectizeInput(inputId = paste("grp_info_",group_id,input$groups[group_id],"bg_strain",sep = "_"), label = NULL, choices = {c(" ",bg_strain_vec) %>% {setNames(.,.)}},options = list(create = TRUE))),
+                tags$td(selectizeInput(inputId = paste("grp_info_",group_id,input$groups[group_id],"gene_symbol",sep = "_"), label = NULL, choices = {c(" ",gene_symbol_vec) %>% {setNames(.,.)}},options = list(create = TRUE))),
+                tags$td(selectizeInput(inputId = paste("grp_info_",group_id,input$groups[group_id],"treatment",sep = "_"), label = NULL,   choices = {c(" ",treatment_vec) %>% {setNames(.,.)}},options = list(create = TRUE)))
+              )
+            }
+          )
+        )
+      )
+    }
+  )
+  
+  
+  
     # {
     #   tags$table(
     #     class = "table table-condensed",
@@ -324,19 +386,12 @@ function(input, output, session) {
     #   if(!is.null(input$groups))
     #   {
   
-  ## link the example raw data file:  ----
-  output$example_raw_input <- downloadHandler(
-    filename = "Simplified IPGTT Glucose response AUC - example.csv",
-    content = function(con) {
-      write.table(x = tbl_example_measure_input,file = con,row.names = F,col.names = F, qmethod = "double",sep = ",")
-    }
-  )
+  
   
   ## read input objects and create summaries table and pairs table: ----
-  tbl_summaries_tidy <- eventReactive(eventExpr = 
-    input$submit,valueExpr = 
+  tbl_summaries_tidy <- reactive(
     {
-      req(input$submit,collect_gxl_details())
+      req(collect_gxl_details())
       
       s2_interaction <- collect_gxl_details()$s2_interaction
       n_labs_s2gxl <- collect_gxl_details()$n_labs_s2gxl
@@ -381,9 +436,12 @@ function(input, output, session) {
     })
   
   ## calculate (estimate, se, statistic ,p-value, conf.lower, conf.higher)X(unadjusted, adjusted GxL) ----
-  tbl_pairs <- reactive(
+  tbl_pairs <- eventReactive(
+    eventExpr = input$submit,
+    valueExpr = 
     {
-      req(tbl_summaries_tidy(),collect_gxl_details())
+      req(input$submit,tbl_summaries_tidy())
+    
       alpha <- 1-input$conf_level
       s2_ratio <- collect_gxl_details()$s2_ratio
       tbl_summaries <- tbl_summaries_tidy()
@@ -461,7 +519,7 @@ function(input, output, session) {
   
   tbl_pairs_bt <- reactive(
     {
-      req(collect_gxl_details()$transformation_symbol != "none")
+      req(collect_gxl_details()$transformation_symbol != "none",tbl_pairs())
       back_transform_expr <- collect_gxl_details()$back_transform_expr
       back_trans_fun <- eval(parse(text=paste("function(y)",back_transform_expr)))
       
@@ -532,12 +590,12 @@ function(input, output, session) {
           {
             tags$caption(
               'Pairwise comparisons differences', 
-              if (input$mult_adjust == "BH selected") {' (BH adjusted for selection):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else ':')
+              if (input$mult_adjust == "BH selected") {' (BH adjusted for FDR control):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else ':')
           } else 
           {
             tags$caption(
               'Table 1: Pairwise comparisons differences on ',tags$strong('transformed'),' scale'
-             # if (input$mult_adjust == "BH selected") {' (BH adjusted for selection):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else':')
+             # if (input$mult_adjust == "BH selected") {' (BH adjusted for FDR control):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else':')
           )}
         ) %>% formatSignif(3:9,digits = 5)
     }
@@ -604,10 +662,10 @@ function(input, output, session) {
       plot_pcci(pcci_obj = po,title = paste("Means Differences Confidence Intervals of",collect_gxl_details()$parameter_name),
                 ylab = 
                   if (collect_gxl_details()$transformation_symbol != "none")
-                    paste(collect_gxl_details()$unit,"after",collect_gxl_details()$transformation_symbol,"transformation")
-                else
-                  paste(collect_gxl_details()$unit)
-                )
+                    paste(collect_gxl_details()$parameter_name,"(",collect_gxl_details()$unit,") after",collect_gxl_details()$transformation_symbol,"transformation")
+                 else
+                  paste(collect_gxl_details()$parameter_name,"(",collect_gxl_details()$unit,")")
+      )
     }
   )
 
@@ -624,10 +682,11 @@ function(input, output, session) {
         geom_boxplot() + #width = bw
         ylab(
           if (collect_gxl_details()$transformation_symbol != "none")
-            paste(collect_gxl_details()$unit,"after",collect_gxl_details()$transformation_symbol,"transformation")
+            paste(collect_gxl_details()$parameter_name,"(",collect_gxl_details()$unit,") after",collect_gxl_details()$transformation_symbol,"transformation")
           else
-            paste(collect_gxl_details()$unit)
+            paste(collect_gxl_details()$parameter_name,"(",collect_gxl_details()$unit,")")
         ) + 
+        xlab("")+
         ggtitle(paste("Groups boxplots of",collect_gxl_details()$parameter_name)) +
         theme_minimal()
     })
@@ -648,6 +707,30 @@ function(input, output, session) {
         ggtitle(paste("Groups boxplots of",collect_gxl_details()$parameter_name," before transformation")) +
         theme_minimal()
     })
+  
+  observe({
+    req(tbl_pairs_bt())
+    toggle(
+      id = "results_table_bt",
+      anim = F,
+      condition =  !is.null(req(tbl_pairs_bt())))
+    toggle(
+      id = "box_plot_bt",
+      anim = F,
+      condition =  !is.null(req(tbl_pairs_bt())))
+  })
+  
+  observe({
+    req(tbl_pairs())
+    toggle(
+      id = "pcci_plot",
+      anim = F,
+      condition =  !is.null(req(tbl_pairs())))
+    toggle(
+      id = "box_plot",
+      anim = F,
+      condition =  !is.null(req(tbl_pairs())))
+  })
   
   
   ## prepare txt file to download: ----
@@ -682,12 +765,7 @@ function(input, output, session) {
   
   observeEvent(
     input$checkbox_agrees_share,
-    {
-      if(input$checkbox_agrees_share)
-        shinyjs::enable(id = "email")
-      else
-        shinyjs::disable(id = "email")
-    }
+    toggle(id = "user_details",condition = input$checkbox_agrees_share)
   )
   
   # observeEvent(
