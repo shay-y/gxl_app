@@ -362,24 +362,3 @@ shinyUI(
     )
   )
 )
-
-
-
-# data table table-bordered table-condensed
-# HTML(""),
-# hr(),
-# "stats_tbl"
-# actionButton("reset_stats_tbl", " Reset",class="ResetBtn",icon = icon("refresh")),
-# HTML("<h5><div class='step'>Results:</div> </h5>")
-# label(" Comparisons Diagram:"),
-# hidden(div(id="dia_plot_h", ggvisOutput("dia_plot"), align = "center",width = "70%")),
-# div(imageOutput("dia_plot_ph",width = "auto",height = "auto"), align = "center"),
-# label(" Differences Confidence Intervals Plot:"),
-# hidden(div(id="ci_plot_h",plotOutput("ci_plot",width = "80%",height = "500px"), align = "center")),
-# div(imageOutput("ci_plot_ph",width = "auto",height = "auto"), align = "center"),
-# br(),
-# p("Download the detailed results in a text file or the table only in comma-separated file:"),
-# dataTableOutput("dt_results", width = "80%"),
-# radioButtons("dl_type", label = NULL, choices = list("Detailed (.txt file)"="all","Table only (.csv file)"="table")),
-# downloadButton("dl_button","Download",class = "disabled")
-

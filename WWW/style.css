@@ -28,27 +28,31 @@ body {
  /* background-color:#FFF;*/
 }
 
-.table-gxl .selectize-input{
-   min-height: 24px;
-   height: 24px;
+.table-gxl .selectize-input, .table-gxl input{
+   min-height: 26px;
+   height: 26px;
    min-width: 100px;
    /*width: 100px;*/
-   padding:3px;
+   padding: 1px 16px 1px 6px;
    vertical-align: middle;
  }
 
+.table-gxl .selectize-control.single .selectize-input:after {
+    right: 10px;
+}
+
 #table-groups input{
-  height: 24px;
+  height: 25px;
   float: right;
 
   /*width:65%;*/
 }
 
-.table-gxl .selectize-control {
-    margin-bottom: 2px;
+.table-gxl .form-control{
+    margin-bottom: 0px;
 }
 .table-gxl .form-group {
-    margin-bottom: 1px;
+    margin-bottom: 0px;
 }
 
 .table-gxl td, .table-gxl th{

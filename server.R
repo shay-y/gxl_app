@@ -1,16 +1,5 @@
 function(input, output, session) {
   
-  ## create temporary debugging concole: ----
-  # observe(label="console",{
-  #   if(input$console != 0) {
-  #     options(browserNLdisabled=TRUE)
-  #     saved_console<-".RDuetConsole"
-  #     if (file.exists(saved_console)) load(saved_console)
-  #     isolate(browser())
-  #     save(file=saved_console,list=ls(environment()))
-  #   }
-  # })
-  
   ## initialize reactive values: ----
   values <- reactiveValues(
     raw_data_file = NULL
@@ -21,16 +10,16 @@ function(input, output, session) {
     req(input$procedure_name)
     
     selected_url <- 
-      tbl_procedures_1 %>% 
+      tbl_procedures %>% 
       filter(procedure_name == input$procedure_name) %>%
       select(url) %>% 
       .$url
     
-    tbl_metadata_selected <- tbl_metadata_1 %>% 
+    tbl_metadata_selected <- tbl_metadata %>% 
       filter(procedure_name == input$procedure_name)
     
     measure_name_list <-
-      tbl_measure_1 %>%
+      tbl_models %>%
       filter(procedure_name == input$procedure_name) %>% 
       .$parameter_name %>%
       as.character() %>%
@@ -57,14 +46,42 @@ function(input, output, session) {
           tbl_metadata_selected,1,
           function(row)
           {
+            row <- as.list(row)
             tags$tr(
               tags$td(row$parameter_name),
               tags$td(
-                selectizeInput(
-                  inputId = row$parameter_stable_id,
-                  label = NULL,
-                  choices = {row$options %>% {setNames(.,.)}},
-                  options = list(create = TRUE))),
+                {
+                  if (row$datatype == "TEXT")
+                  {
+                    selectizeInput(
+                      inputId = row$parameter_name,
+                      label = NULL,
+                      selected = row$default_value,
+                      choices = {row$input_options %>% parse(text = .) %>% eval() %>% {setNames(.,.)}},
+                      options = list(create = TRUE))
+                  } else
+                    if (row$datatype == "INT")
+                    {
+                      numericInput(
+                        inputId = row$parameter_name,
+                        label = NULL,
+                        step = 1,
+                        value = row$default_value,
+                        min = row$input_min,
+                        max = row$input_max)
+                    } else
+                      if (row$datatype == "FLOAT")
+                      {
+                        numericInput(
+                          inputId = row$parameter_name,
+                          label = NULL,
+                          value = row$default_value,
+                          min = row$input_min,
+                          max = row$input_max)
+                      }
+                }
+                
+              ),
               tags$td(row$unit)
             )
           }
@@ -108,67 +125,53 @@ function(input, output, session) {
   
   ## if measure has duration (it is series) then add input for the duration:----
   observe({
-    toggle(id = "duration_line",anim = F, condition = !is.null(get_gxl_matchs()) & !is.na(get_gxl_matchs()$duration))
+    toggle(id = "duration_line",anim = F, condition = !is.null(tbl_matched_models()) & all( !is.na(tbl_models_selected$duration) ))
   })
   
-  ## filter the measures table to get only rows that match the user input (sex, procedure, measure):----
-  get_gxl_matchs <- reactive(
+  ## filter the models table to get only rows that match the user input (sex, procedure, measure) and check refinment conditions:----
+  # tbl with 0 rows represents no matchs
+  tbl_matched_model <- reactive(
     {
-      req(input$measure_selected,input$procedure_name,input$INT_001)
-      tbl_measure_1 %>%
+      req(input$measure_selected,input$procedure_name)
+      tbl_matched_models <- tbl_models %>%
         filter(procedure_name == input$procedure_name,
-               parameter_name==input$measure_selected,
-               sex == input$INT_001)
-    }
-  )
-
-  
-  get_gxl_estimate <- reactive(
-    {
-      req(get_gxl_matchs(),input$duration)
-      req(!is.na(get_gxl_matchs()$duration))
-      x_pred <- input$duration
-      x <- get_gxl_matchs()$duration
-      y <- get_gxl_matchs()$s2_ratio  
-
-      y_pred <- predict.lm(lm(y~x,data = data.frame(y,x)), newdata = data.frame(x = x_pred))
-
-      return(y_pred)
-    }
-  )
-  
-  collect_gxl_details <- reactive(
-    {
-      req(get_gxl_matchs())
-      if(nrow(get_gxl_matchs())<2)
-        get_gxl_matchs()
-      else
-      {
-        req(get_gxl_estimate())
-        s2_ratio_1 = get_gxl_estimate()
-        duration_1 <- input$duration
-        
-        get_gxl_matchs() %>%
-          mutate(duration = duration_1, s2_ratio =  s2_ratio_1) %>% 
-          head(1) # TODO: should be distinct()
-      }
-        
-    }
-  )
+               parameter_name == input$measure_selected,
+               sex            == input$Sex) %>% 
+        filter(metadata_rules %>% parse(text = .) %>% eval())
       
-  
+      ## estimate gxl ratio:
+      if ( all( !is.na(tbl_matched_models$duration) ) )
+      {
+        x_pred <- input$duration
+        x <- tbl_matched_models()$duration
+        y <- tbl_matched_models()$s2_ratio  
+        y_pred <- predict.lm(lm(y~x,data = data.frame(y,x)), newdata = data.frame(x = x_pred))
+        
+        tbl_matched_model <- tbl_matched_models %>% 
+          mutate(duration = x_pred, s2_ratio =  y_pred) %>% 
+          distinct()
+      }
+      else
+        tbl_matched_model <- tbl_matched_models
+      
+      if(nrow(tbl_matched_model>1)) stop("Too many matchs.")
+      
+      tbl_matched_model
+    }
+  )
+
   output$unit <- renderUI({
-    req(collect_gxl_details())
-    collect_gxl_details()$unit
+    req(tbl_matched_model())
+    tbl_matched_model()$unit
   })
   
   
   ## render details table for selected measure: ----
   output$selected_measure_details <- renderUI({
-    req(collect_gxl_details())
+    req(tbl_matched_model())
     withTags(
       with(
-        collect_gxl_details(),
+        tbl_matched_model(),
         ul(
           li(
             b("GxL replicability ratio estimate: "),
@@ -176,7 +179,7 @@ function(input, output, session) {
             s2_ratio %>% signif(digits=6)
           ),
           li(
-            if (collect_gxl_details()$transformation_symbol != "none")
+            if (tbl_matched_model()$transformation_symbol != "none")
               list(b("Transformation taken prior to analysis: "), transformation_symbol) #
             else
               b("No transformation is taken prior to analysis")
@@ -271,8 +274,8 @@ function(input, output, session) {
   ## summarize and transform raw table: ----
   tbl_summaries <- reactive(
     {
-      req(get_raw_df(),collect_gxl_details(),input$input_method=="file")
-      trans_fun <- eval(parse(text=paste("function(x)",collect_gxl_details()$transformation_expr)))
+      req(get_raw_df(),tbl_matched_model(),input$input_method=="file")
+      trans_fun <- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
       get_raw_df()  %>% 
         mutate(group_name = as.factor(V1), transformed = trans_fun(V2)) %>% 
         group_by(group_name) %>% 
@@ -391,11 +394,11 @@ function(input, output, session) {
   ## read input objects and create summaries table and pairs table: ----
   tbl_summaries_tidy <- reactive(
     {
-      req(collect_gxl_details())
+      req(tbl_matched_model())
       
-      s2_interaction <- collect_gxl_details()$s2_interaction
-      n_labs_s2gxl <- collect_gxl_details()$n_labs_s2gxl
-      n_groups_s2gxl <- collect_gxl_details()$n_groups_s2gxl
+      s2_interaction <- tbl_matched_model()$s2_interaction
+      n_labs_s2gxl <- tbl_matched_model()$n_labs_s2gxl
+      n_groups_s2gxl <- tbl_matched_model()$n_groups_s2gxl
      
       if(input$input_method=="file")
       {
@@ -443,7 +446,7 @@ function(input, output, session) {
       req(input$submit,tbl_summaries_tidy())
     
       alpha <- 1-input$conf_level
-      s2_ratio <- collect_gxl_details()$s2_ratio
+      s2_ratio <- tbl_matched_model()$s2_ratio
       tbl_summaries <- tbl_summaries_tidy()
         
 
@@ -513,14 +516,15 @@ function(input, output, session) {
                 lwr_gxl = diff - qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric(),
                 upr_gxl = diff + qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric()
               )
+          browser()
         }
       return(tbl_pairs)
     })
   
   tbl_pairs_bt <- reactive(
     {
-      req(collect_gxl_details()$transformation_symbol != "none",tbl_pairs())
-      back_transform_expr <- collect_gxl_details()$back_transform_expr
+      req(tbl_matched_model()$transformation_symbol != "none",tbl_pairs())
+      back_transform_expr <- tbl_matched_model()$back_transform_expr
       back_trans_fun <- eval(parse(text=paste("function(y)",back_transform_expr)))
       
       tbl_pairs() %>% 
@@ -586,7 +590,7 @@ function(input, output, session) {
             )
           ),
         caption = 
-          if(collect_gxl_details()$transformation_symbol == "none")
+          if(tbl_matched_model()$transformation_symbol == "none")
           {
             tags$caption(
               'Pairwise comparisons differences', 
@@ -659,12 +663,12 @@ function(input, output, session) {
   output$pcci_plot <- renderPlot(
     {
       po <<- list(tbl_pairs = req(tbl_pairs()),tbl_summaries = req(tbl_summaries_tidy()))
-      plot_pcci(pcci_obj = po,title = paste("Means Differences Confidence Intervals of",collect_gxl_details()$parameter_name),
+      plot_pcci(pcci_obj = po,title = paste("Means Differences Confidence Intervals of",tbl_matched_model()$parameter_name),
                 ylab = 
-                  if (collect_gxl_details()$transformation_symbol != "none")
-                    paste(collect_gxl_details()$parameter_name,"(",collect_gxl_details()$unit,") after",collect_gxl_details()$transformation_symbol,"transformation")
+                  if (tbl_matched_model()$transformation_symbol != "none")
+                    paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,") after",tbl_matched_model()$transformation_symbol,"transformation")
                  else
-                  paste(collect_gxl_details()$parameter_name,"(",collect_gxl_details()$unit,")")
+                  paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")")
       )
     }
   )
@@ -673,7 +677,7 @@ function(input, output, session) {
   output$box_plot <- renderPlot(
     {
       req(tbl_pairs())
-      trans_fun<- eval(parse(text=paste("function(x)",collect_gxl_details()$transformation_expr)))
+      trans_fun<- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
       
       ggplot(data = get_raw_df() %>% req() %>% 
                mutate(group_name = as.factor(V1), measure = trans_fun(V2))
@@ -681,13 +685,13 @@ function(input, output, session) {
         aes(x = group_name, y = measure) + 
         geom_boxplot() + #width = bw
         ylab(
-          if (collect_gxl_details()$transformation_symbol != "none")
-            paste(collect_gxl_details()$parameter_name,"(",collect_gxl_details()$unit,") after",collect_gxl_details()$transformation_symbol,"transformation")
+          if (tbl_matched_model()$transformation_symbol != "none")
+            paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,") after",tbl_matched_model()$transformation_symbol,"transformation")
           else
-            paste(collect_gxl_details()$parameter_name,"(",collect_gxl_details()$unit,")")
+            paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")")
         ) + 
         xlab("")+
-        ggtitle(paste("Groups boxplots of",collect_gxl_details()$parameter_name)) +
+        ggtitle(paste("Groups boxplots of",tbl_matched_model()$parameter_name)) +
         theme_minimal()
     })
     
@@ -702,9 +706,9 @@ function(input, output, session) {
         aes(x = group_name, y = measure) + 
         geom_boxplot() + #width = bw
         ylab(
-          collect_gxl_details()$unit
+          tbl_matched_model()$unit
         ) + 
-        ggtitle(paste("Groups boxplots of",collect_gxl_details()$parameter_name," before transformation")) +
+        ggtitle(paste("Groups boxplots of",tbl_matched_model()$parameter_name," before transformation")) +
         theme_minimal()
     })
   
@@ -745,8 +749,9 @@ function(input, output, session) {
   #       procedure_name = input$procedure_name,
   #       send_data = input$send_data,    
   #       genotypes_tested = values$genotypes_tested,
-  #       tbl_measures_selected = values$tbl_measures_selected,
-  #       tbl_metadata_selected = values$tbl_metadata_selected,
+  #       tbl_models_selected = values$tbl_models_selected,
+  #       tbl_metadata_selected = values$
+  #       ++_selected,
   #       tbl_raw_input = values$tbl_raw_input,
   #       tbl_summaries_from_file = values$tbl_summaries_from_file,
   #       tbl_summaries_tidy = values$tbl_summaries_tidy,

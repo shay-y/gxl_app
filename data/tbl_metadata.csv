@@ -1,0 +1,69 @@
+procedure_stable_id,parameter_stable_id,procedure_name,parameter_name,unit,datatype,default_value,input_options,input_min,input_max,valid_options,valid_min_model1,valid_max_model1
+IMPC_ACS_003,IMPC_ACS_040_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Acoustic startle response measure,-,TEXT,Max peak,"c(""Max peak"", ""Peak-to-peak"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,INT_002,Acoustic Startle and Pre-pulse Inhibition (PPI),Age at testing,weeks,INT,10,NA,1,120.0,NA,9.0,60
+IMPC_ACS_003,IMPC_ACS_016_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Background noise,dB,INT,65,NA,0,130.0,NA,30.0,80
+IMPC_ACS_003,IMPC_ACS_027_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Equipment manufacturer,-,TEXT,"Med Associates Inc., VT, USA","c(""Med Associates Inc., VT, USA"", ""San Diego Instruments"", ""O'hara Co. Ltd."")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_028_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Equipment model,-,TEXT,Med Associates Acoustic Startle Model - Startle Cubicle (ENV 022S),"c(""Acoustic startle chambers MED-ASR-PRO1"", ""SR-LAB Startle Response System"", ""SR-4020"", ""Med Associates Acoustic Startle Model - Startle Cubicle (ENV 022S)"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_023_001,Acoustic Startle and Pre-pulse Inhibition (PPI),In-chamber adapt time,s,INT,300,NA,0,Inf,NA,0.0,600
+IMPC_ACS_003,IMPC_ACS_013_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Inter PP-S stimulus interval,ms,INT,50,NA,0,Inf,NA,10.0,800
+IMPC_ACS_003,IMPC_ACS_021_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Inter-trial interval,s,TEXT,random 20-30,"c(""random 20-30"", ""random 10-20"", ""50"", ""25"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_030_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Mouse chamber dimension,cm,TEXT,4 x 9,"c(""3 x 3.5"", ""4 x 9"", ""12 x 3.8"", ""7.5 x 3.0"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_022_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Number of trials,-,INT,90,NA,3,300.0,NA,3.0,300
+IMPC_ACS_003,IMPC_ACS_017_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Pre-pulse stimulus 1,dB,INT,55,NA,0,130.0,NA,40.0,120
+IMPC_ACS_003,IMPC_ACS_018_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Pre-pulse stimulus 2,dB,INT,65,NA,0,130.0,NA,40.0,120
+IMPC_ACS_003,IMPC_ACS_019_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Pre-pulse stimulus 3,dB,INT,70,NA,0,130.0,NA,40.0,120
+IMPC_ACS_003,IMPC_ACS_020_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Pre-pulse stimulus 4,dB,INT,75,NA,0,130.0,NA,40.0,120
+IMPC_ACS_003,INT_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_029_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Software version,-,TEXT,Med Associates Startle Reflex Vers. 6.00,"c(""Med Associates Startle Reflex Vers. 6.00"", ""SR LAB software"", ""Animal Startle SR-9020"", ""Med Associates Startle Reflex Vers. 5.94"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_031_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sound generator manufacturer,-,TEXT,"Med Associates Inc., VT, USA","c(""Med Associates Inc., VT, USA"", ""San Diego Instruments"", ""O'hara Co. Ltd."")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_039_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sound generator model,-,TEXT,PHM 255A,"c(""PHM 255A"", ""SR-LAB Startle Response System"", ""SR1040"", ""SR-LAB CONTROL SRC000444"", ""SR-LAB CONTROL SRC000495"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_032_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sound-proof box dimension,cm,TEXT,50.8 x 33 x 30.5cm,"c(""38.1 x 35.6 x 45.7"", ""33 x 43 x 33"", ""28.5 x 28.5 x 30"", ""50.8 x 33 x 30.5cm"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_015_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Startle stimulus,dB,INT,110,NA,0,130.0,NA,50.0,120
+IMPC_ACS_003,IMPC_ACS_024_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Stimulus order,-,TEXT,Pseudo-random,"c(""Pseudo-random"", ""Random"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,INT_002,Clinical Blood Chemistry,Age at testing,weeks,INT,16,NA,1,120.0,NA,9.0,60
+IMPC_CBC_003,IMPC_CBC_036_001,Clinical Blood Chemistry,Anesthesia used for blood collection,-,TEXT,Gas anaesthesia with Isofluorane,"c(""Gas anaesthesia with Isofluorane"", ""Injection narcosis with Ketamine (100mg/kg)/Xylazine (10mg/kg)"", ""Injection narcosis with Ketamine (100mg/kg)/ Xylazine (10mg/kg )/Antipamezole (Antisedan, 1mg/kg)"", ""Injection narcosis with Ketamine (110mg/kg)/Xylazine (11mg/kg)"", ""Injection narcosis with Ketamine (110mg/kg)/Xylazine (11mg/kg)/ Antipamezole (Antisedan, 1mg/kg)"", ""Injection narcosis with Ketamine (137mg/kg)/Xylazine (6.6mg/kg)"", ""Injection narcosis with Tribromoethanol (Avertin)"", ""Injection narcosis with Sodium Pentobarbital (Pentobarb, 0.1ml)"", 
+""Injection narcosis with Sodium Pentobarbital (Euthatal)"", ""No"", ""Injection narcosis with Sodium Pentobarbital (Somnopentyl)"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_038_001,Clinical Blood Chemistry,Anticoagulant,-,TEXT,Heparine,"c(""No"", ""Lithium Heparin"", ""Sodium Heparin"", ""Heparine"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_034_001,Clinical Blood Chemistry,Equipment manufacturer,-,TEXT,Olympus Diagnostics,"c(""Cobas"", ""Olympus Diagnostics"", ""Beckman Coulter"", ""Hitachi"", ""JEOL (Siemens)"", ""Roche"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_035_001,Clinical Blood Chemistry,Equipment model,-,TEXT,AU 400,"c(""Integra 400 Plus"", ""AU 400"", ""AU 480"", ""7020"", ""JCA-BM2250 (Advia 2400)"", ""Hitachi 917"", ""AU 680"", ""UniCel 600 Pro"", ""JCA-BM6070"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_057_001,Clinical Blood Chemistry,Fasting,-,TEXT,No,"c(""No"", ""Four hours before bleeding"", ""Sixteen hours before bleeding"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_045_001,Clinical Blood Chemistry,ID of blood collection SOP,-,TEXT,ESLIM_024_001,"c(""ESLIM_024_001"", ""sop.inv.019"", ""RIKENMPP_004a_003"", ""PHENO_CBC"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_037_001,Clinical Blood Chemistry,Method of blood collection,-,TEXT,Retro-orbital puncture,"c(""Cardiac puncture"", ""Retro-orbital puncture"", ""Heart puncture"", ""Jugular vein"", ""Tail vein"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_044_001,Clinical Blood Chemistry,Sample dilution,-,TEXT,Neat plasma,"c(""Neat plasma"", ""1:2"", ""Yes (by Equipment, automatically)"", ""Varies"", ""Neat serum"", ""1:3"", ""1:4"", ""1:5"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_043_001,Clinical Blood Chemistry,Sample status,-,TEXT,Frozen,"c(""Fresh"", ""Frozen"", ""Fresh and frozen"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_056_001,Clinical Blood Chemistry,Sample type,-,TEXT,Plasma,"c(""Serum"", ""Plasma"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_042_001,Clinical Blood Chemistry,Samples kept on ice between collection and analysis,-,TEXT,Yes,"c(""Yes"", ""No"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,INT_001,Clinical Blood Chemistry,Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
+IMPC_CBC_003,IMPC_CBC_041_001,Clinical Blood Chemistry,Storage temperature from blood collection till measurement,C,TEXT,2,"c(""2"", ""18-22"", ""4"", ""-80"")",NA,NA,NA,NA,NA
+IMPC_CSD_003,INT_002,Combined SHIRPA and Dysmorphology,Age at testing,weeks,INT,9,NA,1,120.0,NA,9.0,60
+IMPC_CSD_003,IMPC_CSD_082_001,Combined SHIRPA and Dysmorphology,Location of test,-,TEXT,LAF cabinet,"c(""Open bench"", ""LAF cabinet"")",NA,NA,NA,NA,NA
+IMPC_CSD_003,IMPC_CSD_083_001,Combined SHIRPA and Dysmorphology,Number of animals in cage,-,INT,5,NA,1,50.0,NA,1.0,10
+IMPC_CSD_003,INT_001,Combined SHIRPA and Dysmorphology,Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
+IMPC_CSD_003,IMPC_CSD_086_001,Combined SHIRPA and Dysmorphology,Size of squares in arena,cm^2,TEXT,121,"c("" "")",NA,NA,NA,NA,NA
+IMPC_DXA_001,INT_002,Body Composition (DEXA lean/fat),Age at testing,weeks,INT,14,NA,1,120.0,NA,9.0,60
+IMPC_DXA_001,IMPC_DXA_015_001,Body Composition (DEXA lean/fat),Anesthesia,-,TEXT,Isoflurane,"c(""Avertin"", ""Ketamine+Xylazine"", ""Isoflurane"", ""Euthatal"", ""Tribromoethanol"", ""Domitor+Ketamin"", ""Ketamine+Xylazine+Antisedan"", ""Pentobarb"", ""No anesthesia"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,IMPC_DXA_012_001,Body Composition (DEXA lean/fat),Equipment manufacturer,-,TEXT,GE Medical Systems,"c(""GE Medical Systems"", ""Norland Stratec"", ""Bruker"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,IMPC_DXA_013_001,Body Composition (DEXA lean/fat),Equipment model,-,TEXT,Lunar Piximus II,"c(""Lunar Piximus II"", ""Sabre"", ""Minispec LF50"", ""Minispec MQ 10"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,IMPC_DXA_014_001,Body Composition (DEXA lean/fat),Mouse Status,-,TEXT,Anesthetized,"c(""Anesthetized"", ""Dead"", ""Awake"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,INT_001,Body Composition (DEXA lean/fat),Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
+IMPC_GRS_001,INT_002,Grip Strength,Age at testing,weeks,INT,9,NA,1,120.0,NA,9.0,60
+IMPC_GRS_001,IMPC_GRS_006_001,Grip Strength,Equipment manufacturer,-,TEXT,Bioseb,"c(""Chatillon"", ""Bioseb"", ""Columbus Instruments"")",NA,NA,NA,NA,NA
+IMPC_GRS_001,IMPC_GRS_013_001,Grip Strength,Equipment model,-,TEXT,Bio-GT3+MR,"c(""Ametek"", ""Bio-GT3+MR"", ""Bio-GS3"", ""Bio-GS2"", ""E-DFD-E-002"", ""DFIS 2"", ""DFE II"")",NA,NA,NA,NA,NA
+IMPC_GRS_001,IMPC_GRS_007_001,Grip Strength,Grid model,-,TEXT,HMGU plate,"c(""HMGU plate"", ""Not HMGU plate"")",NA,NA,NA,NA,NA
+IMPC_GRS_001,INT_001,Grip Strength,Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
+IMPC_IPG_001,INT_002,Intraperitoneal glucose tolerance test (IPGTT),Age at testing,weeks,INT,13,NA,1,120.0,NA,9.0,60
+IMPC_IPG_001,IMPC_IPG_004_001,Intraperitoneal glucose tolerance test (IPGTT),Equipment manufacturer,-,TEXT,Abbott,"c(""Abbott"", ""Roche Diagnostic"", ""Lifescan"", ""ARKRAY factory.Inc"", ""Analox"")",NA,NA,NA,NA,NA
+IMPC_IPG_001,IMPC_IPG_005_001,Intraperitoneal glucose tolerance test (IPGTT),Equipment model,-,TEXT,Alphatrak 2,"c(""32004-02"", ""Accu-Chek Aviva"", ""Accu-Chek Performa"", ""One Touch Ultra 2"", ""Super Glucocard II GT-1640"", ""GLUCOCARD G+meter GT-1820"", ""Alphatrak 2"", ""GM9"")",NA,NA,NA,NA,NA
+IMPC_IPG_001,IMPC_IPG_006_001,Intraperitoneal glucose tolerance test (IPGTT),Mouse restrained,-,TEXT,yes,"c(""yes"", ""No"")",NA,NA,NA,NA,NA
+IMPC_IPG_001,INT_001,Intraperitoneal glucose tolerance test (IPGTT),Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
+IMPC_IPG_001,IMPC_IPG_007_001,Intraperitoneal glucose tolerance test (IPGTT),Type of strip,-,TEXT,Whole blood,"c(""Whole blood"", ""Plasma"", ""Plasma, no maltose interference"")",NA,NA,NA,NA,NA
+IMPC_OFD_001,INT_002,Open Field,Age at testing,weeks,INT,9,NA,1,120.0,NA,9.0,60
+IMPC_OFD_001,IMPC_OFD_034_001,Open Field,Arena Size,-,TEXT,44x44,"c(""45x45"", ""43.2x43.2"", ""40.5x40.5"", ""40x40"", ""44x44"", ""42x42"", ""44.5x44.5"", ""50x50"")",NA,NA,NA,NA,NA
+IMPC_OFD_001,IMPC_OFD_026_001,Open Field,Central zone surface area,% of total area,INT,40,"c(""39"", ""40"", ""41"", ""42"")",0,Inf,NA,30.0,45
+IMPC_OFD_001,IMPC_OFD_024_001,Open Field,Equipment manufacturer,-,TEXT,Noldus,"c(""TSE Systems"", ""MED Associates Inc"", ""San Diego"", ""O'hara CO Ltd."", ""Panlab"", ""Noldus"", ""Accuscan"", ""Columbus Instruments"")",NA,NA,NA,NA,NA
+IMPC_OFD_001,IMPC_OFD_025_001,Open Field,Equipment model,-,TEXT,Unknown,"c(""ActiMot / MoTil"", ""MED-OFA-RS"", ""2325-0248"", ""TijmeOF9"", ""LE8822"", ""Unknown"", ""ActiMot / MoTil 480 x 480 mm"", ""VMX 1.4b"", ""Opto-Varimex 4"")",NA,NA,NA,NA,NA
+IMPC_OFD_001,IMPC_OFD_027_001,Open Field,Light intensity in the centre of the arena,Lux,FLOAT,150,NA,0,1e4,NA,1e-4,500
+IMPC_OFD_001,IMPC_OFD_032_001,Open Field,Periphery zone,cm,FLOAT,8,"c(""8"", ""7.6"", ""7.35"", ""9.39"")",0,Inf,NA,5.0,15
+IMPC_OFD_001,INT_001,Open Field,Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
+IMPC_OFD_001,IMPC_OFD_039_001,Open Field,Software Version,-,TEXT,Ethovision XT v8.5,"c(""06.15 / 07.01"", ""Topscan Lite"", ""Image OF"", ""Actitrack system"", ""Ethovision XT v8.5"", ""Versamax 4.2"", ""TSE ActiMot Vers. 08.00"", ""Activity Monitor V6.02"", ""Opto-Varimex 4 AutoTrack System 4.97"", ""TimeOFCR4"")",NA,NA,NA,NA,NA
+IMPC_OFD_001,IMPC_OFD_033_001,Open Field,Type of analysis,-,TEXT,Video tracking,"c(""Wide beam break"", ""Video tracking"")",NA,NA,NA,NA,NA
