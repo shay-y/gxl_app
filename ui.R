@@ -17,6 +17,7 @@ shinyUI(
         includeScript("WWW/scroll.js")
       ),
       # actionButton("console","server console"),
+      # runcodeUI(),
       wellPanel(
         fixedRow(
           column(
@@ -54,10 +55,6 @@ shinyUI(
                     )
                   )
                 ))%>%  str_replace_all(pattern = "\n",replacement = ""),
-                
-                #                       a("IMPRESS",href="https://www.mousephenotype.org/impress",target="_blank"),
-                # #                     "Standard operating procedure (SOP)",
-                # #                     br(),
                 placement = "right",
                 trigger = c("hover","focus"),
                 options = NULL)
@@ -82,7 +79,7 @@ shinyUI(
               tabPanel(
                 title = 
                   tagList(
-                    "Upload a .csv file",
+                    "Option 1:Upload a .csv file",
                     popify(
                       el = icon("info-circle"),
                       title = NULL,
@@ -139,7 +136,7 @@ shinyUI(
               tabPanel(
                 title = 
                   tagList(
-                    "Fill in the groups summaries",
+                    "Option 2: Fill in the groups summaries",
                     popify(
                       el = icon("info-circle"),
                       title = NULL,
@@ -155,7 +152,6 @@ shinyUI(
                       trigger = c("hover","focus"),
                       options = NULL)
                   ),
-                
                 value = "summ",
                 #b("Fill in groups summaries (after transformation)"),
                 uiOutput("groups_form"),
@@ -180,8 +176,8 @@ shinyUI(
               #   options = NULL)
             ),
             checkboxInput(
-              inputId = "checkbox_agrees_share",
-              label = span("I agree to contribute the experimental results and testing conditions to enrich the ",tags$i("GxL estimates database")," and help yield better estimates for future users. We will contact you by email."
+              inputId = "agree_contribute",
+              label = span("I agree to contribute the experimental results and testing conditions to enrich the ",tags$i("GxL estimates database")," and help yield better estimates for future users."
               ),
               value = FALSE
             ),
@@ -193,14 +189,12 @@ shinyUI(
                   div(
                     class="form-group shiny-input-container",
                     tags$label("Lab name:"),
-                    tags$input(id = "lab",value = "", type="text", class="form-control",
-                               style = 'display:inline-block;')
+                    tags$input(id = "lab",value = "", type="text", class="form-control")
                   ),
                   div(
                     class="form-group shiny-input-container",
                     tags$label("Your email:"),
-                    tags$input(id = "email",value = "", type="text", class="form-control",
-                               style = 'display:inline-block;')
+                    tags$input(id = "email",value = "", type="text", class="form-control")
                   )
                 ),
                 uiOutput("groups_info")
@@ -213,7 +207,7 @@ shinyUI(
                 "submit",
                 "Calculate comparisons",
                 icon = icon("cog")
-              )
+              ) %>% disabled()
             )
           ),
           column(
@@ -281,7 +275,7 @@ shinyUI(
             uiOutput("selected_measure_details"),
             dataTableOutput("file_summaries"),
             dataTableOutput("results_table"),
-            hidden(dataTableOutput("results_table_bt")),
+            dataTableOutput("results_table_bt"),
             hr(),
             tabsetPanel(
               tabPanel(
@@ -313,10 +307,10 @@ shinyUI(
             "The app is built with ",
             a(href = "http://shiny.rstudio.com/", target="_blank", "Shiny web application framework by Rstudio"),".",
             br(),
-            "Source code is available on github: ",
+            "Source code is available on Github: ",
             a(href = "http://github.com/shay-y/gxl_app/", target="_blank","shay-y/gxl_app/"),".",
             br(),
-            "For further information or technical support please contact Shay Yaacoby on github or by email: ",
+            "For further information or support please contact Shay Yaacoby: ",
             a(href="mailto:shay66[at]gmail.com", target="_blank","shay66[at]gmail.com"),"."
           )
         )

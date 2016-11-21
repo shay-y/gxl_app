@@ -1,4 +1,4 @@
-plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Intervals", ylab = "Measure",
+plot_pcci <- function(tbl_pairs, title = "Pairwise Comparisons Confidence Intervals", ylab = "Measure",
                       labels = FALSE, colors = NULL, error_bar_height = NULL)
 {
   if (is.null(colors))
@@ -11,9 +11,6 @@ plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Interva
       stop("length(colors) must equal 2")
   }
   
-  tbl_pairs <- pcci_obj$tbl_pairs
-  tbl_summaries <- pcci_obj$tbl_summaries
-  
   coef_x_scale=1
   
   suppressWarnings(
@@ -23,7 +20,7 @@ plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Interva
       mutate(Adjustment = factor(ifelse(is.na(Adjustment),"Unadjusted","GxL\nAdjusted"),levels = c("Unadjusted","GxL\nAdjusted"))) %>% 
       spread(key = measure, value = value) %>% 
       mutate(
-        yend = (y.x+y.y)/2,
+        yend = (mean.t.x+mean.t.y)/2,
         xend = abs(diff)*coef_x_scale,
         lwr = ifelse(diff>0,lwr,lwr+2*(-diff)),
         upr = ifelse(diff>0,upr,upr+2*(-diff)),
@@ -41,18 +38,18 @@ plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Interva
     ggplot() +
     geom_segment(
       mapping = aes(x = x, y = y, xend = xend, yend = yend),
-      data =  tbl_pairs_to_plot  %>% transmute(x = x.x, y = y.x, xend = xend, yend = yend),
+      data =  tbl_pairs_to_plot  %>% transmute(x = 0, y = mean.t.x, xend = xend, yend = yend),
       colour = gray(0.8),size = 0.8
     )+
     geom_segment(
       mapping = aes(x = x, y = y, xend = xend, yend = yend),
-      data =  tbl_pairs_to_plot  %>% transmute(x = x.y, y = y.y, xend = xend, yend = yend),
+      data =  tbl_pairs_to_plot  %>% transmute(x = 0, y = mean.t.y, xend = xend, yend = yend),
       colour = gray(0.8),size = 0.8
     ) +
     geom_vline(xintercept = 0,colour = grey(0.5)) +
     geom_point(
       aes(x = x, y = value),
-      data = tbl_summaries %>% transmute(x , value = y),
+      data = tbl_pairs %>% transmute(x = 0, value = mean.t.x) %>% distinct(),
       colour = gray(0.3),
       shape = 3) + 
     theme_minimal() +
@@ -60,19 +57,18 @@ plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Interva
     xlab("|difference|") +
     ylab(ylab)+
     ggtitle(title) +
-    
     geom_errorbarh( 
     aes(x = x, y = y, xmin = xmin ,xmax = xmax,color = Significance, alpha = Adjustment, height = ifelse(Adjustment == "GxL\nAdjusted",0,err_bar_h)),
     data = tbl_pairs_to_plot %>%
-      transmute(x = xend, y = yend, xmin = lwr*coef_x_scale, xmax = upr*coef_x_scale,Adjustment,Significance),
-    position =  position_stack()) + 
+      transmute(x = xend, y = yend, xmin = lwr*coef_x_scale, xmax = upr*coef_x_scale,Adjustment,Significance))+
+  #,position =  position_stack()) + 
     scale_color_manual(values = cols,  drop = F) + 
     scale_alpha_manual(values = c(1,1),labels = c("","")) +
     guides(
       color = guide_legend(order = 1, reverse = F,title = ""),
       alpha = guide_legend(override.aes = list(alpha = 0),
                            order = 2,
-                           title = "outer segments are\nGxL Adjusted",
+                           title = "outer segments are GxL Adjusted",
                            title.theme = element_text(size = 14*0.8,angle = 0))) +
     theme(legend.position = "bottom", legend.box = "horizontal")
   
@@ -90,7 +86,7 @@ plot_pcci <- function(pcci_obj, title = "Pairwise Comparisons Confidence Interva
   pcci <-  pcci +
     geom_text(
       aes(x = x, y = y, label = group_name),
-      data = tbl_summaries,
+      data = tbl_pairs %>% transmute(x = 0, y = mean.t.x, group_name = grp1) %>% distinct(),
       colour = gray(0.2), size = 12*(5/14)*0.9,
       check_overlap = T,hjust = "right",nudge_x = x_nudge)
   
