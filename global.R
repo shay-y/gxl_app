@@ -20,7 +20,7 @@ options(
   DT.options = list(dom = 't')
   )
 
-tbl_example_measure_input <- read.csv("data/Simplified IPGTT Glucose response AUC - example.csv",header = F)
+tbl_example_raw_data <- read.csv("data/MRC_Harwell_Males_Fat_Body weight.csv", header = F)
 tbl_exmp_names <- tbl_examples %>% select(exmp_name) %>% distinct()
 procedure_name_list <-  tbl_procedures %>% .$procedure_name %>% as.character() %>% as.list() %>% {setNames(.,.)}
 group_names_list <- example_group_names_vec %>%
@@ -28,9 +28,8 @@ group_names_list <- example_group_names_vec %>%
   list("Select group names from the list or create new names" = .)
   
 drop_dir <- "GxL/gxl_app_userdata_files/"
-token <- readRDS("droptoken.rds")
+token    <- readRDS("droptoken.rds")
 
-#drop_get(path = paste0(log_file_drop_dir,log_file_name),overwrite = T)
 
 
 

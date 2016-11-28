@@ -1,12 +1,9 @@
 .Rhistory
 .Rproj.user
 .httr-oauth
-actions.txt
-examples.txt
 *.RData
 *.RDataTmp
 *.Rproj
 rsconnect
-o.Rdata
 shiny_app_token.rds
 .RDuetConsole

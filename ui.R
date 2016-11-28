@@ -14,7 +14,15 @@ shinyUI(
         #includeCSS("https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"),
         includeCSS("WWW/style.css"),
         includeScript("WWW/google-analytics.js"),
-        includeScript("WWW/scroll.js")
+        includeScript("WWW/scroll.js"),
+        tags$script('
+Shiny.addCustomMessageHandler("updateFileInputHandler", function(file_id) {   
+var el = $("#" + file_id);
+el.name = "test"
+var prog_id = "#" + file_id + "_progress";
+$(prog_id).show();
+        });
+      ')
       ),
       # actionButton("console","server console"),
       # runcodeUI(),
@@ -24,8 +32,8 @@ shinyUI(
             width = 6,
             h5(div(class='step',"Introduction:")),
             p(
-              "This application takes mouse phenotyping results measured in your laboratory, comparing two or more groups, and adjusts the p-values and confidence intervals to reflect how they are likely to be, had your experiment been reproduced in other laboratories, utilizing the ",
-              tags$i("GxL-Adjustment")," method as detailed in our manuscript ",
+              "This application takes mouse phenotyping results measured in your laboratory, comparing two or more groups, and adjusts the p-values and confidence intervals to reflect how they are likely to be, had your experiment been reproduced in other laboratories. The app utilizes the ",
+              tags$i("GxL-Adjustment")," method for the pairwise t-tests, as detailed in our manuscript ",
               tags$i("Addressing reproducibility in single-laboratory phenotyping experiments"),
               " (submitted). ",
               actionLink(
@@ -33,6 +41,8 @@ shinyUI(
                 label = "Read more...",href = "#intro")
             ),
             hr(),
+            # htmlTemplate("examples_dropdown.html"),
+            actionButton(inputId = "load_example_button",label = "Load example", class = "btn_right btn-sm"),
             h5(
               div(
                 class='step',
@@ -205,8 +215,7 @@ shinyUI(
               id = "wrap_submit_data",
               actionButton(
                 "submit",
-                "Calculate comparisons",
-                icon = icon("cog")
+                "Calculate comparisons" #,icon = icon("cog")
               ) %>% disabled()
             )
           ),
@@ -258,7 +267,7 @@ shinyUI(
                       #   trigger = "hover",
                       #   options = NULL)
                     ),
-                  choices = c("Tukey HSD"="Tukey HSD", "FDR (Benjamini-Hochberg)"="BH selected","None" = "none"),
+                  choices = c("FDR (Benjamini-Hochberg)"="BH selected", "Tukey HSD"="Tukey HSD", "None" = "none"),
                   inline = F
                 )
               )
@@ -272,8 +281,8 @@ shinyUI(
                 ""
               )
             ),
-            uiOutput("selected_measure_details"),
-            dataTableOutput("file_summaries"),
+            uiOutput("measure_selected_details"),
+            hidden(dataTableOutput("file_summaries")),
             dataTableOutput("results_table"),
             dataTableOutput("results_table_bt"),
             hr(),
@@ -286,11 +295,10 @@ shinyUI(
               tabPanel(
                 title = "Comparisons plot",
                 
-                hidden(plotOutput("pcci_plot"))
+                hidden(plotOutput("pcci_plot",height = "650px"))
               )
-            ),
-            hr(),
-            downloadButton("download_button","Download Report",class = "disabled")
+            )
+            # downloadButton("download_button","Download Report",class = "disabled")
           )
         )
       )

@@ -15,9 +15,10 @@ function(input, output, session) {
   
   ## initialize reactive values: ----
   values <- reactiveValues(
-    raw_data_file =  NULL,
-    example_id_clicked = NULL,
-    example_sequence_on = FALSE
+    examples_completed = 0,
+    example_step = 0,
+    # example_file_loaded = F,
+    file = NULL
     )
 
   ## create metadata and measure inputs table for the selected procedure: ----
@@ -174,16 +175,22 @@ function(input, output, session) {
           distinct()
       }
       else
-        tbl_matched_model <- tbl_matched_models
+        tbl_matched_model_ <- tbl_matched_models
       
-      if(nrow(tbl_matched_model)>1) {cat("Too many matchs.")}
+      if(nrow(tbl_matched_model_)>1) {cat("Too many matchs.")}
+
+      # if(nrow(tbl_matched_model_)==0) {
+      #   cat("No match found. analysing only unadjusted comparisons")
+      #   tbl_matched_model_ %>% 
+      #     add_row()
+      #   }
       
-      tbl_matched_model
+      tbl_matched_model_
     }
   )
 
   ## render details table for selected measure: ----
-  output$selected_measure_details <- renderUI({
+  output$measure_selected_details <- renderUI({
     req(tbl_matched_model())
     withTags(
       if (nrow(tbl_matched_model())>0)
@@ -220,40 +227,50 @@ function(input, output, session) {
     req(input$input_method=="file")
     
     # take dependencies on previous selections and reset button
-    input$reset_upload
     input$procedure_name
     input$measure_selected
     input$input_method
     
-    div(
-      actionButton(inputId = "reset_upload",label = "Reset", icon = icon("refresh"),class = "btn_right btn-sm"),
-      downloadButton(outputId = "example_raw_input",label = "Example input file", class = "btn_right btn-sm"),
-      htmlTemplate("examples_dropdown.html"),
-       #class="ResetBtn",,
+    
+    # if(values$example_file_loaded)
+    #   div(
+    #     actionButton(inputId = "reset_example",label = "Unload",class = "btn_right btn-sm"),
+    #     "Example data input is loaded."
+    #   )
+    # else
+    # {
       div(
-        class="form-group shiny-input-container",
-        style="width: 70%;",
-        #<label></label>
-        tags$input(
-          id="upload_file",
-          name="upload_file",
-          type="file",
-          accept="text/csv"),
+        # actionButton(inputId = "reset_upload",label = "Reset", icon = icon("refresh"),class = "btn_right btn-sm"),
+        downloadButton(outputId = "example_raw_input",label = "Download example file", class = "btn_right btn-sm"),
         div(
-          id="upload_file_progress",
-          class="progress progress-striped active shiny-file-input-progress",
-          div(class="progress-bar"
+          class="form-group shiny-input-container",
+          style="width: 70%;",
+          #<label></label>
+          tags$input(
+            id="upload_file",
+            name="upload_file",
+            type="file",
+            accept="text/csv"),
+          div(
+            id="upload_file_progress",
+            class="progress progress-striped active shiny-file-input-progress",
+            div(class="progress-bar"
+            )
           )
         )
       )
-    )
+   # }
   })
   
-  ## pass file input to value to workaround resetting file data
+  ## pass file input to value to workaround resetting file data----
   observe({
     values$file <- input$upload_file
-    
   })
+  
+  # observe({
+  #   input$reset_example
+  #   values$example_file_loaded <- F
+  # })
   
   ## reset the following: file value (file input element resets above) or group summaries inputs : ----
   ## on procedure, meassure, reset, input method switch events
@@ -262,18 +279,17 @@ function(input, output, session) {
     input$procedure_name
     input$measure_selected
     input$input_method
-    input$reset_upload
+    # if (!values$example_file_loaded)
     values$file <- NULL
-    # tbl_summaries() <- NULL
     reset(id = "table-groups")
     disable("submit")
   })
   
   ## link the example raw data file:  ----
   output$example_raw_input <- downloadHandler(
-    filename = "Simplified IPGTT Glucose response AUC - example.csv",
+    filename = "gxl_app_example_input.csv",
     content = function(con) {
-      write.table(x = tbl_example_measure_input,file = con,row.names = F,col.names = F, qmethod = "double",sep = ",")
+      write.table(x = tbl_example_raw_data,file = con,row.names = F,col.names = F, qmethod = "double",sep = ",")
     }
   )
   ## create input form for groups selection: ----
@@ -288,14 +304,17 @@ function(input, output, session) {
   })
   
   ## read raw data from file: ----
-  tbl_raw_data <- reactive(
+  tbl_raw_data <- eventReactive(eventExpr = values$file,
     {
-      req(values$file,input$input_method=="file")
-      read.csv(
+      req(input$input_method=="file",values$file)
+      if(is.character(values$file) & values$file == "example")
+        tbl_example_raw_data 
+      else
+        read.csv(
           file = values$file$datapath,
           header = F,
           stringsAsFactors = F
-      )
+        )
     })  
   
   #observe(print(values$file))
@@ -308,7 +327,11 @@ function(input, output, session) {
     {
       req(tbl_raw_data(),tbl_matched_model())
       enable("submit")
-      trans_fun <- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
+      if (nrow(tbl_matched_model())==0)
+        trans_fun <- eval(parse(text=paste("function(x) x")))
+      else
+        trans_fun <- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
+      
       tbl_raw_data()  %>% 
         mutate(group_name = as.factor(V1), transformed = trans_fun(V2)) %>% 
         group_by(group_name) %>% 
@@ -461,7 +484,7 @@ function(input, output, session) {
   ## on submit, push data to server: ----
   
   observeEvent(
-    eventExpr = input$submit,
+    eventExpr = {input$submit; values$example_submit},
     handlerExpr = 
     {
       req(input$agree_contribute)
@@ -482,7 +505,7 @@ function(input, output, session) {
       file_name_rds <- paste0("userdata_",input$email,"_",format(sys_time,'_%Y_%m_%d__%H_%M_%S__%Z.rds'))
       
       saveRDS(object = user_data  ,file = file_name_rds)
-      drop_upload(file = file_name_rds,dest = drop_dir,overwrite = F)
+      drop_upload(file = file_name_rds,dest = drop_dir,overwrite = F,dtoken = token)
       unlink(file_name_rds)
       
       file_name_txt <- paste0("userdata_",input$email,"_",format(sys_time,'_%Y_%m_%d__%H_%M_%S__%Z.txt'))
@@ -538,9 +561,9 @@ function(input, output, session) {
       ## create pairs table,
       ## calculate stats:
       
-      tbl_pairs_1 <- 
+      tbl_pairs_ <- 
         nrow(tbl_summ) %>%
-        combn(2) %>% t() %>% as_data_frame() %>% 
+        combn(2) %>% t() %>% .[,2:1] %>% as_data_frame() %>% 
         transmute(group_id1 = as.character(V1),group_id2 = as.character(V2)) %>% 
         inner_join(tbl_summ,by = c("group_id1"="group_id")) %>%
         inner_join(tbl_summ,c("group_id2"="group_id","s2_pooled","df_pooled")) %>% 
@@ -549,58 +572,63 @@ function(input, output, session) {
           name_pair = paste(group_name.x,"-",group_name.y),
           grp1  = group_name.x,
           grp2  = group_name.y,
-          #`Pair Names` paste(group_name.x,"-",group_name.y), # term
-          diff  = mean.t.x-mean.t.y,                       # estimate
-          se    = sqrt(s2_pooled*(1/n.x+1/n.y)),
-          se_gxl= sqrt(s2_pooled*(1/n.x+1/n.y+2*s2_ratio)),
-          stat    = abs(diff)/se,
-          stat_gxl= abs(diff)/se_gxl,
-          df_pooled,
-          df_gxl = ( (1/n.x+1/n.y) * s2_pooled + 2 * s2_ratio * s2_pooled ) ^2   /
-            ( ((1/n.x+1/n.y) * s2_pooled)^2/df_pooled + (2 * s2_ratio * s2_pooled)^2 / (n_labs_s2gxl-1) / (n_groups_s2gxl-1) ),
-          pv      = 2*(1-pt(q = stat    ,df = df_pooled))     %>% pmin(1),
-          pv_gxl  = 2*(1-pt(q = stat_gxl,df = df_gxl)) %>% pmin(1),
-          Q_ = 1,
-          Q_gxl = 1,
           mean.t.x,
           mean.t.y,
-          n.x,n.y,
-          s2_pooled
-        ) %>%
-        {
-          if (input$mult_adjust == "Tukey HSD")
-            mutate(
-              .,
-              pv = ptukey(q = stat,nmeans = nmeans_tukey , df = df_pooled, lower.tail = FALSE) %>% pmin(1),
-              pv_gxl = ptukey(q = stat_gxl, nmeans = nmeans_tukey, df = df_gxl ,lower.tail = FALSE) %>% pmin(1),
-              lwr  = diff - qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_pooled)*se,
-              upr  = diff + qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_pooled)*se,
-              lwr_gxl = diff - qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_gxl)*se_gxl,
-              upr_gxl = diff + qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_gxl)*se_gxl)
-          else
-            if(input$mult_adjust == "BH selected")
-              mutate(
-                .,
-                pv = p.adjust(pv,"BH"),
-                pv_gxl = p.adjust(pv_gxl,"BH"),
-                Q_ = max(1,sum(pv <= alpha)) / n(),
-                Q_gxl = max(1,sum(pv_gxl <= alpha)) / n(),
-                lwr = diff - qt(1-alpha/2*Q_ ,df = df_pooled)*se %>% as.numeric(),
-                upr = diff + qt(1-alpha/2*Q_ ,df = df_pooled)*se %>% as.numeric(),
-                lwr_gxl = diff - qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric(),
-                upr_gxl = diff + qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric())
-            else 
-              mutate(
-                .,
-                lwr = diff - qt(1-alpha/2*Q_ ,df = df_pooled)*se %>% as.numeric(),
-                upr = diff + qt(1-alpha/2*Q_ ,df = df_pooled)*se %>% as.numeric(),
-                lwr_gxl = diff - qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric(),
-                upr_gxl = diff + qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric()
-              )
-        }
-      tbl_pairs_1_temp <<- tbl_pairs_1
+          sd.t.x,
+          sd.t.y,
+          n.x,
+          n.y,
+          s2_pooled,
+          df_pooled,
+          
+          diff  = mean.t.x-mean.t.y,                  
+          se    = sqrt(s2_pooled * (1/n.x+1/n.y) ),
+          se_gxl= sqrt(s2_pooled * (1/n.x+1/n.y+2*s2_ratio) ),
+          stat     = abs(diff) / se,
+          stat_gxl = abs(diff) / se_gxl,
+          
+          df_gxl = ( (1/n.x+1/n.y) * s2_pooled + 2 * s2_ratio * s2_pooled ) ^2   /
+            ( ((1/n.x+1/n.y) * s2_pooled)^2/df_pooled + (2 * s2_ratio * s2_pooled)^2 / (n_labs_s2gxl-1) / (n_groups_s2gxl-1) ),
+          
+          pv      = 2*(1-pt(q = stat    ,df = df_pooled )),
+          pv_gxl  = 2*(1-pt(q = stat_gxl,df = df_gxl    )))
       
-      return(tbl_pairs_1)
+      if (input$mult_adjust == "Tukey HSD")
+        tbl_pairs_ <- tbl_pairs_ %>%  mutate(
+          pv      = ptukey(q = sqrt(2) * stat    , nmeans = nmeans_tukey, df = df_pooled, lower.tail = F),
+          pv_gxl  = ptukey(q = sqrt(2) * stat_gxl, nmeans = nmeans_tukey, df = df_gxl   , lower.tail = F),
+          
+          lwr     = diff - qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_pooled) * se / sqrt(2),
+          upr     = diff + qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_pooled) * se / sqrt(2),
+          
+          lwr_gxl = diff - qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_gxl)*se_gxl / sqrt(2),
+          upr_gxl = diff + qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_gxl)*se_gxl / sqrt(2))
+      
+      if (input$mult_adjust == "BH selected")
+        tbl_pairs_ <- tbl_pairs_ %>%  mutate(
+          pv     = p.adjust(pv    ,"BH"),
+          pv_gxl = p.adjust(pv_gxl,"BH"),
+          
+          Q     = max(1, sum(pv     <= alpha)) / n(),
+          Q_gxl = max(1, sum(pv_gxl <= alpha)) / n(),
+          
+          lwr = diff - qt(1-alpha/2*Q ,df = df_pooled)*se %>% as.numeric(),
+          upr = diff + qt(1-alpha/2*Q ,df = df_pooled)*se %>% as.numeric(),
+          
+          lwr_gxl = diff - qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric(),
+          upr_gxl = diff + qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric())
+      
+      if (input$mult_adjust == "none")
+        tbl_pairs_ <- tbl_pairs_ %>% mutate(
+          lwr = diff - qt(1-alpha/2 ,df = df_pooled)*se %>% as.numeric(),
+          upr = diff + qt(1-alpha/2 ,df = df_pooled)*se %>% as.numeric(),
+          
+          lwr_gxl = diff - qt(1-alpha/2 ,df = df_gxl)*se_gxl %>% as.numeric(),
+          upr_gxl = diff + qt(1-alpha/2 ,df = df_gxl)*se_gxl %>% as.numeric())
+      
+      tbl_pairs_temp <<- tbl_pairs_
+      
+      return(tbl_pairs_)
     })
   
   tbl_pairs_bt <- reactive(
@@ -756,41 +784,51 @@ function(input, output, session) {
   ## render boxplot : ----
   output$box_plot <- renderPlot(
     {
-      req(tbl_pairs())
-      trans_fun<- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
-      
+      req(tbl_pairs(),input$input_method=="file")
+      if (nrow(tbl_matched_model())==0)
+      {
+        transformation_symbol <- "none"
+        trans_fun <- eval(parse(text=paste("function(x) x")))
+        unit <- ""
+      }
+      else
+      {
+        transformation_symbol <- tbl_matched_model()$transformation_symbol
+        trans_fun <- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
+        unit <- tbl_matched_model()$unit
+      }
       ggplot(data = tbl_raw_data() %>% req() %>% 
                mutate(group_name = as.factor(V1), measure = trans_fun(V2))
              ) + 
         aes(x = group_name, y = measure) + 
         geom_boxplot() + #width = bw
         ylab(
-          if (tbl_matched_model()$transformation_symbol != "none")
-            paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,") after",tbl_matched_model()$transformation_symbol,"transformation")
+          if (transformation_symbol != "none")
+            paste(input$measure_selected,"(",unit,") after",transformation_symbol,"transformation")
           else
-            paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")")
+            paste(input$measure_selected,"(",unit,")")
         ) + 
         xlab("")+
-        ggtitle(paste("Groups boxplots of",tbl_matched_model()$parameter_name)) +
+        ggtitle(paste("Groups boxplots of",input$measure_selected)) +
         theme_minimal()
     })
     
   ## render boxplot (back transformed): ----
-  output$box_plot_bt <- renderPlot(
-    {
-      req(tbl_pairs_bt())
-      ggplot(data = 
-               tbl_raw_data() %>% req() %>% 
-               mutate(group_name = as.factor(V1), measure = V2)
-      ) + 
-        aes(x = group_name, y = measure) + 
-        geom_boxplot() + #width = bw
-        ylab(
-          tbl_matched_model()$unit
-        ) + 
-        ggtitle(paste("Groups boxplots of",tbl_matched_model()$parameter_name," before transformation")) +
-        theme_minimal()
-    })
+  # output$box_plot_bt <- renderPlot(
+  #   {
+  #     req(tbl_pairs_bt())
+  #     ggplot(data = 
+  #              tbl_raw_data() %>% req() %>% 
+  #              mutate(group_name = as.factor(V1), measure = V2)
+  #     ) + 
+  #       aes(x = group_name, y = measure) + 
+  #       geom_boxplot() + #width = bw
+  #       ylab(
+  #         tbl_matched_model()$unit
+  #       ) + 
+  #       ggtitle(paste("Groups boxplots of",tbl_matched_model()$parameter_name," before transformation")) +
+  #       theme_minimal()
+  #   })
   
   observe({
     req(file_summaries())
@@ -825,9 +863,78 @@ function(input, output, session) {
       condition =  !is.null(req(tbl_pairs())))
   })
   
+  observeEvent(
+    input$agree_contribute,
+    toggle(id = "user_details",condition = input$agree_contribute)
+  )
   
-  ## prepare txt file to download: ----
+  ## load example  ------------------------------------------------------
   
+  session$onFlushed(function() {
+    isolate( 
+      if (values$examples_completed < input$load_example_button)
+      {
+        updateSelectInput(session = session, inputId = "procedure_name",selected = "Body Composition (DEXA lean/fat)")
+        updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
+        updateSelectizeInput(session = session, inputId = "measure_selected",selected = "Fat/Body weight")
+        updateCheckboxInput(session,inputId = "agree_contribute", value = TRUE)
+        values$file <- "example"
+        values$example_step <- values$example_step + 1
+        print(values$example_step)
+      }
+    )
+  },once = F)
+  
+  ## end example cycle
+  observeEvent(
+    values$example_step,
+    if (
+      values$examples_completed < input$load_example_button &
+      nrow(req(file_summaries())) == 4 &
+      values$example_step > 40)
+    {
+      showModal(
+        modalDialog(
+          "Example input loaded.",tags$br(),"Click ",tags$b("Calculation Comparisons")," button to get the analysis results.",
+          title = NULL,
+          footer = modalButton("Ok"),
+          size = "m",
+          easyClose = T)
+      ) 
+      values$examples_completed <- input$load_example_button
+      values$example_step <- 0
+      enable("submit")
+    })
+    
+              
+  
+
+
+
+  #   req(values$examples_completed < input$load_example_button) 
+  #   
+  # })
+  
+  #  
+  # observeEvent(
+  #   input$measure_selected,
+  #   {
+  #     
+  #     #values$load_example_table <- T
+  #     # session$sendCustomMessage(type = "updateFileInputHandler", 'upload_file')
+  #   }
+  # )
+  # observeEvent(
+  #   tbl_raw_data(),
+  #   {
+  #     req(values$examples_completed < input$load_example_button) 
+  #     values$examples_completed <- input$load_example_button
+  #   }
+  # )
+}
+  
+  ## drafts ------------------------------------------------------
+  # prepare txt file to download
   # output$download_button <- downloadHandler(
   #   filename = function()
   #     paste0("Results_",Sys.Date(),".txt"),
@@ -851,79 +958,29 @@ function(input, output, session) {
   #     sink()
   #   }  
   # )
-  
+
   # observe({
   #   req(input$submit)
   #   shinyjs::removeClass(id = "download_button", class = "disabled")
   # })
-  
-  observeEvent(
-    input$agree_contribute,
-    toggle(id = "user_details",condition = input$agree_contribute)
-  )
-  
-  ## examples auto fill ------------------------------------------------------
-  
-  observeEvent(input$exmp_1,values$example_id_clicked <- 1)
-  observeEvent(input$exmp_2,values$example_id_clicked <- 2)
-  observeEvent(input$exmp_3,values$example_id_clicked <- 3)
-  observeEvent(input$exmp_4,values$example_id_clicked <- 4)
-  
-  observeEvent(
-    values$example_id_clicked,
-    {
-      tbl_examples_selected <- tbl_examples %>% 
-        filter(example_id == values$example_id_clicked)
-      updateSelectInput(session = session, inputId = "procedure_name",selected = tbl_examples_selected$procedure_name)
-      values$example_sequence_on <- TRUE
-    }
-  )
-  
-  observe(
-    {
-      req(values$example_sequence_on)
-      tbl_examples_selected <- tbl_examples %>% 
-        filter(example_id == values$example_id_clicked)
-      updateSelectizeInput(session = session, inputId = "measure_selected",selected = tbl_examples_selected$parameter_name)
-    }
-  )
 
-  
-  
-  
-  
-  
-  
-  
-  
-  ## prepare plots: ----
-  
-  
-  # when main object created, plot cis
-  # output$ci_plot <- renderPlot(
+  # observeEvent(input$exmp_1,values$example_id_clicked <- 1)
+  # 
+  # observeEvent(
+  #   values$example_id_clicked,
   #   {
-  #     req(values$tbl_pairs_calc)
-  #     
-  #     values$tbl_pairs_calc %>% 
-  #       select(-(1:13),-pair_id,-m,-R,-`R GxL-Adj`,-contains("Statistic"),-contains("df")) %>% 
-  #       {
-  #         if(input$back_transformed)
-  #           select(.,contains("Group"),contains("(Orig. Scale)"))
-  #         else
-  #           select(.,-contains("(Orig. Scale)"),-contains("p-value"))
-  #       } %>% 
-  #       {
-  #         if(input$fdr_adjust)
-  #           select(.,contains("Group"),contains("Difference"),contains("BH-Adj."))
-  #         else
-  #           select(.,-contains("BH-Adj."),-contains("Standard"))
-  #       } %>% 
-  #       gather(key = key,value = value,-`Group 1`,-`Group 2`)
+  #     tbl_examples_selected <- tbl_examples %>% 
+  #       filter(example_id == values$example_id_clicked)
+  #     updateSelectInput(session = session, inputId = "procedure_name",selected = tbl_examples_selected$procedure_name)
+  #     values$example_sequence_step <- TRUE
   #   }
   # )
-}
-
-
-
-  
-  
+  # 
+  # observe(
+  #   {
+  #     req(values$example_sequence_on)
+  #     tbl_examples_selected <- tbl_examples %>% 
+  #       filter(example_id == values$example_id_clicked)
+  #     updateSelectizeInput(session = session, inputId = "measure_selected",selected = tbl_examples_selected$parameter_name)
+  #   }
+  # )
