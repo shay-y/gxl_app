@@ -372,9 +372,9 @@ function(input, output, session) {
             {
               tags$tr(
                 tags$td(input$groups[g]),
-                tags$td(numericInput(inputId = paste0("grp",g,"_mean.t"), label = NULL, value = "")),
-                tags$td(numericInput(inputId = paste0("grp",g,"_sd.t"), label = NULL, value = "", min = 0)),
-                tags$td(numericInput(inputId = paste0("grp",g,"_n"), label = NULL, value = "", step = 1,min = 0))
+                tags$td(numericInput(inputId = paste("grp",g,"_",input$groups[g],"_mean.t"), label = NULL, value = "")),
+                tags$td(numericInput(inputId = paste0("grp",g,"_",input$groups[g],"_sd.t"), label = NULL, value = "", min = 0)),
+                tags$td(numericInput(inputId = paste0("grp",g,"_",input$groups[g],"_n"), label = NULL, value = "", step = 1,min = 0))
               )
             }
           )
@@ -458,11 +458,11 @@ function(input, output, session) {
       
       tbl_summ_long <-
         input_grp_names %>%
-        str_split_fixed("_",n = 2) %>%
+        str_split_fixed("_",n = 3) %>%
         as_data_frame() %>%
         transmute(
-          group_id = V1,
-          key        = V2,
+          group_name = V2,
+          key        = V3,
           input_grp_names) %>% 
         data.frame(value = NA)
       
