@@ -286,7 +286,7 @@ function(input, output, session) {
   file_summaries <- reactive(
     {
       req(tbl_raw_data(),tbl_matched_model())
-      enable("submit")
+      # enable("submit")
       if (nrow(tbl_matched_model())==0)
         trans_fun <- eval(parse(text=paste("function(x) x")))
       else
@@ -317,6 +317,7 @@ function(input, output, session) {
   ## * summaries input: create input form for groups summaries input fields: ----
   output$groups_form <- renderUI({
     req(input$input_method=="summ")
+    input$input_method
     tags$table(
       id = "table-groups",
       class = "table table-gxl",
@@ -346,6 +347,7 @@ function(input, output, session) {
   
   grps_summaries <- reactive(
     {
+      input$input_method
       ## initialize tibble
       tbl_grp_summ <- tibble(group_name = character(), mean.t = double(), sd.t = double(), n = integer())
       
@@ -368,7 +370,7 @@ function(input, output, session) {
       
       if (nrow(tbl_grp_summ_complete) > 1 & isTruthy(input$measure_selected))
       {
-        enable("submit")
+        # enable("submit")
         return(tbl_grp_summ_complete)
       } else NULL
     })
@@ -381,7 +383,7 @@ function(input, output, session) {
     input$input_method
     values$file <- NULL
     # reset(id = "table-groups")
-    disable("submit")
+    # disable("submit")
   })
   
   
@@ -906,7 +908,7 @@ function(input, output, session) {
   #         easyClose = T)
   #     )
   #     values$examples_completed <- input$load_example_button
-  #     enable("submit")
+  #     # enable("submit")
   #   }
   # )
 }

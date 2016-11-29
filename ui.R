@@ -214,7 +214,7 @@ $(prog_id).show();
               actionButton(
                 "submit",
                 "Calculate comparisons" #,icon = icon("cog")
-              ) %>% disabled()
+              ) # %>% disabled()
             )
           ),
           column(

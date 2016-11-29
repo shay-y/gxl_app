@@ -1,4 +1,3 @@
-# options(shiny.reactlog=TRUE)
 # install.packages(c("devtools","tidyverse","shiny","shinyjs","DT","shinyBS"))
 
 library(tidyverse)
@@ -9,12 +8,14 @@ library(shinyjs,warn.conflicts = F)
 library(DT,warn.conflicts = F)
 library(rdrop2)
 
+
 source("pcci.R")
 
 load("Startup_objects.RData")
 
 options(
   # dplyr.width = Inf,
+  shiny.reactlog=TRUE,
   dplyr.print_max = 50,
   width = 1000,
   DT.options = list(dom = 't')
