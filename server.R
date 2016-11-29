@@ -235,47 +235,33 @@ function(input, output, session) {
     input$measure_selected
     input$input_method
     
-    
-    # if(values$example_file_loaded)
-    #   div(
-    #     actionButton(inputId = "reset_example",label = "Unload",class = "btn_right btn-sm"),
-    #     "Example data input is loaded."
-    #   )
-    # else
-    # {
+    div(
+      # actionButton(inputId = "reset_upload",label = "Reset", icon = icon("refresh"),class = "btn_right btn-sm"),
+      downloadButton(outputId = "example_raw_input",label = "Download example file", class = "btn_right btn-sm"),
       div(
-        # actionButton(inputId = "reset_upload",label = "Reset", icon = icon("refresh"),class = "btn_right btn-sm"),
-        downloadButton(outputId = "example_raw_input",label = "Download example file", class = "btn_right btn-sm"),
+        class="form-group shiny-input-container",
+        style="width: 70%;",
+        #<label></label>
+        tags$input(
+          id="upload_file",
+          name="upload_file",
+          type="file",
+          accept="text/csv"),
         div(
-          class="form-group shiny-input-container",
-          style="width: 70%;",
-          #<label></label>
-          tags$input(
-            id="upload_file",
-            name="upload_file",
-            type="file",
-            accept="text/csv"),
-          div(
-            id="upload_file_progress",
-            class="progress progress-striped active shiny-file-input-progress",
-            div(class="progress-bar"
-            )
+          id="upload_file_progress",
+          class="progress progress-striped active shiny-file-input-progress",
+          div(class="progress-bar"
           )
         )
       )
-   # }
+    )
   })
   
   ## pass file input to value to workaround resetting file data----
   observe({
     values$file <- input$upload_file
   })
-  
-  # observe({
-  #   input$reset_example
-  #   values$example_file_loaded <- F
-  # })
-  
+ 
   ## reset the following: file value (file input element resets above) or group summaries inputs : ----
   ## on procedure, meassure, reset, input method switch events
   observe({
@@ -296,16 +282,6 @@ function(input, output, session) {
       write.table(x = tbl_example_raw_data,file = con,row.names = F,col.names = F, qmethod = "double",sep = ",")
     }
   )
-  ## create input form for groups selection: ----
-  output$groups_form <- renderUI({
-    req(input$input_method=="summ")
-    selectizeInput(
-      inputId = "groups",
-      label = "Groups names:",
-      choices = group_names_list,
-      multiple = T,
-      options = list(create = TRUE))
-  })
   
   ## read raw data from file: ----
   tbl_raw_data <- eventReactive(eventExpr = values$file,
@@ -353,11 +329,15 @@ function(input, output, session) {
     }
   )
   
-  ## render input summaries table: ----
+  ## create input form for groups summaries input fields: ----
+  output$groups_form <- renderUI({
+    req(input$input_method=="summ")
+    
+  })
   
   output$groups_summaries <- renderUI(
     {
-      req(input$groups)
+      
       tags$table(
         id = "table-groups",
         class = "table table-gxl",
@@ -368,13 +348,13 @@ function(input, output, session) {
         ),
         tags$tbody(
           lapply(
-            1:length(input$groups),function(g)
+            1:n_group_inputs,function(i)
             {
               tags$tr(
-                tags$td(input$groups[g]),
-                tags$td(numericInput(inputId = paste("grp",g,"_",input$groups[g],"_mean.t"), label = NULL, value = "")),
-                tags$td(numericInput(inputId = paste0("grp",g,"_",input$groups[g],"_sd.t"), label = NULL, value = "", min = 0)),
-                tags$td(numericInput(inputId = paste0("grp",g,"_",input$groups[g],"_n"), label = NULL, value = "", step = 1,min = 0))
+                tags$td(selectizeInput( inputId = paste0("grp",i,"_name"   ),label = NULL, choices = group_names_list, options = list(create = TRUE))),
+                tags$td(  numericInput( inputId = paste0("grp",i,"_mean.t"), label = NULL, value = "")),
+                tags$td(  numericInput( inputId = paste0("grp",i,"_sd.t"  ), label = NULL, value = "", min = 0)),
+                tags$td(  numericInput( inputId = paste0("grp",i,"_n"     ), label = NULL, value = "", step = 1,min = 0))
               )
             }
           )

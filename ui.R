@@ -163,9 +163,7 @@ $(prog_id).show();
                       options = NULL)
                   ),
                 value = "summ",
-                #b("Fill in groups summaries (after transformation)"),
                 uiOutput("groups_form"),
-                uiOutput("groups_summaries")
               )
             )
             ,

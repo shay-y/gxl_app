@@ -20,6 +20,7 @@ options(
   DT.options = list(dom = 't')
   )
 
+n_group_inputs <- 6
 tbl_example_raw_data <- read.csv("data/MRC_Harwell_Males_Fat_Body weight.csv", header = F)
 tbl_exmp_names <- tbl_examples %>% select(exmp_name) %>% distinct()
 procedure_name_list <-  tbl_procedures %>% .$procedure_name %>% as.character() %>% as.list() %>% {setNames(.,.)}
