@@ -163,7 +163,7 @@ $(prog_id).show();
                       options = NULL)
                   ),
                 value = "summ",
-                uiOutput("groups_form"),
+                uiOutput("groups_form")
               )
             )
             ,

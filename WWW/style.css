@@ -60,6 +60,9 @@ body {
   padding:4px !important;
 } 
 
+.selectize-dropdown {
+    min-width: 400px !important;
+}
 
 .tabs-above .tab-content {
     border-left: 1px solid #ddd;
@@ -84,7 +87,7 @@ body {
     padding-left: 17px;
 }
 
-#table-groups .selectize-input, #table-groups-info  .selectize-input{
+#table-groups-info  .selectize-input{
   width: 80%;
 }
 

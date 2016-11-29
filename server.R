@@ -1,7 +1,8 @@
-function(input, output, session) {
+
   
-  ## create temporary debugging concole: ----
-  # observe(label="console",{
+function(input, output, session) {
+  ##  create temporary debugging concole: ----
+  # * observe(label="console",{
   #   if(input$console != 0) {
   #     options(browserNLdisabled=TRUE)
   #     saved_console<-".RDuetConsole"
@@ -226,7 +227,7 @@ function(input, output, session) {
     )
   })
   
-  ## create input object to receive raw data file: ----
+  ## * file input: create input object to receive raw data file: ----
   output$file_form <- renderUI({
     req(input$input_method=="file")
     
@@ -257,25 +258,12 @@ function(input, output, session) {
     )
   })
   
-  ## pass file input to value to workaround resetting file data----
+  ## * file input: pass file input to value to workaround resetting file data----
   observe({
     values$file <- input$upload_file
   })
  
-  ## reset the following: file value (file input element resets above) or group summaries inputs : ----
-  ## on procedure, meassure, reset, input method switch events
-  observe({
-    #take dependencies on previous selections
-    input$procedure_name
-    input$measure_selected
-    input$input_method
-    # if (!values$example_file_loaded)
-    values$file <- NULL
-    # reset(id = "table-groups")
-    disable("submit")
-  })
-  
-  ## link the example raw data file:  ----
+  ## * file input: link the example raw data file:  ----
   output$example_raw_input <- downloadHandler(
     filename = "gxl_app_example_input.csv",
     content = function(con) {
@@ -283,21 +271,18 @@ function(input, output, session) {
     }
   )
   
-  ## read raw data from file: ----
+  ## * file input: read raw data from file: ----
   tbl_raw_data <- eventReactive(eventExpr = values$file,
     {
       req(input$input_method=="file")
-      if(values$examples_completed < input$load_example_button)
-        tbl_example_raw_data 
-      else
-        read.csv(
-          file = values$file$datapath,
-          header = F,
-          stringsAsFactors = F
-        )
+      read.csv(
+        file = values$file$datapath,
+        header = F,
+        stringsAsFactors = F
+      )
     })  
   
-  ## summarize and transform raw table: ----
+  ## * file input: summarize and transform raw table: ----
   file_summaries <- reactive(
     {
       req(tbl_raw_data(),tbl_matched_model())
@@ -317,7 +302,7 @@ function(input, output, session) {
                   n =sum(!is.na(transformed))) 
     })
     
-  ## render file summaries table: ----
+  ## * file input: render file summaries table: ----
   
   output$file_summaries <- renderDataTable(
     {
@@ -329,58 +314,85 @@ function(input, output, session) {
     }
   )
   
-  ## create input form for groups summaries input fields: ----
+  ## * summaries input: create input form for groups summaries input fields: ----
   output$groups_form <- renderUI({
     req(input$input_method=="summ")
-    
-  })
-  
-  output$groups_summaries <- renderUI(
-    {
-      
-      tags$table(
-        id = "table-groups",
-        class = "table table-gxl",
-        tags$thead(
-          tags$tr(
-            tags$th("Group name"),tags$th("Mean"),tags$th("Standard Deviation"),tags$th("N (# Observations)")
-          )
-        ),
-        tags$tbody(
-          lapply(
-            1:n_group_inputs,function(i)
-            {
-              tags$tr(
-                tags$td(selectizeInput( inputId = paste0("grp",i,"_name"   ),label = NULL, choices = group_names_list, options = list(create = TRUE))),
-                tags$td(  numericInput( inputId = paste0("grp",i,"_mean.t"), label = NULL, value = "")),
-                tags$td(  numericInput( inputId = paste0("grp",i,"_sd.t"  ), label = NULL, value = "", min = 0)),
-                tags$td(  numericInput( inputId = paste0("grp",i,"_n"     ), label = NULL, value = "", step = 1,min = 0))
-              )
-            }
-          )
+    tags$table(
+      id = "table-groups",
+      class = "table table-gxl",
+      tags$thead(
+        tags$tr(
+          tags$th("Group name"),tags$th("Mean"),tags$th("Standard Deviation"),tags$th("N (# Observations)")
+        )
+      ),
+      tags$tbody(
+        lapply(
+          1:n_group_inputs,function(i)
+          {
+            tags$tr(
+              tags$td(selectizeInput( inputId = paste0("grp",i,"_name"  ), label = NULL, choices = group_names_list,selected = NULL,multiple = T, options = list(create = TRUE, maxItems = 1))),
+              tags$td(  numericInput( inputId = paste0("grp",i,"_mean.t"), label = NULL, value = "")),
+              tags$td(  numericInput( inputId = paste0("grp",i,"_sd.t"  ), label = NULL, value = "", min = 0)),
+              tags$td(  numericInput( inputId = paste0("grp",i,"_n"     ), label = NULL, value = "", step = 1,min = 0))
+            )
+          }
         )
       )
-    }
+    )
+  }
   )
   
-  ## render group info table: ----
+  ## * summaries input: read from group summaries input fields to a tibble:----
   
+  grps_summaries <- reactive(
+    {
+      ## initialize tibble
+      tbl_grp_summ <- tibble(group_name = character(), mean.t = double(), sd.t = double(), n = integer())
+      
+      ## take dependencies and fill in current values 
+      for(i in 1:n_group_inputs)
+      {
+        tbl_grp_summ_fiiled <- tbl_grp_summ %>%
+          add_row(
+            group_name = input[paste0("grp",i,"_name"  )],
+            mean.t     = input[paste0("grp",i,"_mean.t")],
+            sd.t       = input[paste0("grp",i,"_sd.t"  )],
+            n          = input[paste0("grp",i,"_n"     )] 
+          ) 
+      }
+      
+      ## keep only complete cases (trims down unused lines ad also incomplete input fields)
+      tbl_grp_summ_complete <- tbl_grp_summ_fiiled %>% filter(complete.cases(.))
+      
+      print(tbl_grp_summ_complete)
+      
+      if (nrow(tbl_grp_summ_complete) > 1 & isTruthy(input$measure_selected))
+      {
+        enable("submit")
+        return(tbl_grp_summ_complete)
+      } else NULL
+    })
+  
+  ## * resets : value$file (on procedure, meassure, reset, input method switch events) : ----
+  observe({
+    #take dependencies on previous selections
+    input$procedure_name
+    input$measure_selected
+    input$input_method
+    values$file <- NULL
+    # reset(id = "table-groups")
+    disable("submit")
+  })
+  
+  
+  ## render group info table: ----
   output$groups_info <- renderUI(
     {
       if (input$input_method=="file")
         groups <- req(file_summaries()$group_name)
       if (input$input_method=="summ")
-        groups <- req(input$groups)
+        groups <- req(grps_summaries()$group_name)
       
-      # popify(
-      #   el = icon("info-circle"),
-      #   title = NULL,
-      #   content = withTags(tagList(
-      #     
-      #   ))%>%  str_replace_all(pattern = "\n",replacement = ""),
-      #   placement = "right",
-      #   trigger = c("hover","focus"),
-      #   options = NULL)
       withTags(
         tagList(
           br(),
@@ -425,58 +437,6 @@ function(input, output, session) {
     }
   )
   
-  ## read from groups summaries input table:----
-  
-  tbl_group_summaries <- reactive(
-    {
-      req(input$groups)
-      input$group
-      
-      input_grp_names <- names(input) %>% str_extract("grp.*") %>% na.omit()
-      
-      req(input_grp_names)
-      
-      tbl_summ_long <-
-        input_grp_names %>%
-        str_split_fixed("_",n = 3) %>%
-        as_data_frame() %>%
-        transmute(
-          group_name = V2,
-          key        = V3,
-          input_grp_names) %>% 
-        data.frame(value = NA)
-      
-      if (nrow(tbl_summ_long)>0)
-        for(i in 1:nrow(tbl_summ_long))
-        {
-          tbl_summ_long$value[i] <- input[[input_grp_names[i]]]
-        }
-      
-      tbl_summ_long_f <- tbl_summ_long %>% 
-        filter(!is.na(value))
-      
-      if (nrow(tbl_summ_long_f)<6)
-        return(NULL)
-      
-      tbl_summ <- tbl_summ_long_f %>% 
-        select(-input_grp_names) %>% 
-        spread(key = key,value = value) 
-      
-      print(tbl_summ)
-      
-      return(tbl_summ)
-  })
-  
-  observe({
-    req(tbl_group_summaries(),input$measure_selected)
-    if (nrow(tbl_group_summaries())>1 &
-        all(!is.na(tbl_group_summaries()[,-1])) &
-        all(tbl_group_summaries()[,-1]!="") &
-        isTruthy(input$measure_selected))
-      enable("submit")
-  })
-  
-  
   ## on submit, push data to server: ----
   
   observeEvent(
@@ -494,7 +454,7 @@ function(input, output, session) {
       else
         reactives_copy <- list(
           tbl_matched_model(),
-          tbl_group_summaries())
+          grps_summaries())
       user_data <- c(input_copy,reactives_copy,reactiveValuesToList(session$clientData))
       
       sys_time <- Sys.time()
@@ -514,11 +474,6 @@ function(input, output, session) {
       unlink(file_name_txt)
   })
   
-        
-
-
-      
-   
   ## on submit, copy summaries from the selected input method and add calculations: ----
   tbl_summaries <- eventReactive(
     eventExpr = input$submit,
@@ -528,7 +483,7 @@ function(input, output, session) {
       tbl_summ <- switch(
         input$input_method,
         "file" = req(file_summaries()),
-        "summ" = req(tbl_group_summaries())
+        "summ" = req(grps_summaries())
       )
       
       ## calculate S2_pooled, df and gxl-adjusted df
