@@ -13,6 +13,10 @@ function(input, output, session) {
   
   # runcodeServer()  
   
+  observe(print(values$file))
+  observe(print(req(input$input_method)))
+  observe(print(req(input$groups)))
+  
   ## initialize reactive values: ----
   values <- reactiveValues(
     examples_completed = 0,
@@ -281,7 +285,7 @@ function(input, output, session) {
     input$input_method
     # if (!values$example_file_loaded)
     values$file <- NULL
-    reset(id = "table-groups")
+    # reset(id = "table-groups")
     disable("submit")
   })
   
@@ -306,8 +310,8 @@ function(input, output, session) {
   ## read raw data from file: ----
   tbl_raw_data <- eventReactive(eventExpr = values$file,
     {
-      req(input$input_method=="file",values$file)
-      if(is.character(values$file) & values$file == "example")
+      req(input$input_method=="file")
+      if(values$examples_completed < input$load_example_button)
         tbl_example_raw_data 
       else
         read.csv(
@@ -316,11 +320,6 @@ function(input, output, session) {
           stringsAsFactors = F
         )
     })  
-  
-  #observe(print(values$file))
-  observe(print(req(input$input_method)))
-  observe(print(req(input$groups)))
-  
   
   ## summarize and transform raw table: ----
   file_summaries <- reactive(
@@ -373,9 +372,9 @@ function(input, output, session) {
             {
               tags$tr(
                 tags$td(input$groups[g]),
-                tags$td(numericInput(inputId = paste("grp",g,input$groups[g],"mean.t",sep = "_"), label = NULL, value = "")),
-                tags$td(numericInput(inputId = paste("grp",g,input$groups[g],"sd.t",sep = "_"), label = NULL, value = "", min = 0)),
-                tags$td(numericInput(inputId = paste("grp",g,input$groups[g],"n",sep = "_"), label = NULL, value = "", step = 1,min = 0))
+                tags$td(numericInput(inputId = paste0("grp",g,"_mean.t"), label = NULL, value = "")),
+                tags$td(numericInput(inputId = paste0("grp",g,"_sd.t"), label = NULL, value = "", min = 0)),
+                tags$td(numericInput(inputId = paste0("grp",g,"_n"), label = NULL, value = "", step = 1,min = 0))
               )
             }
           )
@@ -450,29 +449,46 @@ function(input, output, session) {
   
   tbl_group_summaries <- reactive(
     {
-      input_grp_names <- names(input) %>% str_extract("grp.*") %>% na.omit() %>% unique()
-      req(input_grp_names,input$groups)
+      req(input$groups)
+      input$group
       
-      tbl_summ <-
+      input_grp_names <- names(input) %>% str_extract("grp.*") %>% na.omit()
+      
+      req(input_grp_names)
+      
+      tbl_summ_long <-
         input_grp_names %>%
-        str_split_fixed("_",n = 4) %>%
+        str_split_fixed("_",n = 2) %>%
         as_data_frame() %>%
         transmute(
-          group_name = V3,
-          key        = V4,
+          group_id = V1,
+          key        = V2,
           input_grp_names) %>% 
-        rowwise() %>% 
-        filter(group_name %in% input$groups)
-      tbl_summ <- tbl_summ  %>% 
-        mutate(
-          value = input[[input_grp_names]]) %>% 
+        data.frame(value = NA)
+      
+      if (nrow(tbl_summ_long)>0)
+        for(i in 1:nrow(tbl_summ_long))
+        {
+          tbl_summ_long$value[i] <- input[[input_grp_names[i]]]
+        }
+      
+      tbl_summ_long_f <- tbl_summ_long %>% 
+        filter(!is.na(value))
+      
+      if (nrow(tbl_summ_long_f)<6)
+        return(NULL)
+      
+      tbl_summ <- tbl_summ_long_f %>% 
         select(-input_grp_names) %>% 
-        spread(key = key,value = value)
+        spread(key = key,value = value) 
+      
+      print(tbl_summ)
+      
       return(tbl_summ)
-    })
+  })
   
   observe({
-    req(tbl_group_summaries())
+    req(tbl_group_summaries(),input$measure_selected)
     if (nrow(tbl_group_summaries())>1 &
         all(!is.na(tbl_group_summaries()[,-1])) &
         all(tbl_group_summaries()[,-1]!="") &
@@ -870,65 +886,92 @@ function(input, output, session) {
   
   ## load example  ------------------------------------------------------
   
-  session$onFlushed(function() {
-    isolate( 
-      if (values$examples_completed < input$load_example_button)
-      {
-        updateSelectInput(session = session, inputId = "procedure_name",selected = "Body Composition (DEXA lean/fat)")
-        updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
-        updateSelectizeInput(session = session, inputId = "measure_selected",selected = "Fat/Body weight")
-        updateCheckboxInput(session,inputId = "agree_contribute", value = TRUE)
-        values$file <- "example"
-        values$example_step <- values$example_step + 1
-        print(values$example_step)
-      }
-    )
-  },once = F)
   
-  ## end example cycle
-  observeEvent(
-    values$example_step,
-    if (
-      values$examples_completed < input$load_example_button &
-      nrow(req(file_summaries())) == 4 &
-      values$example_step > 40)
+  observeEvent(priority = -2,
+    input$load_example_button,
     {
-      showModal(
-        modalDialog(
-          "Example input loaded.",tags$br(),"Click ",tags$b("Calculation Comparisons")," button to get the analysis results.",
-          title = NULL,
-          footer = modalButton("Ok"),
-          size = "m",
-          easyClose = T)
-      ) 
-      values$examples_completed <- input$load_example_button
-      values$example_step <- 0
-      enable("submit")
+      updateSelectInput(session = session, inputId = "procedure_name",selected = "Body Composition (DEXA lean/fat)")
+      updateTabsetPanel(session = session, inputId = "input_method",selected = "summ")
     })
-    
-              
   
-
-
-
-  #   req(values$examples_completed < input$load_example_button) 
-  #   
-  # })
+  observeEvent(
+    priority = -1,
+    input$measure_selected,
+    if(values$examples_completed < input$load_example_button)
+    {
+      updateSelectizeInput(session = session, inputId = "measure_selected",selected = "Fat/Body weight")
+    })
   
-  #  
+  observeEvent(
+    priority = 0,
+    input$input_method,
+    if(values$examples_completed < input$load_example_button)
+    {
+      updateSelectizeInput(session = session, inputId = "groups",selected = c("C57BL/6N","Slc38a10","Tnfaip1","Ttll4"))
+    })
+  
+  observeEvent(
+    priority = 0,
+    input$groups,
+    if(values$examples_completed < input$load_example_button)
+    {
+      updateNumericInput(session = session, inputId = "grp1_mean.t",value = 0.48236	)
+      updateNumericInput(session = session, inputId = "grp2_mean.t",value = 0.49274	)
+      updateNumericInput(session = session, inputId = "grp3_mean.t",value = 0.42583	)
+      updateNumericInput(session = session, inputId = "grp4_mean.t",value = 0.38516	)
+      updateNumericInput(session = session, inputId = "grp1_sd.t",value = 0.057855)
+      updateNumericInput(session = session, inputId = "grp2_sd.t",value = 0.054624)
+      updateNumericInput(session = session, inputId = "grp3_sd.t",value = 0.046420)
+      updateNumericInput(session = session, inputId = "grp4_sd.t",value = 0.079445)
+      updateNumericInput(session = session, inputId = "grp1_n",value = 300)
+      updateNumericInput(session = session, inputId = "grp2_n",value = 9)
+      updateNumericInput(session = session, inputId = "grp3_n",value = 13)
+      updateNumericInput(session = session, inputId = "grp4_n",value = 11)
+    })
+
+
+# 
+#   
+#   
+#   
+#   
+#   
+#   
+#   
+#   
+#   
+#   
+#   
+#   
+# 
+#   grp_1_C57BL/6N_mean.t
+#   grp_2_Slc38a10_mean.t
+#   grp_3_Tnfaip1_mean.t
+#   grp_4_Ttll4_mean.t
+#   grp_1_C57BL/6N_sd.t
+#   grp_2_Slc38a10_sd.t
+#   grp_3_Tnfaip1_sd.t
+#   grp_4_Ttll4_sd.t
+#   grp_1_C57BL/6N_n
+#   grp_2_Slc38a10_n
+#   grp_3_Tnfaip1_n
+#   grp_4_Ttll4_n
+  
   # observeEvent(
-  #   input$measure_selected,
+  #   priority = 2,
+  #   file_summaries(),
+  #   if(values$examples_completed < input$load_example_button & nrow(req(file_summaries())) > 0 )
   #   {
-  #     
-  #     #values$load_example_table <- T
-  #     # session$sendCustomMessage(type = "updateFileInputHandler", 'upload_file')
-  #   }
-  # )
-  # observeEvent(
-  #   tbl_raw_data(),
-  #   {
-  #     req(values$examples_completed < input$load_example_button) 
+  #     showModal(
+  #       modalDialog(
+  #         "Example input loaded.",tags$br(),"Click ",tags$b("Calculation Comparisons")," button to get the analysis results.",
+  #         title = NULL,
+  #         footer = modalButton("Ok"),
+  #         size = "m",
+  #         easyClose = T)
+  #     )
   #     values$examples_completed <- input$load_example_button
+  #     enable("submit")
   #   }
   # )
 }

@@ -1,5 +1,5 @@
 # options(shiny.reactlog=TRUE)
-# install.packages(c("devtools","ggplot2","dplyr","tidyr","shiny","shinyjs","DT","shinyBS"))
+# install.packages(c("devtools","tidyverse","shiny","shinyjs","DT","shinyBS"))
 
 library(tidyverse)
 library(stringr)
