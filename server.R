@@ -14,19 +14,13 @@ function(input, output, session) {
   
   # runcodeServer()  
   
-  observe(print(values$file))
-  observe(print(req(input$input_method)))
-  observe(print(req(input$groups)))
-  
   ## initialize reactive values: ----
   values <- reactiveValues(
-    examples_completed = 0,
-    example_step = 0,
-    # example_file_loaded = F,
+    n_loads_completed = 0,
     file = NULL
     )
 
-  ## create metadata and measure inputs table for the selected procedure: ----
+  ## * metadata input: create metadata and measure inputs table for the selected procedure: ----
   output$metadata_input <- renderUI({
     req(input$procedure_name)
     
@@ -143,6 +137,7 @@ function(input, output, session) {
     )
   })
   
+  ## * metadata input: render unit cell ----
   output$unit <- renderUI({
     req(input$measure_selected,input$procedure_name)
     tbl_models %>%
@@ -151,7 +146,7 @@ function(input, output, session) {
       distinct(unit) %>% .$unit
   })
   
-  ## if measure has duration (it is series) then add input for the duration:----
+  ##  * metadata input: if measure has duration (it is series) then add input for the duration:----
   observe({
     toggle(id = "duration_line",anim = F, condition = !is.null(tbl_matched_model()) & nrow(tbl_matched_model())>0 & all( !is.na(tbl_matched_model()$duration) ))
   })
@@ -167,30 +162,31 @@ function(input, output, session) {
                sex            == input$Sex) %>% 
         filter(metadata_rules %>% parse(text = .) %>% eval())
       
-      ## estimate gxl ratio:
+      ## no model found
+      # if(nrow(tbl_matched_model_)==0) {
+      #   tbl_matched_model_ %>% add_row() ...
+      #   }
+      
+      ## if duration related meassure, estimate gxl ratio:
       if ( nrow(tbl_matched_models)>0 & all( !is.na(tbl_matched_models$duration) ) )
       {
         x_pred <- input$duration
         x <- tbl_matched_models$duration %>% as.numeric()
         y <- tbl_matched_models$s2_ratio  
-        y_pred <- predict.lm(lm(y~x,data = data.frame(y,x)), newdata = data.frame(x = x_pred))
+        y_pred <- approxfun(x,y)(x_pred)
+        
         tbl_matched_model <- tbl_matched_models %>% 
           mutate(duration = x_pred, s2_ratio =  y_pred) %>% 
-          select(-s2_interaction, s2_lab, s2_error) %>% 
+          select(-s2_interaction, -s2_lab, -s2_error) %>% 
           distinct()
       }
       else
         tbl_matched_model_ <- tbl_matched_models
       
+      # debug
       if(nrow(tbl_matched_model_)>1) {cat("Too many matchs.")}
 
-      # if(nrow(tbl_matched_model_)==0) {
-      #   cat("No match found. analysing only unadjusted comparisons")
-      #   tbl_matched_model_ %>% 
-      #     add_row()
-      #   }
-      
-      tbl_matched_model_
+      return(tbl_matched_model_)
     }
   )
 
@@ -207,10 +203,10 @@ function(input, output, session) {
             tbl_matched_model()$s2_ratio %>% signif(digits=6)
           ),
           li(
-            if (tbl_matched_model()$transformation_symbol != "none")
+            if (tbl_matched_model()$transformation_expr != "x")
               list(b("Transformation taken prior to analysis: "), tbl_matched_model()$transformation_symbol) #
             else
-              b("No transformation is taken prior to analysis")
+              b("No transformation is applied for this measure")
           )
         )
       } else
@@ -220,7 +216,7 @@ function(input, output, session) {
             b("GxL replicability ratio estimate not found")
           ),
           li(
-            b("No transformation is taken prior to analysis")
+            b("No transformation is applied")
           )
         )
       }
@@ -304,20 +300,24 @@ function(input, output, session) {
     
   ## * file input: render file summaries table: ----
   
-  output$file_summaries <- renderDataTable(
+  output$file_summaries_table <- renderDataTable(
     {
       req(file_summaries())
       datatable(
-        caption = "Groups summaries",
+        class = "compact",
+        options = list(dom = 'tB'),
+        caption = "Groups Summaries",
         data =  file_summaries() %>% select(Group = group_name, Mean = mean.t,`Standard Deviation`	= sd.t,`Num. of Observations` =	n)
-      ) %>% formatSignif(2:3,digits = 5)
+      ) %>% formatSignif(2:3,digits = 3)
     }
   )
   
   ## * summaries input: create input form for groups summaries input fields: ----
   output$groups_form <- renderUI({
-    req(input$input_method=="summ")
+    input$procedure_name
+    input$measure_selected
     input$input_method
+    req(input$input_method=="summ")
     tags$table(
       id = "table-groups",
       class = "table table-gxl",
@@ -328,10 +328,10 @@ function(input, output, session) {
       ),
       tags$tbody(
         lapply(
-          1:n_group_inputs,function(i)
+          1:input$n_group_inputs,function(i)
           {
             tags$tr(
-              tags$td(selectizeInput( inputId = paste0("grp",i,"_name"  ), label = NULL, choices = group_names_list,selected = NULL,multiple = T, options = list(create = TRUE, maxItems = 1))),
+              tags$td(selectizeInput( inputId = paste0("grp",i,"_name"  ), label = NULL, choices = c("",group_names_list),selected = "",multiple = F, options = list(create = TRUE))),
               tags$td(  numericInput( inputId = paste0("grp",i,"_mean.t"), label = NULL, value = "")),
               tags$td(  numericInput( inputId = paste0("grp",i,"_sd.t"  ), label = NULL, value = "", min = 0)),
               tags$td(  numericInput( inputId = paste0("grp",i,"_n"     ), label = NULL, value = "", step = 1,min = 0))
@@ -347,44 +347,66 @@ function(input, output, session) {
   
   grps_summaries <- reactive(
     {
-      input$input_method
       ## initialize tibble
-      tbl_grp_summ <- tibble(group_name = character(), mean.t = double(), sd.t = double(), n = integer())
-      
-      ## take dependencies and fill in current values 
-      for(i in 1:n_group_inputs)
+      tbl_grp_summ <- tibble(
+        group_name = NA,
+        mean.t = NA %>% as.numeric(),
+        sd.t = NA %>% as.numeric(),
+        n = NA %>% as.numeric())
+
+              ## take dependencies and fill in current values 
+      for(i in 1:input$n_group_inputs)
       {
-        tbl_grp_summ_fiiled <- tbl_grp_summ %>%
-          add_row(
-            group_name = input[paste0("grp",i,"_name"  )],
-            mean.t     = input[paste0("grp",i,"_mean.t")],
-            sd.t       = input[paste0("grp",i,"_sd.t"  )],
-            n          = input[paste0("grp",i,"_n"     )] 
-          ) 
+        tbl_grp_summ[i,"group_name"] <- input[[paste0("grp",i,"_name"  )]] %>% ifelse(isTruthy(.),.,NA)
+        tbl_grp_summ[i,"mean.t"] <- input[[paste0("grp",i,"_mean.t"  )]]   %>% ifelse(isTruthy(.),.,NA)
+        tbl_grp_summ[i,"sd.t"] <- input[[paste0("grp",i,"_sd.t"  )]]       %>% ifelse(isTruthy(.),.,NA)
+        tbl_grp_summ[i,"n"] <- input[[paste0("grp",i,"_n"  )]]             %>% ifelse(isTruthy(.),.,NA)
       }
-      
-      ## keep only complete cases (trims down unused lines ad also incomplete input fields)
-      tbl_grp_summ_complete <- tbl_grp_summ_fiiled %>% filter(complete.cases(.))
+
+      ## keep only complete cases (trims down incomplete input field lines)
+      tbl_grp_summ_complete <- tbl_grp_summ %>%
+        filter(group_name!="",isTruthy(mean.t),isTruthy(sd.t),isTruthy( n))
       
       print(tbl_grp_summ_complete)
       
-      if (nrow(tbl_grp_summ_complete) > 1 & isTruthy(input$measure_selected))
+      if (nrow(tbl_grp_summ_complete) > 1)
       {
-        # enable("submit")
         return(tbl_grp_summ_complete)
       } else NULL
     })
   
-  ## * resets : value$file (on procedure, meassure, reset, input method switch events) : ----
-  observe({
-    #take dependencies on previous selections
-    input$procedure_name
-    input$measure_selected
-    input$input_method
-    values$file <- NULL
-    # reset(id = "table-groups")
-    # disable("submit")
+  ## * resets : step 1 inputs   : ----
+  
+  observeEvent(
+    input$reset_all,
+    {
+      reset(id = "table-groups-info")
+      reset(id = "table-groups")
+      reset(id = "n_group_inputs")
+      updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
+      values$file <- NULL
+      reset("measure_selected")
+      reset("procedure_name")
+      
   })
+  
+  ## * resets : step 2 inputs   : ----
+  
+  observeEvent(
+    {
+      input$procedure_name
+      input$measure_selected
+    },
+    {
+      values$file <- NULL
+      if (values$n_loads_completed >= input$load_example_button)
+      { 
+        reset(id = "table-groups-info")
+        reset(id = "table-groups")
+        reset(id = "n_group_inputs")
+        updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
+      }
+    })
   
   
   ## render group info table: ----
@@ -439,7 +461,30 @@ function(input, output, session) {
     }
   )
   
-  ## on submit, push data to server: ----
+  ## * on submit, copy summaries from the selected input method and add calculations: ----
+  tbl_summaries <- eventReactive(
+    eventExpr = {input$submit;values$n_loads_completed},
+    valueExpr = 
+    {
+      tbl_summ <- switch(
+        input$input_method,
+        "file" = req(file_summaries()),
+        "summ" = req(grps_summaries())
+      )
+      
+      ## calculate S2_pooled, df and gxl-adjusted df
+      tbl_summ <- tbl_summ %>%
+        mutate(
+          df_pooled = sum(n)-n(),
+          s2_pooled = sum(sd.t^2*(n-1))/df_pooled
+        ) %>% 
+        rownames_to_column(var = "group_id")
+      
+      tbl_summ_temp <<- tbl_summ
+      return(tbl_summ)
+    })
+  
+  ## * on submit, push data to server: ----
   
   observeEvent(
     eventExpr = {input$submit; values$example_submit},
@@ -471,41 +516,29 @@ function(input, output, session) {
         print(paste0("####--",sys_time,"-",input$email,"----"))
         print(user_data)
         print("####---------------------------")
-       },file = file_name_txt)
+      },file = file_name_txt)
       drop_upload(file = file_name_txt,dest = drop_dir,overwrite = F)
       unlink(file_name_txt)
-  })
-  
-  ## on submit, copy summaries from the selected input method and add calculations: ----
-  tbl_summaries <- eventReactive(
-    eventExpr = input$submit,
-    valueExpr = 
-    {
-      
-      tbl_summ <- switch(
-        input$input_method,
-        "file" = req(file_summaries()),
-        "summ" = req(grps_summaries())
-      )
-      
-      ## calculate S2_pooled, df and gxl-adjusted df
-      tbl_summ <- tbl_summ %>%
-        mutate(
-          df_pooled = sum(n)-n(),
-          s2_pooled = sum(sd.t^2*(n-1))/df_pooled
-        ) %>% 
-        rownames_to_column(var = "group_id")
-      
-      tbl_summ_temp <<- tbl_summ
-      return(tbl_summ)
     })
   
-  ## calculate (estimate, se, statistic ,p-value, conf.lower, conf.higher)X(unadjusted, adjusted GxL) ----
+  
+  ## * calculate pairs with estimate, se, statistic ,p-value, conf.lower, conf.higher [unadjusted, adjusted GxL] ----
   tbl_pairs <- eventReactive({tbl_summaries(); input$conf_level; input$mult_adjust},
     {
-      s2_ratio <- tbl_matched_model()$s2_ratio
-      n_labs_s2gxl <- tbl_matched_model()$n_labs_s2gxl
-      n_groups_s2gxl <- tbl_matched_model()$n_groups_s2gxl
+      req(tbl_summaries(),tbl_matched_model())
+      
+      if (nrow(tbl_matched_model())!=0)
+      {
+        s2_ratio <- tbl_matched_model()$s2_ratio
+        n_labs_s2gxl <- tbl_matched_model()$n_labs_s2gxl
+        n_groups_s2gxl <- tbl_matched_model()$n_groups_s2gxl
+      } else
+      {
+        s2_ratio      <- NA
+        n_labs_s2gxl  <- NA
+        n_groups_s2gxl<- NA
+      }
+      
       alpha <- 1-input$conf_level
       tbl_summ <- tbl_summaries()
       nmeans_tukey <-  nrow(tbl_summ)  
@@ -514,9 +547,12 @@ function(input, output, session) {
       ## create pairs table,
       ## calculate stats:
       
-      tbl_pairs_ <- 
-        nrow(tbl_summ) %>%
-        combn(2) %>% t() %>% .[,2:1] %>% as_data_frame() %>% 
+      if (nrow(tbl_summ) == 2)
+        tbl_pairs_ <- tibble(V1 = 2, V2 = 1)
+      else
+        tbl_pairs_ <- nrow(tbl_summ) %>%  combn(2) %>% t() %>% .[,2:1] %>% as_data_frame()  
+      
+      tbl_pairs_ <- tbl_pairs_ %>% 
         transmute(group_id1 = as.character(V1),group_id2 = as.character(V2)) %>% 
         inner_join(tbl_summ,by = c("group_id1"="group_id")) %>%
         inner_join(tbl_summ,c("group_id2"="group_id","s2_pooled","df_pooled")) %>% 
@@ -579,116 +615,54 @@ function(input, output, session) {
           lwr_gxl = diff - qt(1-alpha/2 ,df = df_gxl)*se_gxl %>% as.numeric(),
           upr_gxl = diff + qt(1-alpha/2 ,df = df_gxl)*se_gxl %>% as.numeric())
       
-      tbl_pairs_temp <<- tbl_pairs_
+      if (tbl_matched_model()$transformation_expr != "x")
+      {
+        back_trans_fun <- eval(parse(text=paste("function(y)", tbl_matched_model()$back_transform_expr )))
+        tbl_pairs_ <- tbl_pairs_ %>% 
+          mutate(
+            diff_bt  = back_trans_fun(diff),
+            lwr_bt = back_trans_fun(lwr),
+            upr_bt = back_trans_fun(upr),
+            lwr_gxl_bt = back_trans_fun(lwr_gxl),
+            upr_gxl_bt = back_trans_fun(upr_gxl)
+          )
+      }
       
+      if (nrow(tbl_matched_model())==0)
+        tbl_pairs_ <- tbl_pairs_ %>% select(-contains("gxl"))
+      
+      tbl_pairs_temp <<- tbl_pairs_
       return(tbl_pairs_)
     })
-  
-  tbl_pairs_bt <- reactive(
-    {
-      req(tbl_matched_model()$transformation_symbol != "x",tbl_pairs())
-      back_transform_expr <- tbl_matched_model()$back_transform_expr
-      back_trans_fun <- eval(parse(text=paste("function(y)",back_transform_expr)))
-      
-      tbl_pairs() %>% 
-        req() %>% 
-        transmute(
-          pair_id = pair_id,
-          name_pair,
-          diff  = back_trans_fun(diff),
-          pv    = pv,
-          pv_gxl= pv_gxl,
-          lwr = back_trans_fun(lwr),
-          upr = back_trans_fun(upr),
-          lwr_gxl = back_trans_fun(lwr_gxl),
-          upr_gxl = back_trans_fun(upr_gxl)
-        )
-    }
-  )
-  
-  ## render DT1: ----
-  output$results_table <- DT::renderDataTable(
+
+  ## render pairs table: ----
+  output$pairs_table <- DT::renderDataTable(
     expr = 
     {
       req(tbl_pairs())
-      datatable(class = "display compact", # BS: table table-striped table-bordered table-condensed table-hover
-        options = 
-          list(
-            autoWidth = F,
-            dom = 't',
-            paging = F,
-            scrollY = "300px",
-            scrollCollapse = T,
-            scrollX = TRUE), # fixedColumns = list(leftColumns = 2),
-            # buttons = list(
-            #   'colvis',
-            #   'csv',
-            #   'excel',
-            #   'print'
-            # ) 
-        # extensions = 'Buttons',
-        data = tbl_pairs() %>% select(name_pair,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl),
-        rownames = FALSE,
-        container =
-          withTags(
-            table(
-              thead(
-                tr(
-                  th(rowspan = 2, 'Comparison'),
-                  th(rowspan = 2, 'Difference'),
-                  th(colspan = 3, 'Unadjusted'),
-                  th(colspan = 3, 'GxL-Adjusted')
-                ),
-                tr(
-                  th('p-value'),
-                  th('CI-Low'),
-                  th('CI-High'),
-                  th('p-value'),
-                  th('CI-Low'),
-                  th('CI-High')
-                )
-              )
-            )
-          ),
-        caption = 
-          if(isolate(expr = tbl_matched_model()$transformation_symbol) == "none")
-          {
-            tags$caption(
-              'Pairwise comparisons differences', 
-              if (input$mult_adjust == "BH selected") {' (BH adjusted for FDR control):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else ':')
-          } else 
-          {
-            tags$caption(
-              'Table 1: Pairwise comparisons differences on ',tags$strong('transformed'),' scale'
-             # if (input$mult_adjust == "BH selected") {' (BH adjusted for FDR control):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else':')
-          )}
-        ) %>% formatSignif(2:8,digits = 5)
-    }
-  )
-  
-  ## render DT2 (back transformed): ----
-  output$results_table_bt <- renderDataTable(
-    expr = 
-    {
-      req(tbl_pairs_bt())
+      if (nrow(tbl_matched_model())==0)
+        tbl_pairs_to_print <- tbl_pairs() %>% select(name_pair,diff,pv,lwr,upr)
+      else
+      {
+        if (!input$back_transform)
+          tbl_pairs_to_print <- tbl_pairs() %>% select(name_pair,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl)
+        else
+          tbl_pairs_to_print <- tbl_pairs() %>% select(name_pair,diff_bt,pv,lwr_bt,upr_bt,pv_gxl,lwr_gxl_bt,upr_gxl_bt)
+      }
+      
       datatable(
         class = "display compact", # BS: table table-striped table-bordered table-condensed table-hover
         options = 
           list(
             autoWidth = F,
-            dom = 't',
+            dom = 'tB',
             paging = F,
             scrollY = "300px",
             scrollCollapse = T,
-            scrollX = TRUE),
-            # buttons = list(
-            #   'colvis',
-            #   'csv',
-            #   'excel',
-            #   'print'
-            # ) 
-        #extensions = 'Buttons',
-        data = tbl_pairs_bt() %>% select(name_pair,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl),
+            scrollX = TRUE, 
+            buttons = c('csv','excel')),
+        extensions = 'Buttons',
+        data = tbl_pairs_to_print,
         rownames = FALSE,
         container =
           withTags(
@@ -698,38 +672,47 @@ function(input, output, session) {
                   th(rowspan = 2, 'Comparison'),
                   th(rowspan = 2, 'Difference'),
                   th(colspan = 3, 'Unadjusted'),
-                  th(colspan = 3, 'GxL-Adjusted')
+                  if (nrow(tbl_matched_model())!=0) th(colspan = 3, 'GxL-Adjusted')
                 ),
                 tr(
                   th('p-value'),
                   th('CI-Low'),
                   th('CI-High'),
-                  th('p-value'),
-                  th('CI-Low'),
-                  th('CI-High')
+                  if (nrow(tbl_matched_model())!=0) th('p-value'),
+                  if (nrow(tbl_matched_model())!=0) th('CI-Low'),
+                  if (nrow(tbl_matched_model())!=0) th('CI-High')
                 )
               )
             )
           ),
-        caption = 
-          tags$caption(
-            'Table 2: Pairwise comparisons differences on ',tags$strong('original'),' scale'
-            #if (input$fdr_adjust) {' (BH adjusted for selection):'} else ':')
-        )) %>% formatSignif(2:8,digits = 5)
-      }
+        caption = "Groups Pairwise Comparisons"
+          # if(isolate(expr = tbl_matched_model()$transformation_symbol) == "none")
+          # {
+          #   tags$caption(
+          #     'ifferences', 
+          #     if (input$mult_adjust == "BH selected") {' (BH adjusted for FDR control):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else ':')
+          # } else 
+          # {
+          #   tags$caption(
+          #     'Table 1: Pairwise comparisons differences on ',tags$strong('transformed'),' scale'
+          #    # if (input$mult_adjust == "BH selected") {' (BH adjusted for FDR control):'} else if (input$mult_adjust == "Tukey HSD") {' (Tukey HSD adjusted to control FWER):'} else':')
+          # )}
+        ) %>% formatSignif(2:8,digits = 3)
+    }
   )
   
-  ## render pcci plot (back transformed): ----
+  ## render pcci plot: ----
   output$pcci_plot <- renderPlot(
     {
       req(tbl_pairs())
-      plot_pcci(tbl_pairs = tbl_pairs(),
-                title = paste("Means Differences Confidence Intervals of",tbl_matched_model()$parameter_name),
-                ylab = 
-                  if (tbl_matched_model()$transformation_symbol != "none")
-                    paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")\nafter",tbl_matched_model()$transformation_symbol,"transformation")
-                 else
-                  paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")"))
+      plot_pcci(
+        tbl_pairs = tbl_pairs(),
+        title = paste("Confidence Intervals of Means Differences ;",tbl_matched_model()$parameter_name),
+        ylab = 
+          if (tbl_matched_model()$transformation_symbol != "none")
+            paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")\nafter",tbl_matched_model()$transformation_symbol,"transformation")
+        else
+          paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")"))
       
     }
   )
@@ -737,33 +720,39 @@ function(input, output, session) {
   ## render boxplot : ----
   output$box_plot <- renderPlot(
     {
-      req(tbl_pairs(),input$input_method=="file")
-      if (nrow(tbl_matched_model())==0)
-      {
-        transformation_symbol <- "none"
-        trans_fun <- eval(parse(text=paste("function(x) x")))
-        unit <- ""
-      }
+      req(tbl_pairs())
+      
+      if (input$input_method!="file")
+        "Boxplots avaliable on file input only"
       else
       {
-        transformation_symbol <- tbl_matched_model()$transformation_symbol
-        trans_fun <- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
-        unit <- tbl_matched_model()$unit
-      }
-      ggplot(data = tbl_raw_data() %>% req() %>% 
-               mutate(group_name = as.factor(V1), measure = trans_fun(V2))
-             ) + 
-        aes(x = group_name, y = measure) + 
-        geom_boxplot() + #width = bw
-        ylab(
-          if (transformation_symbol != "none")
-            paste(input$measure_selected,"(",unit,") after",transformation_symbol,"transformation")
-          else
-            paste(input$measure_selected,"(",unit,")")
+        if (nrow(tbl_matched_model())==0)
+        {
+          transformation_symbol <- "none"
+          trans_fun <- eval(parse(text=paste("function(x) x")))
+          unit <- ""
+        }
+        else
+        {
+          transformation_symbol <- tbl_matched_model()$transformation_symbol
+          trans_fun <- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
+          unit <- tbl_matched_model()$unit
+        }
+        ggplot(data = tbl_raw_data() %>% req() %>% 
+                 mutate(group_name = as.factor(V1), measure = trans_fun(V2))
         ) + 
-        xlab("")+
-        ggtitle(paste("Groups boxplots of",input$measure_selected)) +
-        theme_minimal()
+          aes(x = group_name, y = measure) + 
+          geom_boxplot() + #width = bw
+          ylab(
+            if (transformation_symbol != "none")
+              paste(input$measure_selected,"(",unit,") after",transformation_symbol,"transformation")
+            else
+              paste(input$measure_selected,"(",unit,")")
+          ) + 
+          xlab("")+
+          ggtitle(paste("Groups boxplots of",input$measure_selected)) +
+          theme_minimal()
+      }
     })
     
   ## render boxplot (back transformed): ----
@@ -784,37 +773,33 @@ function(input, output, session) {
   #   })
   
   observe({
-    req(file_summaries())
     toggle(
       id = "file_summaries",
       anim = F,
-      condition =  !is.null(req(file_summaries())))
-  })
-    
-  
-  observe({
-    req(tbl_pairs_bt())
-    toggle(
-      id = "results_table_bt",
-      anim = F,
-      condition =  !is.null(req(tbl_pairs_bt())))
-    toggle(
-      id = "box_plot_bt",
-      anim = F,
-      condition =  !is.null(req(tbl_pairs_bt())))
+      condition =  isTruthy(file_summaries()))
   })
   
   observe({
-    req(tbl_pairs())
+    toggle(
+      id = "pairs_table",
+      anim = F,
+      condition =  isTruthy(tbl_pairs()))
     toggle(
       id = "pcci_plot",
       anim = F,
-      condition =  !is.null(req(tbl_pairs())))
+      condition =  isTruthy(tbl_pairs()))
     toggle(
       id = "box_plot",
       anim = F,
-      condition =  !is.null(req(tbl_pairs())))
+      condition =  isTruthy(tbl_pairs()))
   })
+  
+  # observe({
+  #   toggle(
+  #     id = "",
+  #     anim = F,
+  #     condition =  isTruthy())
+  # })
   
   observeEvent(
     input$agree_contribute,
@@ -824,34 +809,37 @@ function(input, output, session) {
   ## load example  ------------------------------------------------------
   
   
-  observeEvent(priority = -2,
+  observeEvent(priority = 2,
     input$load_example_button,
     {
+      updateSelectInput(session = session, inputId = "procedure_name",selected = "")
       updateSelectInput(session = session, inputId = "procedure_name",selected = "Body Composition (DEXA lean/fat)")
       updateTabsetPanel(session = session, inputId = "input_method",selected = "summ")
     })
   
   observeEvent(
-    priority = -1,
-    input$measure_selected,
-    if(values$examples_completed < input$load_example_button)
+    priority = 1,
+    {input$procedure_name;input$measure_selected},
+    if(values$n_loads_completed < input$load_example_button)
     {
       updateSelectizeInput(session = session, inputId = "measure_selected",selected = "Fat/Body weight")
     })
   
   observeEvent(
     priority = 0,
-    input$input_method,
-    if(values$examples_completed < input$load_example_button)
-    {
-      updateSelectizeInput(session = session, inputId = "groups",selected = c("C57BL/6N","Slc38a10","Tnfaip1","Ttll4"))
-    })
-  
+    {input$measure_selected},
+    updateNumericInput(session = session, inputId = "n_group_inputs",value = 4)
+  )
+    
   observeEvent(
-    priority = 0,
-    input$groups,
-    if(values$examples_completed < input$load_example_button)
+    priority = -1,
+    {input$n_group_inputs},
+    if(values$n_loads_completed < input$load_example_button)
     {
+      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "C57BL/6")
+      updateSelectizeInput(session = session, inputId = "grp2_name",selected = "Slc38a10")
+      updateSelectizeInput(session = session, inputId = "grp3_name",selected = "Tnfaip1")
+      updateSelectizeInput(session = session, inputId = "grp4_name",selected = "Ttll4")
       updateNumericInput(session = session, inputId = "grp1_mean.t",value = 0.48236	)
       updateNumericInput(session = session, inputId = "grp2_mean.t",value = 0.49274	)
       updateNumericInput(session = session, inputId = "grp3_mean.t",value = 0.42583	)
@@ -865,102 +853,37 @@ function(input, output, session) {
       updateNumericInput(session = session, inputId = "grp3_n",value = 13)
       updateNumericInput(session = session, inputId = "grp4_n",value = 11)
     })
-
-
-# 
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-#   
-# 
-#   grp_1_C57BL/6N_mean.t
-#   grp_2_Slc38a10_mean.t
-#   grp_3_Tnfaip1_mean.t
-#   grp_4_Ttll4_mean.t
-#   grp_1_C57BL/6N_sd.t
-#   grp_2_Slc38a10_sd.t
-#   grp_3_Tnfaip1_sd.t
-#   grp_4_Ttll4_sd.t
-#   grp_1_C57BL/6N_n
-#   grp_2_Slc38a10_n
-#   grp_3_Tnfaip1_n
-#   grp_4_Ttll4_n
   
-  # observeEvent(
-  #   priority = 2,
-  #   file_summaries(),
-  #   if(values$examples_completed < input$load_example_button & nrow(req(file_summaries())) > 0 )
-  #   {
-  #     showModal(
-  #       modalDialog(
-  #         "Example input loaded.",tags$br(),"Click ",tags$b("Calculation Comparisons")," button to get the analysis results.",
-  #         title = NULL,
-  #         footer = modalButton("Ok"),
-  #         size = "m",
-  #         easyClose = T)
-  #     )
-  #     values$examples_completed <- input$load_example_button
-  #     # enable("submit")
-  #   }
-  # )
+  observeEvent(
+    priority = -2,
+    {input$grp4_n},
+    {
+      req(input$grp4_n ==  11)
+      if(values$n_loads_completed < input$load_example_button)
+      {
+        values$n_loads_completed <- input$load_example_button
+        showNotification(
+          id = "example_loaded_notification",
+          duration = 6,closeButton = T,type = "warning",session = session,
+          ui = 
+            tagList(
+              "Example loaded."# ,tags$br(),"Click ",tags$b("Calculation Comparisons"),"."
+            )
+        )
+      }
+    }
+  )
+  
+  # observers ---------------------------------------------------------------
+  
+  # observe(print(values$file))
+  observe(print(req(input$input_method)))
+  observe(print(req(tbl_summaries())))
+  observe(print(req(tbl_pairs())))
 }
   
-  ## drafts ------------------------------------------------------
-  # prepare txt file to download
-  # output$download_button <- downloadHandler(
-  #   filename = function()
-  #     paste0("Results_",Sys.Date(),".txt"),
-  #   content  = function(file)
-  #   {
-  #     to_print <- list(
-  #       groups = input$groups,
-  #       procedure_name = input$procedure_name,
-  #       send_data = input$send_data,    
-  #       genotypes_tested = values$genotypes_tested,
-  #       tbl_models_selected = values$tbl_models_selected,
-  #       tbl_metadata_selected = values$
-  #       ++_selected,
-  #       tbl_raw_input = values$tbl_raw_input,
-  #       tbl_summaries_from_file = values$tbl_summaries_from_file,
-  #       tbl_summaries = values$tbl_summaries,
-  #       tbl_pairs_calc = values$tbl_pairs_calc
-  #       )
-  #     sink(file = file)
-  #     print(to_print)
-  #     sink()
-  #   }  
-  # )
 
-  # observe({
-  #   req(input$submit)
-  #   shinyjs::removeClass(id = "download_button", class = "disabled")
-  # })
 
-  # observeEvent(input$exmp_1,values$example_id_clicked <- 1)
-  # 
-  # observeEvent(
-  #   values$example_id_clicked,
-  #   {
-  #     tbl_examples_selected <- tbl_examples %>% 
-  #       filter(example_id == values$example_id_clicked)
-  #     updateSelectInput(session = session, inputId = "procedure_name",selected = tbl_examples_selected$procedure_name)
-  #     values$example_sequence_step <- TRUE
-  #   }
-  # )
-  # 
-  # observe(
-  #   {
-  #     req(values$example_sequence_on)
-  #     tbl_examples_selected <- tbl_examples %>% 
-  #       filter(example_id == values$example_id_clicked)
-  #     updateSelectizeInput(session = session, inputId = "measure_selected",selected = tbl_examples_selected$parameter_name)
-  #   }
-  # )
+
+
+

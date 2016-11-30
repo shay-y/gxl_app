@@ -14,15 +14,7 @@ shinyUI(
         #includeCSS("https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"),
         includeCSS("WWW/style.css"),
         includeScript("WWW/google-analytics.js"),
-        includeScript("WWW/scroll.js"),
-        tags$script('
-Shiny.addCustomMessageHandler("updateFileInputHandler", function(file_id) {   
-var el = $("#" + file_id);
-el.name = "test"
-var prog_id = "#" + file_id + "_progress";
-$(prog_id).show();
-        });
-      ')
+        includeScript("WWW/scroll.js")
       ),
       # actionButton("console","server console"),
       # runcodeUI(),
@@ -42,6 +34,7 @@ $(prog_id).show();
             ),
             hr(),
             # htmlTemplate("examples_dropdown.html"),
+            actionButton(inputId = "reset_all",label = "Reset", icon = icon("refresh"),class = "btn_right btn-sm"),
             actionButton(inputId = "load_example_button",label = "Load example", class = "btn_right btn-sm"),
             h5(
               div(
@@ -153,8 +146,9 @@ $(prog_id).show();
                       content = withTags(
                         tagList(
                           ul(
-                            li("Fill in the group names (space delimited) in the text input box. You may use your names of choice, and these names will appear in the results tables and figures."),
-                            li("In the table that opens, fill in the groups means, standard deviations and number of observations."),
+                            li("Select the number of groups in the experiment."),
+                            li("Fill in the groups names, means, standard deviations and number of observations."),
+                            li("For group names, you may select from the dropdown list or type-in a name of your choise"),
                             li("The means and standard deviations should be calculated ", b("after applying")," the specified transformation for the selected measure.")
                           )
                         )) %>%  str_replace_all(pattern = "\n",replacement = ""),    
@@ -163,6 +157,12 @@ $(prog_id).show();
                       options = NULL)
                   ),
                 value = "summ",
+                div(
+                  class="form-group shiny-input-container",
+                  tags$label("Number of groups: "),
+                  tags$input(id="n_group_inputs", type="number", class="form-control", value="2", min="2", max="8", step="1",
+                             style = 'display:inline-block; width:50px; min-width:50px')
+                ),
                 uiOutput("groups_form")
               )
             )
@@ -175,13 +175,6 @@ $(prog_id).show();
               strong(
                 "Participation in our program:"
               )
-              # popify(
-              #   el = icon("info-circle"),
-              #   title = NULL,
-              #   content = ""
-              #   placement = "right",
-              #   trigger = c("hover","focus"),
-              #   options = NULL)
             ),
             checkboxInput(
               inputId = "agree_contribute",
@@ -214,7 +207,7 @@ $(prog_id).show();
               actionButton(
                 "submit",
                 "Calculate comparisons" #,icon = icon("cog")
-              ) # %>% disabled()
+              ) 
             )
           ),
           column(
@@ -247,7 +240,8 @@ $(prog_id).show();
                     ":"),
                   tags$input(id="conf_level", type="number", class="form-control", value="0.95", min="0.001", max="0.5", step="0.01",
                              style = 'display:inline-block; width:70px; min-width:70px')
-                )
+                ),
+                checkboxInput("back_transform", "Transform the estimates in the table back to the original scale", FALSE)
               ),
               column(
                 6,
@@ -280,23 +274,20 @@ $(prog_id).show();
               )
             ),
             uiOutput("measure_selected_details"),
-            hidden(dataTableOutput("file_summaries")),
-            dataTableOutput("results_table"),
-            dataTableOutput("results_table_bt"),
+            dataTableOutput("file_summaries_table"),   #%>% hidden(),
+            dataTableOutput("pairs_table"),    #%>% hidden(),
             hr(),
             tabsetPanel(
               tabPanel(
                 title = "Boxplots",
-                hidden(plotOutput("box_plot")),  
-                hidden(plotOutput("box_plot_bt"))
+                plotOutput("box_plot"),   #%>% hidden(),  
+                plotOutput("box_plot_bt") #%>% hidden()
               ),
               tabPanel(
                 title = "Comparisons plot",
-                
-                hidden(plotOutput("pcci_plot",height = "650px"))
+                plotOutput("pcci_plot",height = "650px") #%>% hidden()
               )
             )
-            # downloadButton("download_button","Download Report",class = "disabled")
           )
         )
       )
@@ -306,17 +297,17 @@ $(prog_id).show();
         column(
           12,
           p(
-            "This app is a project by the ",
+            "The application is a project by the ",
             a(href = "http://www.replicability.tau.ac.il/", target='_blank',"Replicability Research Group"),".",
             br(),
             "The research leading to the GxL adjustment and the development of the application are supported by the European Research Council (ERC) under the European Community’s 7th Framework Program (FP/2007-2013) grant agreement (PSARPS-294519).",              br(),
-            "The app is built with ",
+            "The application wass built with ",
             a(href = "http://shiny.rstudio.com/", target="_blank", "Shiny web application framework by Rstudio"),".",
             br(),
             "Source code is available on Github: ",
             a(href = "http://github.com/shay-y/gxl_app/", target="_blank","shay-y/gxl_app/"),".",
             br(),
-            "For further information or support please contact Shay Yaacoby: ",
+            "For technical support and comments contact Shay Yaacoby at ",
             a(href="mailto:shay66[at]gmail.com", target="_blank","shay66[at]gmail.com"),"."
           )
         )
