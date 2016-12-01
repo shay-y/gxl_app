@@ -163,7 +163,7 @@ function(input, output, session) {
         filter(metadata_rules %>% parse(text = .) %>% eval())
       
       ## no model found
-      # if(nrow(tbl_matched_model_)==0) {
+      # if(nrow(tbl_matched_models)==0) {
       #   tbl_matched_model_ %>% add_row() ...
       #   }
       
@@ -173,9 +173,9 @@ function(input, output, session) {
         x_pred <- input$duration
         x <- tbl_matched_models$duration %>% as.numeric()
         y <- tbl_matched_models$s2_ratio  
-        y_pred <- approxfun(x,y)(x_pred)
+        y_pred <- approxfun(x,y,rule = 2)(x_pred)
         
-        tbl_matched_model <- tbl_matched_models %>% 
+        tbl_matched_model_ <- tbl_matched_models %>% 
           mutate(duration = x_pred, s2_ratio =  y_pred) %>% 
           select(-s2_interaction, -s2_lab, -s2_error) %>% 
           distinct()
@@ -304,8 +304,13 @@ function(input, output, session) {
     {
       req(file_summaries())
       datatable(
+        rownames = F,
         class = "compact",
-        options = list(dom = 'tB'),
+        options = 
+          list(
+            dom = 'tB',
+            buttons = c('csv','excel')),
+        extensions = 'Buttons',
         caption = "Groups Summaries",
         data =  file_summaries() %>% select(Group = group_name, Mean = mean.t,`Standard Deviation`	= sd.t,`Num. of Observations` =	n)
       ) %>% formatSignif(2:3,digits = 3)
@@ -375,40 +380,6 @@ function(input, output, session) {
       } else NULL
     })
   
-  ## * resets : step 1 inputs   : ----
-  
-  observeEvent(
-    input$reset_all,
-    {
-      reset(id = "table-groups-info")
-      reset(id = "table-groups")
-      reset(id = "n_group_inputs")
-      updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
-      values$file <- NULL
-      reset("measure_selected")
-      reset("procedure_name")
-      
-  })
-  
-  ## * resets : step 2 inputs   : ----
-  
-  observeEvent(
-    {
-      input$procedure_name
-      input$measure_selected
-    },
-    {
-      values$file <- NULL
-      if (values$n_loads_completed >= input$load_example_button)
-      { 
-        reset(id = "table-groups-info")
-        reset(id = "table-groups")
-        reset(id = "n_group_inputs")
-        updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
-      }
-    })
-  
-  
   ## render group info table: ----
   output$groups_info <- renderUI(
     {
@@ -462,10 +433,11 @@ function(input, output, session) {
   )
   
   ## * on submit, copy summaries from the selected input method and add calculations: ----
-  tbl_summaries <- eventReactive(
-    eventExpr = {input$submit;values$n_loads_completed},
-    valueExpr = 
+  tbl_summaries <- reactive(
     {
+      input$submit
+      values$n_loads_completed
+      
       tbl_summ <- switch(
         input$input_method,
         "file" = req(file_summaries()),
@@ -651,7 +623,7 @@ function(input, output, session) {
       }
       
       datatable(
-        class = "display compact", # BS: table table-striped table-bordered table-condensed table-hover
+        class = "compact", # BS: table table-striped table-bordered table-condensed table-hover
         options = 
           list(
             autoWidth = F,
@@ -874,10 +846,62 @@ function(input, output, session) {
     }
   )
   
+  ## * resets : step 1 inputs   : ----
+  
+  observeEvent(
+    priority = -3,
+    input$reset_all,
+    {
+      values$n_loads_completed <- input$load_example_button
+      reset(id = "table-groups-info")
+      reset(id = "table-groups")
+      reset(id = "n_group_inputs")
+      updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
+      values$file <- NULL
+      reset("measure_selected")
+      reset("procedure_name")
+    })
+  
+  ## * resets : step 2 inputs   : ----
+  
+  observeEvent(
+    priority = 3,
+    {
+      input$procedure_name
+      input$measure_selected
+    },
+    {
+      if (values$n_loads_completed >= input$load_example_button)
+      {
+      reset(id = "table-groups-info")
+      reset(id = "table-groups")
+      reset(id = "n_group_inputs")
+      updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
+      values$file <- NULL  
+      }
+    })
+  
+  observeEvent(
+    {
+      input$input_method
+    },
+    {
+      if (values$n_loads_completed >= input$load_example_button)
+      {
+      reset(id = "table-groups-info")
+      reset(id = "table-groups")
+      reset(id = "n_group_inputs")
+      values$file <- NULL  
+      }
+    })
+  
   # observers ---------------------------------------------------------------
   
-  # observe(print(values$file))
-  observe(print(req(input$input_method)))
+  
+  # observe(print(req(input$input_method)))
+  observe(print(values$file))
+  # observe(print(req(file_summaries())))
+  # observe(print(req(grps_summaries())))
   observe(print(req(tbl_summaries())))
   observe(print(req(tbl_pairs())))
 }
