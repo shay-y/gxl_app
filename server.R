@@ -282,7 +282,6 @@ function(input, output, session) {
   file_summaries <- reactive(
     {
       req(tbl_raw_data(),tbl_matched_model())
-      # enable("submit")
       if (nrow(tbl_matched_model())==0)
         trans_fun <- eval(parse(text=paste("function(x) x")))
       else
@@ -432,17 +431,17 @@ function(input, output, session) {
     }
   )
   
-  ## * on submit, copy summaries from the selected input method and add calculations: ----
+  ## * copy summaries from the selected input method and add calculations: ----
   tbl_summaries <- reactive(
     {
-      input$submit
-      values$n_loads_completed
-      
       tbl_summ <- switch(
         input$input_method,
         "file" = req(file_summaries()),
         "summ" = req(grps_summaries())
       )
+      
+      if (isolate(input$input_method=="summ"))
+        updateTabsetPanel(session = session,inputId = "plots_tabset",selected = "Comparisons plot")
       
       ## calculate S2_pooled, df and gxl-adjusted df
       tbl_summ <- tbl_summ %>%
@@ -456,10 +455,10 @@ function(input, output, session) {
       return(tbl_summ)
     })
   
-  ## * on submit, push data to server: ----
+  ## * on data submit, push data to server: ----
   
   observeEvent(
-    eventExpr = {input$submit; values$example_submit},
+    eventExpr = input$submit_data,
     handlerExpr = 
     {
       req(input$agree_contribute)
@@ -743,41 +742,7 @@ function(input, output, session) {
   #       ggtitle(paste("Groups boxplots of",tbl_matched_model()$parameter_name," before transformation")) +
   #       theme_minimal()
   #   })
-  
-  observe({
-    toggle(
-      id = "file_summaries",
-      anim = F,
-      condition =  isTruthy(file_summaries()))
-  })
-  
-  observe({
-    toggle(
-      id = "pairs_table",
-      anim = F,
-      condition =  isTruthy(tbl_pairs()))
-    toggle(
-      id = "pcci_plot",
-      anim = F,
-      condition =  isTruthy(tbl_pairs()))
-    toggle(
-      id = "box_plot",
-      anim = F,
-      condition =  isTruthy(tbl_pairs()))
-  })
-  
-  # observe({
-  #   toggle(
-  #     id = "",
-  #     anim = F,
-  #     condition =  isTruthy())
-  # })
-  
-  observeEvent(
-    input$agree_contribute,
-    toggle(id = "user_details",condition = input$agree_contribute)
-  )
-  
+
   ## load example  ------------------------------------------------------
   
   
@@ -895,7 +860,38 @@ function(input, output, session) {
       }
     })
   
-  # observers ---------------------------------------------------------------
+  # * observers: display ---------------------------------------------------------------  
+  
+  # observe({
+  #   toggle(
+  #     selector = "file_summaries_table_wrap",
+  #     anim = F,
+  #     condition =  isTruthy(file_summaries()))
+  #   isTruthy(file_summaries())
+  #   browser()
+  # })
+  
+  observe({
+    condition <- !isTruthy(tbl_pairs())
+    toggleClass(id = "pairs_table", condition, class = "nd")
+    toggleClass(id = "pcci_plot", condition, class = "nd")
+    toggleClass(id = "box_plot", condition, class = "nd")
+  })
+  
+  # observe({
+  #   toggle(
+  #     id = "",
+  #     anim = F,
+  #     condition =  isTruthy())
+  # })
+  
+  observeEvent(
+    input$agree_contribute,
+    toggle(id = "user_details",condition = input$agree_contribute)
+  )
+  
+  
+  # * observers: debugging ---------------------------------------------------------------
   
   
   # observe(print(req(input$input_method)))

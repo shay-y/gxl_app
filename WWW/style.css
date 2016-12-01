@@ -60,6 +60,11 @@ body {
   padding:4px !important;
 } 
 
+.nd{
+  display:none !important;
+}
+
+
 .selectize-dropdown {
     min-width: 400px !important;
 }
@@ -197,10 +202,10 @@ font-size: 1.1em !important;
 
 #wrap_submit_data{
   padding: 2px;
-  border: solid 2px #88B54D;
+  border: solid 1px #88B54D;
   border-radius: 7px;
-  display: inline-block;
   box-shadow: 1px 1px 1px #BBB;
+  float:right;
 }
 
 .nav > li > a{

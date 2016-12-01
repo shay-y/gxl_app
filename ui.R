@@ -198,16 +198,16 @@ shinyUI(
                     tags$input(id = "email",value = "", type="text", class="form-control")
                   )
                 ),
-                uiOutput("groups_info")
+                uiOutput("groups_info"),
+                div(
+                  id = "wrap_submit_data",
+                  actionButton(
+                    "submit_data",
+                    "Submit data",
+                    class= "btn_right" #,icon = icon("cog")
+                  ) 
+                )
               )
-            ),
-            br(),
-            div(
-              id = "wrap_submit_data",
-              actionButton(
-                "submit",
-                "Calculate comparisons" #,icon = icon("cog")
-              ) 
             )
           ),
           column(
@@ -274,18 +274,19 @@ shinyUI(
               )
             ),
             uiOutput("measure_selected_details"),
-            dataTableOutput("file_summaries_table"),   #%>% hidden(),
+            dataTableOutput("file_summaries_table"), # %>% div(id = "file_summaries_table_wrap") %>% hidden(),
             dataTableOutput("pairs_table"),    #%>% hidden(),
             hr(),
             tabsetPanel(
+              id = "plots_tabset",
               tabPanel(
                 title = "Boxplots",
-                plotOutput("box_plot"),   #%>% hidden(),  
-                plotOutput("box_plot_bt") #%>% hidden()
+                plotOutput("box_plot"),
+                plotOutput("box_plot_bt")
               ),
               tabPanel(
                 title = "Comparisons plot",
-                plotOutput("pcci_plot",height = "650px") #%>% hidden()
+                plotOutput("pcci_plot",height = "650px")
               )
             )
           )
