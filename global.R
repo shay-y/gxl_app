@@ -29,8 +29,7 @@ source("pcci.R")
 
 load("Startup_objects.RData")
 
-tbl_example_raw_data <- read_csv("data/MRC_Harwell_Males_Fat_Body weight.csv")
-# tbl_exmp_names <- tbl_examples %>% select(exmp_name) %>% distinct()
+tbl_example_raw_data <- read_csv("data/tbl_example.csv", col_names = F)
 procedure_name_list <-  tbl_procedures %>% .$procedure_name %>% as.character() %>% as.list() %>% {setNames(.,.)}
 group_names_list <- example_group_names_vec %>%
   {setNames(.,.)} %>% 

@@ -263,7 +263,7 @@ function(input, output, session) {
   output$example_raw_input <- downloadHandler(
     filename = "gxl_app_example_input.csv",
     content = function(con) {
-      write.table(x = tbl_example_raw_data,file = con,row.names = F,col.names = F, qmethod = "double",sep = ",")
+      write_csv(x = tbl_example_raw_data,path = con,col_names = F) 
     }
   )
   
@@ -481,6 +481,7 @@ function(input, output, session) {
       saveRDS(object = user_data  ,file = file_name_rds)
       drop_upload(file = file_name_rds,dest = drop_dir,overwrite = F,dtoken = token)
       unlink(file_name_rds)
+      file.remove(file_name_rds)
       
       file_name_txt <- paste0("userdata_",input$email,"_",format(sys_time,'_%Y_%m_%d__%H_%M_%S__%Z.txt'))
       capture.output({
@@ -488,8 +489,9 @@ function(input, output, session) {
         print(user_data)
         print("####---------------------------")
       },file = file_name_txt)
-      drop_upload(file = file_name_txt,dest = drop_dir,overwrite = F)
+      drop_upload(file = file_name_txt,dest = drop_dir,overwrite = F,dtoken = token)
       unlink(file_name_txt)
+      file.remove(file_name_txt)
     })
   
   
@@ -776,7 +778,7 @@ function(input, output, session) {
     {input$procedure_name;input$measure_selected},
     if(values$n_loads_completed < input$load_example_button)
     {
-      updateSelectizeInput(session = session, inputId = "measure_selected",selected = "Fat/Body weight")
+      updateSelectizeInput(session = session, inputId = "measure_selected",selected = "BMC/Body weight")
     })
   
   observeEvent(
@@ -790,22 +792,22 @@ function(input, output, session) {
     {input$n_group_inputs},
     if(values$n_loads_completed < input$load_example_button)
     {
-      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "C57BL/6J")
-      updateSelectizeInput(session = session, inputId = "grp2_name",selected = "Slc38a10")
-      updateSelectizeInput(session = session, inputId = "grp3_name",selected = "Tnfaip1")
-      updateSelectizeInput(session = session, inputId = "grp4_name",selected = "Ttll4")
-      updateNumericInput(session = session, inputId = "grp1_mean.t",value = 0.48236	)
-      updateNumericInput(session = session, inputId = "grp2_mean.t",value = 0.49274	)
-      updateNumericInput(session = session, inputId = "grp3_mean.t",value = 0.42583	)
-      updateNumericInput(session = session, inputId = "grp4_mean.t",value = 0.38516	)
-      updateNumericInput(session = session, inputId = "grp1_sd.t",value = 0.057855)
-      updateNumericInput(session = session, inputId = "grp2_sd.t",value = 0.054624)
-      updateNumericInput(session = session, inputId = "grp3_sd.t",value = 0.046420)
-      updateNumericInput(session = session, inputId = "grp4_sd.t",value = 0.079445)
-      updateNumericInput(session = session, inputId = "grp1_n",value = 300)
-      updateNumericInput(session = session, inputId = "grp2_n",value = 9)
-      updateNumericInput(session = session, inputId = "grp3_n",value = 13)
-      updateNumericInput(session = session, inputId = "grp4_n",value = 11)
+      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "Arhgef4")
+      updateSelectizeInput(session = session, inputId = "grp2_name",selected = "C57BL/6J")
+      updateSelectizeInput(session = session, inputId = "grp3_name",selected = "Elk4")
+      updateSelectizeInput(session = session, inputId = "grp4_name",selected = "Tnfaip1")
+      updateNumericInput(session = session, inputId = "grp1_mean.t",value = 0.0106107)
+      updateNumericInput(session = session, inputId = "grp2_mean.t",value = 0.0131590)
+      updateNumericInput(session = session, inputId = "grp3_mean.t",value = 0.0118673)
+      updateNumericInput(session = session, inputId = "grp4_mean.t",value = 0.0169907)
+      updateNumericInput(session = session, inputId = "grp1_sd.t",value = 0.0031976)
+      updateNumericInput(session = session, inputId = "grp2_sd.t",value = 0.0034319)
+      updateNumericInput(session = session, inputId = "grp3_sd.t",value = 0.0023538)
+      updateNumericInput(session = session, inputId = "grp4_sd.t",value = 0.0034506)
+      updateNumericInput(session = session, inputId = "grp1_n",value = 14)
+      updateNumericInput(session = session, inputId = "grp2_n",value = 597)
+      updateNumericInput(session = session, inputId = "grp3_n",value = 24)
+      updateNumericInput(session = session, inputId = "grp4_n",value = 15)
     })
   
   observeEvent(
