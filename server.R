@@ -335,7 +335,7 @@ function(input, output, session) {
           1:input$n_group_inputs,function(i)
           {
             tags$tr(
-              tags$td(selectizeInput( inputId = paste0("grp",i,"_name"  ), label = NULL, choices = c("",group_names_list),selected = "",multiple = F, options = list(create = TRUE))),
+              tags$td(selectizeInput( inputId = paste0("grp",i,"_name"  ), label = NULL, choices = c("",group_names_list),selected = "",multiple = T, options = list(create = TRUE,maxItems = 1))),
               tags$td(  numericInput( inputId = paste0("grp",i,"_mean.t"), label = NULL, value = "")),
               tags$td(  numericInput( inputId = paste0("grp",i,"_sd.t"  ), label = NULL, value = "", min = 0)),
               tags$td(  numericInput( inputId = paste0("grp",i,"_n"     ), label = NULL, value = "", step = 1,min = 0))
@@ -505,14 +505,14 @@ function(input, output, session) {
         s2_ratio <- tbl_matched_model()$s2_ratio
         n_labs_s2gxl <- tbl_matched_model()$n_labs_s2gxl
         n_groups_s2gxl <- tbl_matched_model()$n_groups_s2gxl
-        back_trans_fun <- eval(parse(text=paste("function(y)", tbl_matched_model()$back_transform_expr )))
+        # back_trans_fun <- eval(parse(text=paste("function(y)", tbl_matched_model()$back_transform_expr )))
         
       } else
       {
         s2_ratio      <- NA
         n_labs_s2gxl  <- NA
         n_groups_s2gxl<- NA
-        back_trans_fun <- "y"
+        # back_trans_fun <- "y"
       }
       
       alpha <- 1-input$conf_level
@@ -596,31 +596,19 @@ function(input, output, session) {
       
       if (nrow(tbl_matched_model())==0)
         tbl_pairs_ <- tbl_pairs_ %>% select(-contains("gxl"))
-      else
-        if (tbl_matched_model()$transformation_expr != "x")
-        {
-          tbl_pairs_ <- tbl_pairs_ %>% 
-            mutate(
-              diff_bt  = back_trans_fun(diff),
-              lwr_bt = back_trans_fun(lwr),
-              upr_bt = back_trans_fun(upr),
-              lwr_gxl_bt = back_trans_fun(lwr_gxl),
-              upr_gxl_bt = back_trans_fun(upr_gxl)
-            )
-        }
+      # else
+      #   if (tbl_matched_model()$transformation_expr != "x")
+      #   {
+      #     tbl_pairs_ <- tbl_pairs_ %>% 
+      #       mutate(
+      #         diff_bt  = back_trans_fun(diff),
+      #         lwr_bt = back_trans_fun(lwr),
+      #         upr_bt = back_trans_fun(upr),
+      #         lwr_gxl_bt = back_trans_fun(lwr_gxl),
+      #         upr_gxl_bt = back_trans_fun(upr_gxl)
+      #       )
+      #   }
       
-#       cupp<-(exp(cup)-1)*exp(mx)
-#       cloww<-(exp(clow)-1)*exp(mx)
-#       
-#       2) for sqrt (strange but correct)
-#   
-#       cupp<-cup*(mx+my)
-#   loww<-clow*(mx+my)
-#   
-#   3) for x^(1/3)
-# cupp<-cup*(mx^2+mx*my+my^2)
-# loww<-clow*(mx^2+mx*my+my^2)
-
       tbl_pairs_temp <<- tbl_pairs_
       return(tbl_pairs_)
     })
@@ -634,10 +622,9 @@ function(input, output, session) {
         tbl_pairs_to_print <- tbl_pairs() %>% select(name_pair,diff,pv,lwr,upr)
       else
       {
-        if (!input$back_transform)
-          tbl_pairs_to_print <- tbl_pairs() %>% select(name_pair,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl)
-        else
-          tbl_pairs_to_print <- tbl_pairs() %>% select(name_pair,diff_bt,pv,lwr_bt,upr_bt,pv_gxl,lwr_gxl_bt,upr_gxl_bt)
+        # if (!input$back_transform)
+        tbl_pairs_to_print <- tbl_pairs() %>% select(name_pair,diff,pv,lwr,upr,pv_gxl,lwr_gxl,upr_gxl)
+        # else tbl_pairs_to_print <- tbl_pairs() %>% select(name_pair,diff_bt,pv,lwr_bt,upr_bt,pv_gxl,lwr_gxl_bt,upr_gxl_bt)
       }
       
       datatable(
@@ -697,16 +684,21 @@ function(input, output, session) {
       req(tbl_pairs())
       plot_pcci(
         tbl_pairs = tbl_pairs()%>% select(-contains("bt")),
-        title = paste("Confidence Intervals of Means Differences ;",tbl_matched_model()$parameter_name),
+        title = paste("Confidence Intervals of Means Differences ;",input$measure_selected),
         ylab = 
-          if (tbl_matched_model()$transformation_expr != "x")
-            paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")\nafter",tbl_matched_model()$transformation_expr,"transformation")
-        else
-          paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")"))
-      
+          if (nrow(tbl_matched_model())!=0)
+          {
+            if (tbl_matched_model()$transformation_expr != "x")
+              paste("Group means of",input$measure_selected,"(",tbl_matched_model()$unit,")\nafter",tbl_matched_model()$transformation_expr,"transformation")
+            else
+              paste("Group means of",input$measure_selected,"(",tbl_matched_model()$unit,")")
+          } else
+            paste("Group means of",input$measure_selected),
+        xlab = "Differences of group means"
+      )
     }
   )
-
+  
   ## render boxplot : ----
   output$box_plot <- renderPlot(
     {
@@ -725,7 +717,7 @@ function(input, output, session) {
         else
         {
           transformation_expr <- tbl_matched_model()$transformation_expr
-          trans_fun <- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
+          trans_fun <- eval(parse(text=paste("function(x)",transformation_expr)))
           unit <- tbl_matched_model()$unit
         }
         ggplot(data = tbl_raw_data() %>% req() %>% 
@@ -745,22 +737,22 @@ function(input, output, session) {
       }
     })
     
-  ## render boxplot (back transformed): ----
-  # output$box_plot_bt <- renderPlot(
-  #   {
-  #     req(tbl_pairs_bt())
-  #     ggplot(data = 
-  #              tbl_raw_data() %>% req() %>% 
-  #              mutate(group_name = as.factor(V1), measure = V2)
-  #     ) + 
-  #       aes(x = group_name, y = measure) + 
-  #       geom_boxplot() + #width = bw
-  #       ylab(
-  #         tbl_matched_model()$unit
-  #       ) + 
-  #       ggtitle(paste("Groups boxplots of",tbl_matched_model()$parameter_name," before transformation")) +
-  #       theme_minimal()
-  #   })
+  ## render boxplot : ----
+  output$box_plot_bt <- renderPlot(
+    {
+      req(tbl_matched_model(), nrow(tbl_matched_model())>0, tbl_matched_model()$transformation_expr !="x")
+      ggplot(data =
+               tbl_raw_data() %>% req() %>%
+               mutate(group_name = as.factor(V1), measure = V2)
+      ) +
+        aes(x = group_name, y = measure) +
+        geom_boxplot() + #width = bw
+        ylab(
+          tbl_matched_model()$unit
+        ) +
+        ggtitle(paste("Groups boxplots of",input$measure_selected," before transformation")) +
+        theme_minimal()
+    })
 
   ## load example  ------------------------------------------------------
   
@@ -792,10 +784,10 @@ function(input, output, session) {
     {input$n_group_inputs},
     if(values$n_loads_completed < input$load_example_button)
     {
-      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "Arhgef4")
-      updateSelectizeInput(session = session, inputId = "grp2_name",selected = "C57BL/6J")
-      updateSelectizeInput(session = session, inputId = "grp3_name",selected = "Elk4")
-      updateSelectizeInput(session = session, inputId = "grp4_name",selected = "Tnfaip1")
+      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "Arhgef4", options = list(create = TRUE))
+      updateSelectizeInput(session = session, inputId = "grp2_name",selected = "C57BL/6J", options = list(create = TRUE))
+      updateSelectizeInput(session = session, inputId = "grp3_name",selected = "Elk4", options = list(create = TRUE))
+      updateSelectizeInput(session = session, inputId = "grp4_name",selected = "Tnfaip1", options = list(create = TRUE))
       updateNumericInput(session = session, inputId = "grp1_mean.t",value = 0.0106107)
       updateNumericInput(session = session, inputId = "grp2_mean.t",value = 0.0131590)
       updateNumericInput(session = session, inputId = "grp3_mean.t",value = 0.0118673)
@@ -814,7 +806,7 @@ function(input, output, session) {
     priority = -2,
     {input$grp4_n},
     {
-      req(input$grp4_n ==  11)
+      req(input$grp4_n >  1)
       if(values$n_loads_completed < input$load_example_button)
       {
         values$n_loads_completed <- input$load_example_button

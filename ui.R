@@ -240,8 +240,7 @@ shinyUI(
                     ":"),
                   tags$input(id="conf_level", type="number", class="form-control", value="0.95", min="0.001", max="0.5", step="0.01",
                              style = 'display:inline-block; width:70px; min-width:70px')
-                ),
-                checkboxInput("back_transform", "Transform the estimates in the table back to the original scale", FALSE)
+                ) #,checkboxInput("back_transform", "Transform the estimates in the table back to the original scale", FALSE)
               ),
               column(
                 6,
