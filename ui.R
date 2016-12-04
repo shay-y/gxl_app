@@ -11,7 +11,7 @@ shinyUI(
       title = NULL,
       useShinyjs(),
       tags$head(
-        #includeCSS("https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"),
+        # includeCSS("https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"),
         includeCSS("WWW/style.css"),
         includeScript("WWW/google-analytics.js"),
         includeScript("WWW/scroll.js")

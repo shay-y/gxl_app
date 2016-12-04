@@ -204,7 +204,7 @@ function(input, output, session) {
           ),
           li(
             if (tbl_matched_model()$transformation_expr != "x")
-              list(b("Transformation taken prior to analysis: "), tbl_matched_model()$transformation_symbol) #
+              list(b("Transformation taken prior to analysis: "), tbl_matched_model()$transformation_expr) #
             else
               b("No transformation is applied for this measure")
           )
@@ -503,11 +503,14 @@ function(input, output, session) {
         s2_ratio <- tbl_matched_model()$s2_ratio
         n_labs_s2gxl <- tbl_matched_model()$n_labs_s2gxl
         n_groups_s2gxl <- tbl_matched_model()$n_groups_s2gxl
+        back_trans_fun <- eval(parse(text=paste("function(y)", tbl_matched_model()$back_transform_expr )))
+        
       } else
       {
         s2_ratio      <- NA
         n_labs_s2gxl  <- NA
         n_groups_s2gxl<- NA
+        back_trans_fun <- "y"
       }
       
       alpha <- 1-input$conf_level
@@ -554,6 +557,7 @@ function(input, output, session) {
           pv_gxl  = 2*(1-pt(q = stat_gxl,df = df_gxl    )))
       
       if (input$mult_adjust == "Tukey HSD")
+        
         tbl_pairs_ <- tbl_pairs_ %>%  mutate(
           pv      = ptukey(q = sqrt(2) * stat    , nmeans = nmeans_tukey, df = df_pooled, lower.tail = F),
           pv_gxl  = ptukey(q = sqrt(2) * stat_gxl, nmeans = nmeans_tukey, df = df_gxl   , lower.tail = F),
@@ -565,6 +569,7 @@ function(input, output, session) {
           upr_gxl = diff + qtukey(p = 1-alpha, nmeans = nmeans_tukey, df = df_gxl)*se_gxl / sqrt(2))
       
       if (input$mult_adjust == "BH selected")
+        
         tbl_pairs_ <- tbl_pairs_ %>%  mutate(
           pv     = p.adjust(pv    ,"BH"),
           pv_gxl = p.adjust(pv_gxl,"BH"),
@@ -579,6 +584,7 @@ function(input, output, session) {
           upr_gxl = diff + qt(1-alpha/2*Q_gxl ,df = df_gxl)*se_gxl %>% as.numeric())
       
       if (input$mult_adjust == "none")
+        
         tbl_pairs_ <- tbl_pairs_ %>% mutate(
           lwr = diff - qt(1-alpha/2 ,df = df_pooled)*se %>% as.numeric(),
           upr = diff + qt(1-alpha/2 ,df = df_pooled)*se %>% as.numeric(),
@@ -586,22 +592,33 @@ function(input, output, session) {
           lwr_gxl = diff - qt(1-alpha/2 ,df = df_gxl)*se_gxl %>% as.numeric(),
           upr_gxl = diff + qt(1-alpha/2 ,df = df_gxl)*se_gxl %>% as.numeric())
       
-      if (tbl_matched_model()$transformation_expr != "x")
-      {
-        back_trans_fun <- eval(parse(text=paste("function(y)", tbl_matched_model()$back_transform_expr )))
-        tbl_pairs_ <- tbl_pairs_ %>% 
-          mutate(
-            diff_bt  = back_trans_fun(diff),
-            lwr_bt = back_trans_fun(lwr),
-            upr_bt = back_trans_fun(upr),
-            lwr_gxl_bt = back_trans_fun(lwr_gxl),
-            upr_gxl_bt = back_trans_fun(upr_gxl)
-          )
-      }
-      
       if (nrow(tbl_matched_model())==0)
         tbl_pairs_ <- tbl_pairs_ %>% select(-contains("gxl"))
+      else
+        if (tbl_matched_model()$transformation_expr != "x")
+        {
+          tbl_pairs_ <- tbl_pairs_ %>% 
+            mutate(
+              diff_bt  = back_trans_fun(diff),
+              lwr_bt = back_trans_fun(lwr),
+              upr_bt = back_trans_fun(upr),
+              lwr_gxl_bt = back_trans_fun(lwr_gxl),
+              upr_gxl_bt = back_trans_fun(upr_gxl)
+            )
+        }
       
+#       cupp<-(exp(cup)-1)*exp(mx)
+#       cloww<-(exp(clow)-1)*exp(mx)
+#       
+#       2) for sqrt (strange but correct)
+#   
+#       cupp<-cup*(mx+my)
+#   loww<-clow*(mx+my)
+#   
+#   3) for x^(1/3)
+# cupp<-cup*(mx^2+mx*my+my^2)
+# loww<-clow*(mx^2+mx*my+my^2)
+
       tbl_pairs_temp <<- tbl_pairs_
       return(tbl_pairs_)
     })
@@ -657,7 +674,7 @@ function(input, output, session) {
             )
           ),
         caption = "Groups Pairwise Comparisons"
-          # if(isolate(expr = tbl_matched_model()$transformation_symbol) == "none")
+          # if(isolate(expr = tbl_matched_model()$transformation_expr) == "x")
           # {
           #   tags$caption(
           #     'ifferences', 
@@ -677,11 +694,11 @@ function(input, output, session) {
     {
       req(tbl_pairs())
       plot_pcci(
-        tbl_pairs = tbl_pairs(),
+        tbl_pairs = tbl_pairs()%>% select(-contains("bt")),
         title = paste("Confidence Intervals of Means Differences ;",tbl_matched_model()$parameter_name),
         ylab = 
-          if (tbl_matched_model()$transformation_symbol != "none")
-            paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")\nafter",tbl_matched_model()$transformation_symbol,"transformation")
+          if (tbl_matched_model()$transformation_expr != "x")
+            paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")\nafter",tbl_matched_model()$transformation_expr,"transformation")
         else
           paste(tbl_matched_model()$parameter_name,"(",tbl_matched_model()$unit,")"))
       
@@ -699,13 +716,13 @@ function(input, output, session) {
       {
         if (nrow(tbl_matched_model())==0)
         {
-          transformation_symbol <- "none"
+          transformation_expr <- "x"
           trans_fun <- eval(parse(text=paste("function(x) x")))
           unit <- ""
         }
         else
         {
-          transformation_symbol <- tbl_matched_model()$transformation_symbol
+          transformation_expr <- tbl_matched_model()$transformation_expr
           trans_fun <- eval(parse(text=paste("function(x)",tbl_matched_model()$transformation_expr)))
           unit <- tbl_matched_model()$unit
         }
@@ -715,8 +732,8 @@ function(input, output, session) {
           aes(x = group_name, y = measure) + 
           geom_boxplot() + #width = bw
           ylab(
-            if (transformation_symbol != "none")
-              paste(input$measure_selected,"(",unit,") after",transformation_symbol,"transformation")
+            if (transformation_expr != "x")
+              paste(input$measure_selected,"(",unit,") after",transformation_expr,"transformation")
             else
               paste(input$measure_selected,"(",unit,")")
           ) + 
@@ -773,7 +790,7 @@ function(input, output, session) {
     {input$n_group_inputs},
     if(values$n_loads_completed < input$load_example_button)
     {
-      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "C57BL/6")
+      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "C57BL/6J")
       updateSelectizeInput(session = session, inputId = "grp2_name",selected = "Slc38a10")
       updateSelectizeInput(session = session, inputId = "grp3_name",selected = "Tnfaip1")
       updateSelectizeInput(session = session, inputId = "grp4_name",selected = "Ttll4")
@@ -811,7 +828,7 @@ function(input, output, session) {
     }
   )
   
-  ## * resets : step 1 inputs   : ----
+  # * resets : step 1 inputs   : ----
   
   observeEvent(
     priority = -3,
@@ -827,7 +844,7 @@ function(input, output, session) {
       reset("procedure_name")
     })
   
-  ## * resets : step 2 inputs   : ----
+  # * resets : step 2 inputs   : ----
   
   observeEvent(
     priority = 3,
@@ -870,13 +887,13 @@ function(input, output, session) {
   #   isTruthy(file_summaries())
   #   browser()
   # })
-  
-  observe({
-    condition <- !isTruthy(tbl_pairs())
-    toggleClass(id = "pairs_table", condition, class = "nd")
-    toggleClass(id = "pcci_plot", condition, class = "nd")
-    toggleClass(id = "box_plot", condition, class = "nd")
-  })
+
+  # observe({
+  #   condition <- !isTruthy(tbl_pairs())
+  #   toggleClass(id = "pairs_table", condition, class = "nd")
+  #   toggleClass(id = "pcci_plot", condition, class = "nd")
+  #   toggleClass(id = "box_plot", condition, class = "nd")
+  # })
   
   # observe({
   #   toggle(
@@ -895,9 +912,9 @@ function(input, output, session) {
   
   
   # observe(print(req(input$input_method)))
-  observe(print(values$file))
-  # observe(print(req(file_summaries())))
-  # observe(print(req(grps_summaries())))
+  # observe(print(values$file))
+  observe(print(req(file_summaries())))
+  observe(print(req(grps_summaries())))
   observe(print(req(tbl_summaries())))
   observe(print(req(tbl_pairs())))
 }
