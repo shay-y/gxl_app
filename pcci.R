@@ -1,5 +1,3 @@
-plot_pcci(tbl_pairs = tbl_pairs_temp)
-
 plot_pcci <- function(tbl_pairs, title = "Confidence Intervals of Group Means", ylab = "Group means", xlab = "Group means Differences")
 {
   cols = rev(c("#7570B3","#D95F02"))

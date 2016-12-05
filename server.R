@@ -17,7 +17,8 @@ function(input, output, session) {
   ## initialize reactive values: ----
   values <- reactiveValues(
     n_loads_completed = 0,
-    file = NULL
+    file = NULL,
+    display_output = F
     )
 
   ## * metadata input: create metadata and measure inputs table for the selected procedure: ----
@@ -457,14 +458,16 @@ function(input, output, session) {
   
   ## * on data submit, push data to server: ----
   
-  observeEvent(
+  data_submited <- eventReactive(
     eventExpr = input$submit_data,
-    handlerExpr = 
+    valueExpr =  
     {
       validate(
+        need(tbl_summaries(), 'Complete the data input'),
         need(input$agree_contribute, 'Check agreement checkbox'),
         need(input$email   , 'Enter email address'),
-        need(input$lab_name, 'Enter lab name')
+        need(!isTruthy(input$email) | str_detect(input$email,pattern = "([\\w\\.]+)@([\\w\\.]+)\\.(\\w+)"), 'Enter a valid email address'),
+        need(input$lab, 'Enter lab name')
       )
       
       input_copy <- reactiveValuesToList(input)
@@ -483,10 +486,9 @@ function(input, output, session) {
       file_name_rds <- paste0("userdata_",input$email,"_",format(sys_time,'_%Y_%m_%d__%H_%M_%S__%Z.rds'))
       
       saveRDS(object = user_data  ,file = file_name_rds)
-      drop_upload(file = file_name_rds,dest = drop_dir,overwrite = F,dtoken = token)
+      uploaded <- drop_upload(file = file_name_rds,dest = drop_dir,overwrite = F,dtoken = token) %>% try()
       unlink(file_name_rds)
-      file.remove(file_name_rds)
-      
+
       file_name_txt <- paste0("userdata_",input$email,"_",format(sys_time,'_%Y_%m_%d__%H_%M_%S__%Z.txt'))
       capture.output({
         print(paste0("####--",sys_time,"-",input$email,"----"))
@@ -495,8 +497,19 @@ function(input, output, session) {
       },file = file_name_txt)
       drop_upload(file = file_name_txt,dest = drop_dir,overwrite = F,dtoken = token)
       unlink(file_name_txt)
-      file.remove(file_name_txt)
+      
+      validate(
+        need(is.null(uploaded), 'Data upload failed. Please try again or contact authors.'),
+        need(!is.null(uploaded), 'Data uploaded successfully.') # to get the same message style..
+      )
     })
+  
+  output$info_submit_feedback <- renderUI(
+    {
+      data_submited()
+    }
+  )
+  
   
   
   ## * calculate pairs with estimate, se, statistic ,p-value, conf.lower, conf.higher [unadjusted, adjusted GxL] ----
@@ -614,7 +627,21 @@ function(input, output, session) {
       #   }
       
       tbl_pairs_temp <<- tbl_pairs_
-      return(tbl_pairs_)
+      
+      
+      if (isTruthy(tbl_pairs_) & nrow(tbl_pairs_)>0)
+      {
+        values$display_output <- T
+        return(tbl_pairs_)
+      }
+      else
+      {
+        values$display_output <- F
+        return(NULL)
+      }
+      
+      
+      
     })
 
   ## render pairs table: ----
@@ -632,7 +659,7 @@ function(input, output, session) {
       }
       
       datatable(
-        class = "compact", # BS: table table-striped table-bordered table-condensed table-hover
+        class = "compact hover", # BS: table table-striped table-bordered table-condensed table-hover
         options = 
           list(
             autoWidth = F,
@@ -730,12 +757,16 @@ function(input, output, session) {
         aes(x = group_name, y = measure) + 
         geom_boxplot() + #width = bw
         ylab(
-          if (transformation_expr != "x")
-            paste(input$measure_selected,"(",unit,") after",transformation_expr,"transformation")
-          else
-            paste(input$measure_selected,"(",unit,")")
-        ) + 
-        xlab("")+
+          if (nrow(tbl_matched_model())!=0)
+          {
+            if (tbl_matched_model()$transformation_expr != "x")
+              paste(input$measure_selected,"(",unit,") after",transformation_expr,"transformation")
+            else
+              paste(input$measure_selected,"(",unit,")")
+          } else
+            input$measure_selected
+          ) + 
+        xlab("Group") +
         ggtitle(paste("Groups boxplots of",input$measure_selected)) +
         theme_minimal()
     })
@@ -810,9 +841,9 @@ function(input, output, session) {
   
   observeEvent(
     priority = -2,
-    {input$grp4_n},
+    {input$grp1_n},
     {
-      req(input$grp4_n >  1)
+      req(input$grp1_n)
       if(values$n_loads_completed < input$load_example_button)
       {
         values$n_loads_completed <- input$load_example_button
@@ -879,22 +910,25 @@ function(input, output, session) {
   
   # * observers: display ---------------------------------------------------------------  
   
-  # observe({
-  #   toggle(
-  #     selector = "file_summaries_table_wrap",
-  #     anim = F,
-  #     condition =  isTruthy(file_summaries()))
-  #   isTruthy(file_summaries())
-  #   browser()
-  # })
-
-  # observe({
-  #   condition <- !isTruthy(tbl_pairs())
-  #   toggleClass(id = "pairs_table", condition, class = "nd")
-  #   toggleClass(id = "pcci_plot", condition, class = "nd")
-  #   toggleClass(id = "box_plot", condition, class = "nd")
-  # })
-  
+  # observe(
+  #   priority = -4,
+  #   {
+  #     cond <- isTruthy(file_summaries())
+  #     toggle(id = "file_summaries_table", cond)
+  #   }
+  # )
+  # 
+  # observe(
+  #   priority = -5,
+  #   {
+  #     cond <- values$display_output
+  #     toggle(id = "pairs_table", cond)
+  #     toggle(id = "pcci_plot"  , cond)
+  #     toggle(id = "box_plot"   , cond)
+  #     toggle(id = "box_plot_bt", cond)
+  #   }
+  # )
+  # 
   # observe({
   #   toggle(
   #     id = "",

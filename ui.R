@@ -13,7 +13,7 @@ shinyUI(
       tags$head(
         # includeCSS("https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"),
         includeCSS("WWW/style.css"),
-        includeScript("WWW/google-analytics.js"),
+        includeScript("google-analytics.js"),
         includeScript("WWW/scroll.js")
       ),
       # actionButton("console","server console"),
@@ -199,6 +199,7 @@ shinyUI(
                   )
                 ),
                 uiOutput("groups_info"),
+                uiOutput("info_submit_feedback"),
                 div(
                   id = "wrap_submit_data",
                   actionButton(
@@ -273,8 +274,8 @@ shinyUI(
               )
             ),
             uiOutput("measure_selected_details"),
-            dataTableOutput("file_summaries_table"), # %>% div(id = "file_summaries_table_wrap") %>% hidden(),
-            dataTableOutput("pairs_table"),    #%>% hidden(),
+            dataTableOutput("file_summaries_table"),
+            dataTableOutput("pairs_table"),
             hr(),
             tabsetPanel(
               id = "plots_tabset",

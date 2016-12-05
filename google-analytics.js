@@ -6,3 +6,14 @@ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 ga('create', 'UA-72801155-2', 'auto');
 ga('send', 'pageview');
 
+$(document).on('change', 'input', function(e) {
+    ga('send', 'event', 'input', 'input change', $(e.currentTarget).val());
+  });
+  
+$(document).on('click', 'button', function() {
+  ga('send', 'event', 'button', 'button click');
+});
+
+$(document).on('click', 'a', function() {
+  ga('send', 'event', 'button', 'link click');
+});

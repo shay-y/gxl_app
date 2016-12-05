@@ -1,141 +1,20 @@
 /* General font styling */
-@import 'https://fonts.googleapis.com/css?family=BioRhyme|Bitter|Noto+Sans'; /*Noto+Serif|Open+Sans*/
+@import 'https://fonts.googleapis.com/css?family=Source+Sans+Pro'; /*Noto+Serif|Open+Sans|Bitter|Noto+Sans*/
 
 @media (min-width: 1400px) {
-  
-    .container{
+  .container{
             width: 1380px;
     }
 }
 
-/* The default styles (background, fontface, font color) are part of the light theme and apply in the courses pages */
-/*
 body {
-	font-size: 15px;
-	font-family: 'Bitter', serif;
-	background: url("img/billie_holiday.png") repeat;
-  background: url("img/farmer.png") repeat;
-	background: url("img/old_mathematics.png") repeat;
-	background: url("img/ricepaper2.png") repeat;
-	background: url("img/absurdidad.png") repeat;
-	background: url("img/brillant.png") repeat; 
-
-	color: #020201;
-}*/
-
-.well {
-    margin-bottom: 20px;
-    background-color: #f8f8f8;
-    border: 1px solid #e7e7e7;
-    border-radius: 1px;
-    /*-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.05);*/
-}
-
-.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover {
-    background-color: #f8f8f8;
-}
-
-.table-gxl{
- /* background-color:#FFF;*/
-}
-
-.table-gxl .selectize-input, .table-gxl input{
-   min-height: 26px;
-   height: 26px;
-   min-width: 100px;
-   /*width: 100px;*/
-   padding: 1px 16px 1px 6px;
-   vertical-align: middle;
- }
-
-.table-gxl .selectize-control.single .selectize-input:after {
-    right: 10px;
-}
-
-#table-groups input{
-  height: 25px;
-  float: right;
-
-  /*width:65%;*/
-}
-
-.table-gxl .form-control{
-    margin-bottom: 0px;
-}
-.table-gxl .form-group {
-    margin-bottom: 0px;
-}
-
-.table-gxl td, .table-gxl th{
-  vertical-align: middle !important;
-  padding:4px !important;
-} 
-
-.nd{
-  display:none !important;
-}
-
-.selectize-dropdown {
-    min-width: 400px !important;
-}
-
-.tabs-above .tab-content {
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
-    padding: 10px;
-    background-color:#FFF;
-}
-
-.nav-tabs {
-    margin-bottom: 0;
-}
-
-.popover{
-    width:450px;
-    max-width: none;
-}
-
-.popover-content ul{
-    list-style-type: disc;
-    padding-left: 17px;
-}
-
-#table-groups-info  .selectize-input{
-  width: 80%;
-}
-
-#user_details .form-inline input.form-control {
-      max-width: 180px;
-}
-
-.shiny-plot-output{
-    border: 1px solid #ddd;
-}
-
-.dataTable td, .dataTable th{
-  border: 1px solid #ddd;
-  background-color: #fff;
-}
-
-
-body {
-  /*background-image: url('tiny_grid.png');*/
+	font-size: 14px;
+	/*font-family: 'Bitter', serif;*/
+	/*background-image: url('tiny_grid.png');*/
   /*background-repeat: repeat;*/
-  /*font-size: 100%;*/
   /*font-family: "Source Sans Pro";*/
-  /*font-size: 15px;*/
 }
 
-/*.navbar-nav {
-  float:left;
-}*/
-
-/*nav .container{
-  margin-left:0;
-  margin-right:0;
-}*/
 
 #title {
   text-shadow: 4px 4px 3px rgba(0,0,0,0.3);
@@ -153,6 +32,15 @@ body {
   font-size:17px
 }
 
+.well {
+    margin-bottom: 20px;
+    background-color: #f8f8f8;
+    border: 1px solid #e7e7e7;
+    border-radius: 1px;
+    /*-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.05);*/
+}
+
 h1, h3,  h6, .h1, .h3, .h6 ,body {
   /*font-family: "Source Sans Pro";*/
 }  
@@ -161,7 +49,6 @@ h5 {
   font-size: 15px;
   line-height: 1.5em;
 }
-
 
 .MathJax {
 font-size: 1.1em !important;
@@ -204,6 +91,20 @@ font-size: 1.1em !important;
   
 }
 
+.popover{
+    width:450px;
+    max-width: none;
+}
+
+.popover-content ul{
+    list-style-type: disc;
+    padding-left: 17px;
+}
+
+#user_details .form-inline input.form-control {
+      max-width: 180px;
+}
+
 .progress {
     height: 20px;
     margin-bottom: 4px;
@@ -218,6 +119,104 @@ font-size: 1.1em !important;
   box-shadow: 1px 1px 1px #BBB;
   float:right;
 }
+
+/* input tables---------------------------------------------------------------------------*/
+
+.table-gxl{
+ /* background-color:#FFF;*/
+}
+
+.table-gxl .selectize-input, .table-gxl input{
+   min-height: 26px;
+   height: 26px;
+   min-width: 100px;
+   /*width: 100px;*/
+   padding: 1px 16px 1px 6px;
+   vertical-align: middle;
+ }
+
+.table-gxl .selectize-control.single .selectize-input:after {
+    right: 10px;
+}
+
+.table-gxl .form-control, .table-gxl .form-group{
+    margin-bottom: 0px;
+}
+
+.table-gxl td, .table-gxl th{
+  vertical-align: middle !important;
+  padding:4px !important;
+} 
+
+#table-groups input{
+  height: 25px;
+  float: right;
+ /*width:65%;*/
+}
+
+#table-groups-info  .selectize-input{
+  width: 80%;
+}
+
+/* general input---------------------------------------------------------------------------*/
+
+.selectize-dropdown {
+    min-width: 400px !important;
+}
+
+/* tabs---------------------------------------------------------------------------*/
+
+.tabs-above .tab-content {
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    background-color:#FFF;
+}
+
+.nav-tabs {
+    margin-bottom: 0;
+}
+
+/* output ---------------------------------------------------------------------------*/
+
+/*
+.shiny-plot-output{
+    border: 1px solid #ddd;
+}*/
+
+#pairs_table td,
+#pairs_table th,
+#file_summaries_table td,
+#file_summaries_table th{
+  border-right: 1px solid #ddd;
+  background-color: #fff;
+  font-size:13px;
+}
+
+table.dataTable {
+  border-collapse: collapse !important;
+  border: 1px solid #ccc;
+}
+.dataTable tbody {
+  border-bottom: 1px solid #ccc;
+}
+
+
+/* navbar---------------------------------------------------------------------------*/
+
+.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover {
+    background-color: #f8f8f8;
+}
+
+/*.navbar-nav {
+  float:left;
+}*/
+
+/*nav .container{
+  margin-left:0;
+  margin-right:0;
+}*/
 
 .nav > li > a{
   text-shadow: 1px 0 1px rgba(0, 0, 0, 0.2);
@@ -334,5 +333,3 @@ font-size: 1.1em !important;
 .navbar-inner .navbar-link:hover {
   color: #424242;
 }
-
-

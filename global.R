@@ -9,11 +9,11 @@ library(DT,warn.conflicts = F)
 library(rdrop2)
 
 options(
-  shiny.testmode = TRUE,
-  shiny.reactlog=TRUE
-  # shiny.autoreload = TRUE,
-  # shiny.autoreload.pattern = glob2rx("ui.R"),
-  # shiny.autoreload.interval = 2000,
+  #shiny.testmode = TRUE,
+  # shiny.reactlog=TRUE,
+  #shiny.autoreload = TRUE,
+  #shiny.autoreload.pattern = glob2rx(c("ui.R","server.R","style.css","WWW/style.css")),
+  #shiny.autoreload.interval = 2000
   # shiny.maxRequestSize = 10e6,
   # shiny.minified = FALSE,
   # shiny.error = browser,
