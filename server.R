@@ -461,7 +461,11 @@ function(input, output, session) {
     eventExpr = input$submit_data,
     handlerExpr = 
     {
-      req(input$agree_contribute)
+      validate(
+        need(input$agree_contribute, 'Check agreement checkbox'),
+        need(input$email   , 'Enter email address'),
+        need(input$lab_name, 'Enter lab name')
+      )
       
       input_copy <- reactiveValuesToList(input)
       if(input$input_method=="file")
@@ -704,43 +708,45 @@ function(input, output, session) {
     {
       req(tbl_pairs())
       
-      if (input$input_method!="file")
-        "Boxplots avaliable on file input only"
+      validate(
+        need(input$input_method=="file", 'Boxplots avaliable on file input only')
+      )
+      
+      if (nrow(tbl_matched_model())==0)
+      {
+        transformation_expr <- "x"
+        trans_fun <- eval(parse(text=paste("function(x) x")))
+        unit <- ""
+      }
       else
       {
-        if (nrow(tbl_matched_model())==0)
-        {
-          transformation_expr <- "x"
-          trans_fun <- eval(parse(text=paste("function(x) x")))
-          unit <- ""
-        }
-        else
-        {
-          transformation_expr <- tbl_matched_model()$transformation_expr
-          trans_fun <- eval(parse(text=paste("function(x)",transformation_expr)))
-          unit <- tbl_matched_model()$unit
-        }
-        ggplot(data = tbl_raw_data() %>% req() %>% 
-                 mutate(group_name = as.factor(V1), measure = trans_fun(V2))
-        ) + 
-          aes(x = group_name, y = measure) + 
-          geom_boxplot() + #width = bw
-          ylab(
-            if (transformation_expr != "x")
-              paste(input$measure_selected,"(",unit,") after",transformation_expr,"transformation")
-            else
-              paste(input$measure_selected,"(",unit,")")
-          ) + 
-          xlab("")+
-          ggtitle(paste("Groups boxplots of",input$measure_selected)) +
-          theme_minimal()
+        transformation_expr <- tbl_matched_model()$transformation_expr
+        trans_fun <- eval(parse(text=paste("function(x)",transformation_expr)))
+        unit <- tbl_matched_model()$unit
       }
+      ggplot(data = tbl_raw_data() %>% req() %>% 
+               mutate(group_name = as.factor(V1), measure = trans_fun(V2))
+      ) + 
+        aes(x = group_name, y = measure) + 
+        geom_boxplot() + #width = bw
+        ylab(
+          if (transformation_expr != "x")
+            paste(input$measure_selected,"(",unit,") after",transformation_expr,"transformation")
+          else
+            paste(input$measure_selected,"(",unit,")")
+        ) + 
+        xlab("")+
+        ggtitle(paste("Groups boxplots of",input$measure_selected)) +
+        theme_minimal()
     })
     
   ## render boxplot : ----
   output$box_plot_bt <- renderPlot(
     {
       req(tbl_matched_model(), nrow(tbl_matched_model())>0, tbl_matched_model()$transformation_expr !="x")
+      validate(
+        need(input$input_method=="file", '')
+      )
       ggplot(data =
                tbl_raw_data() %>% req() %>%
                mutate(group_name = as.factor(V1), measure = V2)
