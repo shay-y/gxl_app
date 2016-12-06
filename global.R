@@ -1,4 +1,4 @@
-# install.packages(c("devtools","tidyverse","shiny","shinyjs","shinyBS","DT"))
+# install.packages(c("tidyverse","shiny","shinyjs","shinyBS","DT","rdrop2"))
 
 library(tidyverse,warn.conflicts = F)
 library(stringr)
@@ -27,9 +27,12 @@ options(
 
 source("pcci.R")
 
-load("Startup_objects.RData")
-
-tbl_example_raw_data <- read_csv("data/tbl_example.csv", col_names = F)
+# load("Startup_objects.RData")
+tbl_metadata   <- read_csv("data/tbl_metadata.csv"  )
+tbl_models     <- read_csv("data/tbl_models.csv"    )
+tbl_procedures <- read_csv("data/tbl_procedures.csv")
+tbl_example_raw_data <- read_csv("data/tbl_example.csv"   )
+example_group_names_vec <- readRDS("data/example_group_names_vec.rds")
 procedure_name_list <-  tbl_procedures %>% .$procedure_name %>% as.character() %>% as.list() %>% {setNames(.,.)}
 group_names_list <- example_group_names_vec %>%
   {setNames(.,.)} %>% 
