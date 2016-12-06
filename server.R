@@ -871,7 +871,7 @@ function(input, output, session) {
       reset(id = "n_group_inputs")
       updateTabsetPanel(session = session, inputId = "input_method",selected = "file")
       values$file <- NULL
-      reset("measure_selected")
+      updateSelectizeInput(session = session, inputId = "measure_selected",selected = "")
       reset("procedure_name")
     })
   
