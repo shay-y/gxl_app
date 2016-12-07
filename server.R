@@ -126,7 +126,7 @@ function(input, output, session) {
                 label = NULL,
                 min = 0,
                 max = 60,
-                value = 5
+                value = 20
               )
             ),
             tags$td(
@@ -149,7 +149,7 @@ function(input, output, session) {
   
   ##  * metadata input: if measure has duration (it is series) then add input for the duration:----
   observe({
-    toggle(id = "duration_line",anim = F, condition = !is.null(tbl_matched_model()) & nrow(tbl_matched_model())>0 & all( !is.na(tbl_matched_model()$duration) ))
+    toggle(id = "duration_line",anim = F, condition = input$measure_selected %in% c("Distance travelled","Number of rears")) 
   })
   
   ## filter the models table to get only rows that match the user input (sex, procedure, measure) and check refinment conditions:----
@@ -163,28 +163,27 @@ function(input, output, session) {
                sex            == input$Sex) %>% 
         filter(metadata_rules %>% parse(text = .) %>% eval())
       
-      ## no model found
-      # if(nrow(tbl_matched_models)==0) {
-      #   tbl_matched_model_ %>% add_row() ...
-      #   }
-      
-      ## if duration related meassure, estimate gxl ratio:
-      if ( nrow(tbl_matched_models)>0 & all( !is.na(tbl_matched_models$duration) ) )
+      if (nrow(tbl_matched_models)>0)
       {
-        x_pred <- input$duration
-        x <- tbl_matched_models$duration %>% as.numeric()
-        y <- tbl_matched_models$s2_ratio  
-        y_pred <- approxfun(x,y,rule = 2)(x_pred)
-        
-        tbl_matched_model_ <- tbl_matched_models %>% 
-          mutate(duration = x_pred, s2_ratio =  y_pred) %>% 
-          select(-s2_interaction, -s2_lab, -s2_error) %>% 
-          distinct()
+        ## if duration related meassure, estimate gxl ratio:
+        if ( all(!is.na(tbl_matched_models$duration)) )
+        {
+          x_pred <- input$duration
+          x <- tbl_matched_models$duration %>% as.numeric()
+          y <- tbl_matched_models$s2_ratio  
+          y_pred <- approxfun(x,y,rule = 2)(x_pred)
+          
+          tbl_matched_model_ <- tbl_matched_models %>%
+            mutate(duration = x_pred, s2_ratio =  y_pred) %>% 
+            select(-s2_interaction, -s2_lab, -s2_error,-duration) %>% 
+            distinct()
+          
+        }
+        else
+          tbl_matched_model_ <- tbl_matched_models
       }
-      else
-        tbl_matched_model_ <- tbl_matched_models
       
-      # debug
+      ## exeption
       if(nrow(tbl_matched_model_)>1) {cat("Too many matchs.")}
 
       return(tbl_matched_model_)
@@ -736,7 +735,7 @@ function(input, output, session) {
       req(tbl_pairs())
       
       validate(
-        need(input$input_method=="file", 'Boxplots avaliable on file input only')
+        need(input$input_method=="file", 'Box plots are available only when entire dataset is loaded (via file input).')
       )
       
       if (nrow(tbl_matched_model())==0)
