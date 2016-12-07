@@ -27,7 +27,6 @@ options(
 
 source("pcci.R")
 
-# load("Startup_objects.RData")
 tbl_metadata   <- read_csv("data/tbl_metadata.csv"  )
 tbl_models     <- read_csv("data/tbl_models.csv"    )
 tbl_procedures <- read_csv("data/tbl_procedures.csv")
