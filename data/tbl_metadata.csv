@@ -5,8 +5,8 @@ IMPC_ACS_003,IMPC_ACS_016_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Ba
 IMPC_ACS_003,IMPC_ACS_027_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Equipment manufacturer,-,TEXT,"Med Associates Inc., VT, USA","c(""Med Associates Inc., VT, USA"", ""San Diego Instruments"", ""O'hara Co. Ltd."")",NA,NA,NA,NA,NA
 IMPC_ACS_003,IMPC_ACS_028_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Equipment model,-,TEXT,Med Associates Acoustic Startle Model - Startle Cubicle (ENV 022S),"c(""Acoustic startle chambers MED-ASR-PRO1"", ""SR-LAB Startle Response System"", ""SR-4020"", ""Med Associates Acoustic Startle Model - Startle Cubicle (ENV 022S)"")",NA,NA,NA,NA,NA
 IMPC_ACS_003,IMPC_ACS_023_001,Acoustic Startle and Pre-pulse Inhibition (PPI),In-chamber adapt time,s,INT,300,NA,0,Inf,NA,0.0,600
-IMPC_ACS_003,IMPC_ACS_013_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Inter PP-S stimulus interval,ms,INT,50,NA,0,Inf,NA,10.0,800
 IMPC_ACS_003,IMPC_ACS_021_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Inter-trial interval,s,TEXT,random 20-30,"c(""random 20-30"", ""random 10-20"", ""50"", ""25"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_013_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Inter PP-S stimulus interval,ms,INT,50,NA,0,Inf,NA,10.0,800
 IMPC_ACS_003,IMPC_ACS_030_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Mouse chamber dimension,cm,TEXT,4 x 9,"c(""3 x 3.5"", ""4 x 9"", ""12 x 3.8"", ""7.5 x 3.0"")",NA,NA,NA,NA,NA
 IMPC_ACS_003,IMPC_ACS_022_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Number of trials,-,INT,90,NA,3,300.0,NA,3.0,300
 IMPC_ACS_003,IMPC_ACS_017_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Pre-pulse stimulus 1,dB,INT,55,NA,0,130.0,NA,40.0,120
@@ -15,11 +15,17 @@ IMPC_ACS_003,IMPC_ACS_019_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Pr
 IMPC_ACS_003,IMPC_ACS_020_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Pre-pulse stimulus 4,dB,INT,75,NA,0,130.0,NA,40.0,120
 IMPC_ACS_003,INT_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
 IMPC_ACS_003,IMPC_ACS_029_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Software version,-,TEXT,Med Associates Startle Reflex Vers. 6.00,"c(""Med Associates Startle Reflex Vers. 6.00"", ""SR LAB software"", ""Animal Startle SR-9020"", ""Med Associates Startle Reflex Vers. 5.94"")",NA,NA,NA,NA,NA
+IMPC_ACS_003,IMPC_ACS_032_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sound-proof box dimension,cm,TEXT,50.8 x 33 x 30.5cm,"c(""38.1 x 35.6 x 45.7"", ""33 x 43 x 33"", ""28.5 x 28.5 x 30"", ""50.8 x 33 x 30.5cm"")",NA,NA,NA,NA,NA
 IMPC_ACS_003,IMPC_ACS_031_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sound generator manufacturer,-,TEXT,"Med Associates Inc., VT, USA","c(""Med Associates Inc., VT, USA"", ""San Diego Instruments"", ""O'hara Co. Ltd."")",NA,NA,NA,NA,NA
 IMPC_ACS_003,IMPC_ACS_039_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sound generator model,-,TEXT,PHM 255A,"c(""PHM 255A"", ""SR-LAB Startle Response System"", ""SR1040"", ""SR-LAB CONTROL SRC000444"", ""SR-LAB CONTROL SRC000495"")",NA,NA,NA,NA,NA
-IMPC_ACS_003,IMPC_ACS_032_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Sound-proof box dimension,cm,TEXT,50.8 x 33 x 30.5cm,"c(""38.1 x 35.6 x 45.7"", ""33 x 43 x 33"", ""28.5 x 28.5 x 30"", ""50.8 x 33 x 30.5cm"")",NA,NA,NA,NA,NA
 IMPC_ACS_003,IMPC_ACS_015_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Startle stimulus,dB,INT,110,NA,0,130.0,NA,50.0,120
 IMPC_ACS_003,IMPC_ACS_024_001,Acoustic Startle and Pre-pulse Inhibition (PPI),Stimulus order,-,TEXT,Pseudo-random,"c(""Pseudo-random"", ""Random"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,INT_002,Body Composition (DEXA lean/fat),Age at testing,weeks,INT,14,NA,1,120.0,NA,9.0,60
+IMPC_DXA_001,IMPC_DXA_015_001,Body Composition (DEXA lean/fat),Anesthesia,-,TEXT,Isoflurane,"c(""Avertin"", ""Ketamine+Xylazine"", ""Isoflurane"", ""Euthatal"", ""Tribromoethanol"", ""Domitor+Ketamin"", ""Ketamine+Xylazine+Antisedan"", ""Pentobarb"", ""No anesthesia"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,IMPC_DXA_012_001,Body Composition (DEXA lean/fat),Equipment manufacturer,-,TEXT,GE Medical Systems,"c(""GE Medical Systems"", ""Norland Stratec"", ""Bruker"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,IMPC_DXA_013_001,Body Composition (DEXA lean/fat),Equipment model,-,TEXT,Lunar Piximus II,"c(""Lunar Piximus II"", ""Sabre"", ""Minispec LF50"", ""Minispec MQ 10"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,IMPC_DXA_014_001,Body Composition (DEXA lean/fat),Mouse Status,-,TEXT,Anesthetized,"c(""Anesthetized"", ""Dead"", ""Awake"")",NA,NA,NA,NA,NA
+IMPC_DXA_001,INT_001,Body Composition (DEXA lean/fat),Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
 IMPC_CBC_003,INT_002,Clinical Blood Chemistry,Age at testing,weeks,INT,16,NA,1,120.0,NA,9.0,60
 IMPC_CBC_003,IMPC_CBC_036_001,Clinical Blood Chemistry,Anesthesia used for blood collection,-,TEXT,Gas anaesthesia with Isofluorane,"c(""Gas anaesthesia with Isofluorane"", ""Injection narcosis with Ketamine (100mg/kg)/Xylazine (10mg/kg)"", ""Injection narcosis with Ketamine (100mg/kg)/ Xylazine (10mg/kg )/Antipamezole (Antisedan, 1mg/kg)"", ""Injection narcosis with Ketamine (110mg/kg)/Xylazine (11mg/kg)"", ""Injection narcosis with Ketamine (110mg/kg)/Xylazine (11mg/kg)/ Antipamezole (Antisedan, 1mg/kg)"", ""Injection narcosis with Ketamine (137mg/kg)/Xylazine (6.6mg/kg)"", ""Injection narcosis with Tribromoethanol (Avertin)"", ""Injection narcosis with Sodium Pentobarbital (Pentobarb, 0.1ml)"", 
 ""Injection narcosis with Sodium Pentobarbital (Euthatal)"", ""No"", ""Injection narcosis with Sodium Pentobarbital (Somnopentyl)"")",NA,NA,NA,NA,NA
@@ -40,12 +46,6 @@ IMPC_CSD_003,IMPC_CSD_082_001,Combined SHIRPA and Dysmorphology,Location of test
 IMPC_CSD_003,IMPC_CSD_083_001,Combined SHIRPA and Dysmorphology,Number of animals in cage,-,INT,5,NA,1,50.0,NA,1.0,10
 IMPC_CSD_003,INT_001,Combined SHIRPA and Dysmorphology,Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
 IMPC_CSD_003,IMPC_CSD_086_001,Combined SHIRPA and Dysmorphology,Size of squares in arena,cm^2,TEXT,121,"c("" "")",NA,NA,NA,NA,NA
-IMPC_DXA_001,INT_002,Body Composition (DEXA lean/fat),Age at testing,weeks,INT,14,NA,1,120.0,NA,9.0,60
-IMPC_DXA_001,IMPC_DXA_015_001,Body Composition (DEXA lean/fat),Anesthesia,-,TEXT,Isoflurane,"c(""Avertin"", ""Ketamine+Xylazine"", ""Isoflurane"", ""Euthatal"", ""Tribromoethanol"", ""Domitor+Ketamin"", ""Ketamine+Xylazine+Antisedan"", ""Pentobarb"", ""No anesthesia"")",NA,NA,NA,NA,NA
-IMPC_DXA_001,IMPC_DXA_012_001,Body Composition (DEXA lean/fat),Equipment manufacturer,-,TEXT,GE Medical Systems,"c(""GE Medical Systems"", ""Norland Stratec"", ""Bruker"")",NA,NA,NA,NA,NA
-IMPC_DXA_001,IMPC_DXA_013_001,Body Composition (DEXA lean/fat),Equipment model,-,TEXT,Lunar Piximus II,"c(""Lunar Piximus II"", ""Sabre"", ""Minispec LF50"", ""Minispec MQ 10"")",NA,NA,NA,NA,NA
-IMPC_DXA_001,IMPC_DXA_014_001,Body Composition (DEXA lean/fat),Mouse Status,-,TEXT,Anesthetized,"c(""Anesthetized"", ""Dead"", ""Awake"")",NA,NA,NA,NA,NA
-IMPC_DXA_001,INT_001,Body Composition (DEXA lean/fat),Sex,-,TEXT,Males,"c(""Males"", ""Females"")",NA,NA,NA,NA,NA
 IMPC_GRS_001,INT_002,Grip Strength,Age at testing,weeks,INT,9,NA,1,120.0,NA,9.0,60
 IMPC_GRS_001,IMPC_GRS_006_001,Grip Strength,Equipment manufacturer,-,TEXT,Bioseb,"c(""Chatillon"", ""Bioseb"", ""Columbus Instruments"")",NA,NA,NA,NA,NA
 IMPC_GRS_001,IMPC_GRS_013_001,Grip Strength,Equipment model,-,TEXT,Bio-GT3+MR,"c(""Ametek"", ""Bio-GT3+MR"", ""Bio-GS3"", ""Bio-GS2"", ""E-DFD-E-002"", ""DFIS 2"", ""DFE II"")",NA,NA,NA,NA,NA
