@@ -1,5 +1,3 @@
-
-  
 function(input, output, session) {
   ##  create temporary debugging concole: ----
   # * observe(label="console",{
@@ -106,7 +104,7 @@ function(input, output, session) {
             span(
               class='step',
               ""),
-            "phenotypic measure"),
+            "phenotypic measure *"),
           tags$td(
             selectizeInput(
               inputId = "measure_selected",
@@ -173,7 +171,7 @@ function(input, output, session) {
           y <- tbl_matched_models$s2_ratio  
           y_pred <- approxfun(x,y,rule = 2)(x_pred)
           
-          tbl_matched_model_ <- tbl_matched_models %>%
+          tbl_matched_model_ <- tbl_matched_models %>% 
             mutate(duration = x_pred, s2_ratio =  y_pred) %>% 
             select(-s2_interaction, -s2_lab, -s2_error,-duration) %>% 
             distinct()
@@ -352,7 +350,7 @@ function(input, output, session) {
   grps_summaries <- reactive(
     {
       ## initialize tibble
-      tbl_grp_summ <- tibble(
+      tbl_grp_summ <- data_frame(
         group_name = NA,
         mean.t = NA %>% as.numeric(),
         sd.t = NA %>% as.numeric(),
@@ -499,7 +497,7 @@ function(input, output, session) {
       
       validate(
         need(is.null(uploaded), 'Data upload failed. Please try again or contact authors.'),
-        need(!is.null(uploaded), 'Data uploaded successfully.') # to get the same message style..
+        need(!is.null(uploaded), 'Data uploaded successfully. Thanks. We shall be in touch by email to continue your data integration process.') # added here to get the same message style
       )
     })
   
@@ -540,9 +538,9 @@ function(input, output, session) {
       ## calculate stats:
       
       if (nrow(tbl_summ) == 2)
-        tbl_pairs_ <- tibble(V1 = 2, V2 = 1)
+        tbl_pairs_ <- data_frame(V1 = 2, V2 = 1)
       else
-        tbl_pairs_ <- nrow(tbl_summ) %>%  combn(2) %>% t() %>% .[,2:1] %>% as_data_frame()  
+        tbl_pairs_ <- nrow(tbl_summ) %>%  combn(2) %>% t() %>% .[,2:1] %>% as_tibble()  
       
       tbl_pairs_ <- tbl_pairs_ %>% 
         transmute(group_id1 = as.character(V1),group_id2 = as.character(V2)) %>% 
@@ -713,7 +711,7 @@ function(input, output, session) {
     {
       req(tbl_pairs())
       plot_pcci(
-        tbl_pairs = tbl_pairs()%>% select(-contains("bt")),
+        tbl_pairs = tbl_pairs_temp,
         title = paste("Confidence Intervals of Means Differences ;",input$measure_selected),
         ylab = 
           if (nrow(tbl_matched_model())!=0)
