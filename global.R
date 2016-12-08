@@ -1,28 +1,21 @@
-# install.packages(c("tidyverse","shiny","shinyjs","shinyBS","DT","rdrop2"))
-
-library(tidyverse,warn.conflicts = F)
-library(stringr)
 library(shiny)
+library(tidyverse)
+library(stringr)
 library(shinyBS)
-library(shinyjs,warn.conflicts = F)
-library(DT,warn.conflicts = F)
+library(shinyjs)
+library(DT)
 library(rdrop2)
 
 options(
-  #shiny.testmode = TRUE,
+  shiny.maxRequestSize = 10e6
+  # ## for development and debugging:
+  # shiny.testmode = TRUE,
   # shiny.reactlog=TRUE,
-  #shiny.autoreload = TRUE,
-  #shiny.autoreload.pattern = glob2rx(c("ui.R","server.R","style.css","WWW/style.css")),
-  #shiny.autoreload.interval = 2000
-  # shiny.maxRequestSize = 10e6,
   # shiny.minified = FALSE,
-  # shiny.error = browser,
-  # shiny.table.class = "gxl-table",
-  # shiny.sanitize.errors = TURE,
+  # shiny.sanitize.errors = TRUE,
   # dplyr.print_max = 50,
   # dplyr.width = Inf,
-  # width = 1000,
-  # DT.options = list(dom = 'tB')
+  # width = 1000
 )
 
 source("pcci.R")
@@ -39,14 +32,3 @@ group_names_list <- example_group_names_vec %>%
   
 drop_dir <- "GxL/gxl_app_userdata_files/"
 token    <- readRDS("droptoken.rds")
-
-
-
-
-
-
-
-
-
-
-
