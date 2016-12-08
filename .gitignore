@@ -9,5 +9,3 @@ rsconnect
 droptoken.rds
 TODO.md
 TODO.html
-packrat/lib*/
-packrat/src/
