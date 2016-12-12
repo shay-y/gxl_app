@@ -507,8 +507,6 @@ function(input, output, session) {
     }
   )
   
-  
-  
   ## * calculate pairs with estimate, se, statistic ,p-value, conf.lower, conf.higher [unadjusted, adjusted GxL] ----
   tbl_pairs <- eventReactive({tbl_summaries(); input$conf_level; input$mult_adjust},
     {
