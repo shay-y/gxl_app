@@ -793,10 +793,13 @@ function(input, output, session) {
   
   observeEvent(priority = 2,
     input$load_example_button,
-    {
+    { 
+      values$example_progress <- Progress$new(session, min = 0, max = 1)
+      values$example_progress$set(value = 0.1, message = "Loading example", detail = NULL)
       updateSelectInput(session = session, inputId = "procedure_name",selected = "")
       updateSelectInput(session = session, inputId = "procedure_name",selected = "Body Composition (DEXA lean/fat)")
       updateTabsetPanel(session = session, inputId = "input_method",selected = "summ")
+      values$example_progress$set(value = 0.3, message = "Loading example input...", detail = "procedure selected.")
     })
   
   observeEvent(
@@ -805,12 +808,16 @@ function(input, output, session) {
     if(values$n_loads_completed < input$load_example_button)
     {
       updateSelectizeInput(session = session, inputId = "measure_selected",selected = "BMC/Body weight")
+      values$example_progress$set(value = 0.5, message = "Loading example input...", detail = "measure selected.")
     })
   
   observeEvent(
     priority = 0,
-    {input$measure_selected},
+    input$measure_selected,
+    {
     updateNumericInput(session = session, inputId = "n_group_inputs",value = 4)
+    values$example_progress$set(value = 0.5, message = "Loading example input...", detail = "input method selected.")
+    }
   )
     
   observeEvent(
@@ -834,6 +841,8 @@ function(input, output, session) {
       updateNumericInput(session = session, inputId = "grp2_n",value = 597)
       updateNumericInput(session = session, inputId = "grp3_n",value = 24)
       updateNumericInput(session = session, inputId = "grp4_n",value = 15)
+      
+      values$example_progress$set(value = 0.7, message = "Loading example input...", detail = "group summaries filled in")
     })
   
   observeEvent(
@@ -844,14 +853,16 @@ function(input, output, session) {
       if(values$n_loads_completed < input$load_example_button)
       {
         values$n_loads_completed <- input$load_example_button
-        showNotification(
-          id = "example_loaded_notification",
-          duration = 6,closeButton = T,type = "warning",session = session,
-          ui = 
-            tagList(
-              "Example loaded."# ,tags$br(),"Click ",tags$b("Calculation Comparisons"),"."
-            )
-        )
+        values$example_progress$set(value = 1, message = "Loading example input...", detail = "Done.")
+        on.exit(values$example_progress$close())
+        # showNotification(
+        #   id = "example_loaded_notification",
+        #   duration = 6,closeButton = T,type = "warning",session = session,
+        #   ui = 
+        #     tagList(
+        #       "Example loaded."# ,tags$br(),"Click ",tags$b("Calculation Comparisons"),"."
+        #     )
+        # )
       }
     }
   )
