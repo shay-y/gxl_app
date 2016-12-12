@@ -153,13 +153,13 @@ font-size: 1.1em !important;
   float: right;
  /*width:65%;*/
 }
-
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
+/*
+#table-groups input[type=number]::-webkit-inner-spin-button, 
+#table-groups input[type=number]::-webkit-outer-spin-button { 
   -webkit-appearance: none; 
   margin: 0; 
 }
-
+*/
 
 #table-groups-info  .selectize-input{
   width: 80%;

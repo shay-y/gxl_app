@@ -336,7 +336,7 @@ function(input, output, session) {
               tags$td(selectizeInput( inputId = paste0("grp",i,"_name"  ), label = NULL, choices = c("",group_names_list),selected = "",multiple = T, options = list(create = TRUE,maxItems = 1))),
               tags$td(  numericInput( inputId = paste0("grp",i,"_mean.t"), label = NULL, value = "")),
               tags$td(  numericInput( inputId = paste0("grp",i,"_sd.t"  ), label = NULL, value = "", min = 0)),
-              tags$td(  numericInput( inputId = paste0("grp",i,"_n"     ), label = NULL, value = "", step = 1,min = 0))
+              tags$td(  numericInput( inputId = paste0("grp",i,"_n"     ), label = NULL, value = "", step = 1,min = 2))
             )
           }
         )
