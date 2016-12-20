@@ -812,6 +812,7 @@ function(input, output, session) {
   observeEvent(
     priority = 0,
     input$measure_selected,
+    if(values$n_loads_completed < input$load_example_button)
     {
     updateNumericInput(session = session, inputId = "n_group_inputs",value = 4)
     values$example_progress$set(value = 0.5, message = "Loading example input...", detail = "input method selected.")
