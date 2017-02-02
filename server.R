@@ -198,7 +198,10 @@ function(input, output, session) {
           li(
             b("GxL replicability ratio estimate: "),
             withMathJax("\\(S^2_{G\\times L}/S^2_{error}=\\)"),
-            tbl_matched_model()$s2_ratio %>% signif(digits=6)
+            tbl_matched_model()$s2_ratio %>% signif(digits=6),
+            br(),
+            small("Model based on analysis with genotypes: " %>% b(),tbl_matched_model()$strains,
+                  " in labs: " %>%  b(),tbl_matched_model()$labs)
           ),
           li(
             if (tbl_matched_model()$transformation_expr != "x")
