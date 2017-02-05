@@ -161,25 +161,20 @@ function(input, output, session) {
                sex            == input$Sex) %>% 
         filter(metadata_rules %>% parse(text = .) %>% eval())
       
-      if (nrow(tbl_matched_models)>0)
+      ## if duration related meassure, estimate gxl ratio:
+      if (nrow(tbl_matched_models)>0 & all(!is.na(tbl_matched_models$duration)) )
       {
-        ## if duration related meassure, estimate gxl ratio:
-        if ( all(!is.na(tbl_matched_models$duration)) )
-        {
-          x_pred <- input$duration
-          x <- tbl_matched_models$duration %>% as.numeric()
-          y <- tbl_matched_models$s2_ratio  
-          y_pred <- approxfun(x,y,rule = 2)(x_pred)
-          
-          tbl_matched_model_ <- tbl_matched_models %>% 
-            mutate(duration = x_pred, s2_ratio =  y_pred) %>% 
-            select(-s2_interaction, -s2_lab, -s2_error,-duration) %>% 
-            distinct()
-          
-        }
-        else
-          tbl_matched_model_ <- tbl_matched_models
-      }
+        x_pred <- input$duration
+        x <- tbl_matched_models$duration %>% as.numeric()
+        y <- tbl_matched_models$s2_ratio  
+        y_pred <- approxfun(x,y,rule = 2)(x_pred)
+        
+        tbl_matched_model_ <- tbl_matched_models %>% 
+          mutate(duration = x_pred, s2_ratio =  y_pred) %>% 
+          select(-s2_interaction, -s2_lab, -s2_error,-duration) %>% 
+          distinct()
+      } else
+      tbl_matched_model_ <- tbl_matched_models
       
       ## exeption
       if(nrow(tbl_matched_model_)>1) {cat("Too many matchs.")}
@@ -214,7 +209,7 @@ function(input, output, session) {
       {
         ul(
           li(
-            b("GxL replicability ratio estimate not found")
+            b("GxL estimate not found; output unadjusted result only")
           ),
           li(
             b("No transformation is applied")
@@ -452,7 +447,6 @@ function(input, output, session) {
         ) %>% 
         rownames_to_column(var = "group_id")
       
-      tbl_summ_temp <<- tbl_summ
       return(tbl_summ)
     })
   
@@ -624,9 +618,6 @@ function(input, output, session) {
       #       )
       #   }
       
-      tbl_pairs_temp <<- tbl_pairs_
-      
-      
       if (isTruthy(tbl_pairs_) & nrow(tbl_pairs_)>0)
       {
         values$display_output <- T
@@ -712,7 +703,7 @@ function(input, output, session) {
     {
       req(tbl_pairs())
       plot_pcci(
-        tbl_pairs = tbl_pairs_temp,
+        tbl_pairs = tbl_pairs(),
         title = paste("Confidence Intervals of Means Differences ;",input$measure_selected),
         ylab = 
           if (nrow(tbl_matched_model())!=0)
@@ -952,14 +943,14 @@ function(input, output, session) {
   )
   
   
-  # * observers: debugging ---------------------------------------------------------------
+  # * observers: for debugging ---------------------------------------------------------------
   
   
   # observe(print(req(input$input_method)))
   # observe(print(values$file))
-  observe(print(req(file_summaries())))
-  observe(print(req(grps_summaries())))
-  observe(print(req(tbl_summaries())))
+  # observe(print(req(file_summaries())))
+  # observe(print(req(grps_summaries())))
+  # observe(print(req(tbl_summaries())))
   observe(print(req(tbl_pairs())))
 }
   
