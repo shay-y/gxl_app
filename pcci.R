@@ -29,7 +29,8 @@ plot_pcci <-
         )
       )
     
-    x_nudge   <- -max(tbl_pairs_to_plot$xend) / 40
+    x_nudge   <- -max(tbl_pairs_to_plot$xend) / 30
+    x_lim_left   <- min( -max(tbl_pairs_to_plot$xend) / 3, min(tbl_pairs_to_plot$lwr)*1.5)
     err_bar_h <-  max(tbl_pairs_to_plot$xend) / 28
     
     tbl_grps <- union(
@@ -81,6 +82,7 @@ plot_pcci <-
       theme_minimal() +
       coord_fixed(ratio = 2) +
       xlab(xlab) + ylab(ylab) +  ggtitle(title) +
+      xlim(x_lim_left, NA) +
       geom_errorbarh(
         aes(
           x = x,
