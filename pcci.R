@@ -34,8 +34,8 @@ plot_pcci <-
     err_bar_h <-  max(tbl_pairs_to_plot$xend) / 28
     
     tbl_grps <- union(
-      tbl_pairs_temp %>% select(grp = grp1, mean = mean.t.x) %>% distinct(),
-      tbl_pairs_temp %>% select(grp = grp2, mean = mean.t.y) %>% distinct()
+      tbl_pairs %>% select(grp = grp1, mean = mean.t.x) %>% distinct(),
+      tbl_pairs %>% select(grp = grp2, mean = mean.t.y) %>% distinct()
     )
     
     pcci <-
