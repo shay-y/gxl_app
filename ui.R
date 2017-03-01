@@ -323,7 +323,7 @@ shinyUI(
                 a(href = "http://www.replicability.tau.ac.il/", target='_blank',"Replicability Research Group"),".",
                 br(),
                 "The research leading to the GxL adjustment and the development of the application are supported by the European Research Council (ERC) under the European Community’s 7th Framework Program (FP/2007-2013) grant agreement (PSARPS-294519).",              br(),
-                "The application wass built with ",
+                "The application was built with ",
                 a(href = "http://shiny.rstudio.com/", target="_blank", "Shiny web application framework by Rstudio"),".",
                 br(),
                 "Source code is available on Github: ",
