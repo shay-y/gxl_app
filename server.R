@@ -229,8 +229,11 @@ function(input, output, session) {
     input$input_method
     
     div(
-      # actionButton(inputId = "reset_upload",label = "Reset", icon = icon("refresh"),class = "btn_right btn-sm"),
-      downloadButton(outputId = "example_raw_input",label = "Download example file", class = "btn_right btn-sm"),
+      if (isTruthy(input$measure_selected))
+        if (input$measure_selected == "Periphery average speed")
+          {
+        downloadButton(outputId = "example_raw_input",label = "Download example file", class = "btn_right btn-sm")
+      } ,
       div(
         class="form-group shiny-input-container",
         style="width: 70%;",
@@ -789,7 +792,7 @@ function(input, output, session) {
       values$example_progress <- Progress$new(session, min = 0, max = 1)
       values$example_progress$set(value = 0.1, message = "Loading example", detail = NULL)
       updateSelectInput(session = session, inputId = "procedure_name",selected = "")
-      updateSelectInput(session = session, inputId = "procedure_name",selected = "Body Composition (DEXA lean/fat)")
+      updateSelectInput(session = session, inputId = "procedure_name",selected = "Open Field") # "Body Composition (DEXA lean/fat)"
       updateTabsetPanel(session = session, inputId = "input_method",selected = "summ")
       values$example_progress$set(value = 0.3, message = "Loading example input...", detail = "procedure selected.")
     })
@@ -799,7 +802,7 @@ function(input, output, session) {
     {input$procedure_name;input$measure_selected},
     if(values$n_loads_completed < input$load_example_button)
     {
-      updateSelectizeInput(session = session, inputId = "measure_selected",selected = "BMC/Body weight")
+      updateSelectizeInput(session = session, inputId = "measure_selected",selected = "Periphery average speed") # "BMC/Body weight"
       values$example_progress$set(value = 0.5, message = "Loading example input...", detail = "measure selected.")
     })
   
@@ -812,28 +815,28 @@ function(input, output, session) {
     values$example_progress$set(value = 0.5, message = "Loading example input...", detail = "input method selected.")
     }
   )
-    
+
   observeEvent(
     priority = -1,
     {input$n_group_inputs},
     if(values$n_loads_completed < input$load_example_button)
     {
-      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "Arhgef4", options = list(create = TRUE))
-      updateSelectizeInput(session = session, inputId = "grp2_name",selected = "C57BL/6J", options = list(create = TRUE))
-      updateSelectizeInput(session = session, inputId = "grp3_name",selected = "Elk4", options = list(create = TRUE))
-      updateSelectizeInput(session = session, inputId = "grp4_name",selected = "Tnfaip1", options = list(create = TRUE))
-      updateNumericInput(session = session, inputId = "grp1_mean.t",value = 0.0106107)
-      updateNumericInput(session = session, inputId = "grp2_mean.t",value = 0.0131590)
-      updateNumericInput(session = session, inputId = "grp3_mean.t",value = 0.0118673)
-      updateNumericInput(session = session, inputId = "grp4_mean.t",value = 0.0169907)
-      updateNumericInput(session = session, inputId = "grp1_sd.t",value = 0.0031976)
-      updateNumericInput(session = session, inputId = "grp2_sd.t",value = 0.0034319)
-      updateNumericInput(session = session, inputId = "grp3_sd.t",value = 0.0023538)
-      updateNumericInput(session = session, inputId = "grp4_sd.t",value = 0.0034506)
-      updateNumericInput(session = session, inputId = "grp1_n",value = 14)
-      updateNumericInput(session = session, inputId = "grp2_n",value = 597)
-      updateNumericInput(session = session, inputId = "grp3_n",value = 24)
-      updateNumericInput(session = session, inputId = "grp4_n",value = 15)
+      updateSelectizeInput(session = session, inputId = "grp1_name",selected = "C57BL/6J", options = list(create = TRUE)) # Arhgef4
+      updateSelectizeInput(session = session, inputId = "grp2_name",selected = "Setmar", options = list(create = TRUE)) # C57BL/6J
+      updateSelectizeInput(session = session, inputId = "grp3_name",selected = "Slc38a10"    , options = list(create = TRUE)) # Elk4
+      updateSelectizeInput(session = session, inputId = "grp4_name",selected = "Tnfaip1" , options = list(create = TRUE)) # Tnfaip1
+      updateNumericInput(session = session, inputId = "grp1_mean.t",value = 4.3148) # 0.0106
+      updateNumericInput(session = session, inputId = "grp2_mean.t",value = 5.0359) # 0.0131
+      updateNumericInput(session = session, inputId = "grp3_mean.t",value = 4.1748) # 0.0118
+      updateNumericInput(session = session, inputId = "grp4_mean.t",value = 3.2225) # 0.0169
+      updateNumericInput(session = session, inputId = "grp1_sd.t",value = 0.6776) #0.00319
+      updateNumericInput(session = session, inputId = "grp2_sd.t",value = 0.5229) #0.00343
+      updateNumericInput(session = session, inputId = "grp3_sd.t",value = 0.4604) #0.00235
+      updateNumericInput(session = session, inputId = "grp4_sd.t",value = 0.7213) #0.00345
+      updateNumericInput(session = session, inputId = "grp1_n",value = 310) # 14
+      updateNumericInput(session = session, inputId = "grp2_n",value = 13) # 597
+      updateNumericInput(session = session, inputId = "grp3_n",value = 19) # 24
+      updateNumericInput(session = session, inputId = "grp4_n",value = 9) # 15
       
       values$example_progress$set(value = 0.7, message = "Loading example input...", detail = "group summaries filled in")
     })
