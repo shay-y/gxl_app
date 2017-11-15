@@ -496,8 +496,8 @@ function(input, output, session) {
       unlink(file_name_txt)
       
       validate(
-        need(is.null(uploaded), 'Data upload failed. Please try again or contact authors.'),
-        need(!is.null(uploaded), 'Data uploaded successfully. Thanks. We shall be in touch by email to continue the integration process your data.') # added here to get the same message style
+        need(is.null(uploaded), 'Data upload failed. Please try again or contact the authors.'),
+        need(!is.null(uploaded), 'Data uploaded successfully. Thanks. We shall be in touch by email to continue the integration process of the data.') # added here to get the same message style
       )
     })
   
