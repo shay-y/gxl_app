@@ -483,7 +483,7 @@ function(input, output, session) {
       file_name_rds <- paste0("userdata_",input$email,"_",format(sys_time,'_%Y_%m_%d__%H_%M_%S__%Z.rds'))
       
       saveRDS(object = user_data  ,file = file_name_rds)
-      uploaded <- drop_upload(file = file_name_rds,dest = drop_dir,overwrite = F,dtoken = token) %>% try()
+      uploaded <- drop_upload(file = file_name_rds, path = drop_dir_s, mode = "add", dtoken = token) %>% try()
       unlink(file_name_rds)
 
       file_name_txt <- paste0("userdata_",input$email,"_",format(sys_time,'_%Y_%m_%d__%H_%M_%S__%Z.txt'))
@@ -492,7 +492,7 @@ function(input, output, session) {
         print(user_data)
         print("####---------------------------")
       },file = file_name_txt)
-      drop_upload(file = file_name_txt,dest = drop_dir,overwrite = F,dtoken = token)
+      drop_upload(file = file_name_txt, path = drop_dir_s, mode = "add", dtoken = token)
       unlink(file_name_txt)
       
       validate(

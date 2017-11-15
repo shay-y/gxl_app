@@ -5,6 +5,7 @@ library(shinyBS)
 library(shinyjs)
 library(DT)
 library(rdrop2)
+ 
 
 options(
   shiny.maxRequestSize = 10e6
@@ -30,5 +31,6 @@ group_names_list <- example_group_names_vec %>%
   {setNames(.,.)} %>% 
   list("Select group names from the list or create new names" = .)
   
-drop_dir <- "GxL/gxl_app_userdata_files/"
+drop_dir_s <- "GxL/gxl_app_userdata_files/"
 token    <- readRDS("droptoken.rds")
+
