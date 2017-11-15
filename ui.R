@@ -199,7 +199,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 ),
                 value = FALSE
               ),
-              hidden(
+              disabled(
                 div(
                   id = "user_details",
                   tags$form(
@@ -211,21 +211,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     ),
                     div(
                       class="form-group shiny-input-container",
-                      tags$label("Your email:"),
+                      tags$label("Email address:"),
                       tags$input(id = "email",value = "", type="text", class="form-control")
+                    ),
+                    span(
+                      id = "wrap_submit_data",
+                      actionButton(
+                        "submit_data",
+                        "Submit data",
+                        class= "btn" #,icon = icon("cog")
+                      )  
                     )
                   ),
-                  uiOutput("groups_info"),
-                  uiOutput("info_submit_feedback"),
-                  div(
-                    id = "wrap_submit_data",
-                    actionButton(
-                      "submit_data",
-                      "Submit data",
-                      class= "btn_right" #,icon = icon("cog")
-                    ) 
-                  )
-                )
+                  
+                  # uiOutput("groups_info"),
+                  uiOutput("info_submit_feedback")
+                ) 
               )
             ),
             column(

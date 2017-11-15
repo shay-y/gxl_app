@@ -379,56 +379,56 @@ function(input, output, session) {
     })
   
   ## render group info table: ----
-  output$groups_info <- renderUI(
-    {
-      if (input$input_method=="file")
-        groups <- req(file_summaries()$group_name)
-      if (input$input_method=="summ")
-        groups <- req(grps_summaries()$group_name)
-      
-      withTags(
-        tagList(
-          br(),
-          "Please fill-in additional details for each experimental group.",
-          ul(
-            li("For ",b("Background strain")," and ",b("Genetic manipulation")," you may use the nomeclature as in ",
-               a(href="http://www.findmice.org/","International Mouse Strain Resource",target="_blank"),"."),
-            li("You may either specify the treatments or use obsfucated names ('Treatment1','Treatment2', etc.).")
-          ),
-          table(
-            id = "table-groups-info",
-            class = "table table-gxl",
-            thead(
-              tr(
-                th("Group"),th(
-                  "Background strain"
-                ),
-                th(
-                  "Genetic manipulation"
-                ),
-                th(
-                  "Treatment"
-                )
-              )
-            ),
-            tbody(
-              lapply(
-                1:length(groups),function(g)
-                {
-                  tr(
-                    td(groups[g]),
-                    td(textInput(inputId = paste("grp_info_",g,groups[g],"bg.strain",sep = "_"), label = NULL)), # choices = {c(" ",bg_strain_vec) %>% {setNames(.,.)}},options = list(create = TRUE))
-                    td(textInput(inputId = paste("grp_info_",g,groups[g],"genetic.manipulation", sep = "_"), label = NULL)),  # choices = {c(" ",gene_symbol_vec) %>% {setNames(.,.)}},options = list(create = TRUE)))
-                    td(textInput(inputId = paste("grp_info_",g,groups[g],"treatment",sep = "_"), label = NULL)) # choices = {c(" ",treatment_vec) %>% {setNames(.,.)}},options = list(create = TRUE)))  
-                  )
-                }
-              )
-            )
-          )
-        )
-      )
-    }
-  )
+  # output$groups_info <- renderUI(
+  #   {
+  #     if (input$input_method=="file")
+  #       groups <- req(file_summaries()$group_name)
+  #     if (input$input_method=="summ")
+  #       groups <- req(grps_summaries()$group_name)
+  #     
+  #     withTags(
+  #       tagList(
+  #         br(),
+  #         "Please fill-in additional details for each experimental group.",
+  #         ul(
+  #           li("For ",b("Background strain")," and ",b("Genetic manipulation")," you may use the nomeclature as in ",
+  #              a(href="http://www.findmice.org/","International Mouse Strain Resource",target="_blank"),"."),
+  #           li("You may either specify the treatments or use obsfucated names ('Treatment1','Treatment2', etc.).")
+  #         ),
+  #         table(
+  #           id = "table-groups-info",
+  #           class = "table table-gxl",
+  #           thead(
+  #             tr(
+  #               th("Group"),th(
+  #                 "Background strain"
+  #               ),
+  #               th(
+  #                 "Genetic manipulation"
+  #               ),
+  #               th(
+  #                 "Treatment"
+  #               )
+  #             )
+  #           ),
+  #           tbody(
+  #             lapply(
+  #               1:length(groups),function(g)
+  #               {
+  #                 tr(
+  #                   td(groups[g]),
+  #                   td(textInput(inputId = paste("grp_info_",g,groups[g],"bg.strain",sep = "_"), label = NULL)), # choices = {c(" ",bg_strain_vec) %>% {setNames(.,.)}},options = list(create = TRUE))
+  #                   td(textInput(inputId = paste("grp_info_",g,groups[g],"genetic.manipulation", sep = "_"), label = NULL)),  # choices = {c(" ",gene_symbol_vec) %>% {setNames(.,.)}},options = list(create = TRUE)))
+  #                   td(textInput(inputId = paste("grp_info_",g,groups[g],"treatment",sep = "_"), label = NULL)) # choices = {c(" ",treatment_vec) %>% {setNames(.,.)}},options = list(create = TRUE)))  
+  #                 )
+  #               }
+  #             )
+  #           )
+  #         )
+  #       )
+  #     )
+  #   }
+  # )
   
   ## * copy summaries from the selected input method and add calculations: ----
   tbl_summaries <- reactive(
@@ -942,7 +942,7 @@ function(input, output, session) {
   
   observeEvent(
     input$agree_contribute,
-    toggle(id = "user_details",condition = input$agree_contribute)
+    toggleState(id = "user_details",condition = input$agree_contribute)
   )
   
   
