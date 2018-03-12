@@ -14,25 +14,25 @@ shinyUI(
       # runcodeUI(),
       tagList(
         useShinyjs(),
-        HTML(
-          '<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KN4T996"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->'
-        ),
+#         HTML(
+#           '<!-- Google Tag Manager (noscript) -->
+# <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KN4T996"
+# height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+# <!-- End Google Tag Manager (noscript) -->'
+#         ),
         tags$head(
           # includeCSS("https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css"),
           includeCSS("WWW/style.css"),
-          HTML("
-<!-- Google Tag Manager -->
-            <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','GTM-KN4T996');</script>
-            <!-- End Google Tag Manager -->
-               "),
-          #includeScript("google-analytics.js"),
+#           HTML("
+# <!-- Google Tag Manager -->
+#             <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+#                 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+#                 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+#                   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+#             })(window,document,'script','dataLayer','GTM-KN4T996');</script>
+#             <!-- End Google Tag Manager -->
+#                "),
+          includeScript("google-analytics.js"),
           includeScript("WWW/scroll.js")
         ),
         wellPanel(
